@@ -168,27 +168,3 @@ Our IR also consists of basic control, including
     * ~~bottom->up opt~~
     * ~~up->bottom opt~~
     * This is probably an open area of research --> search for that.
-
-
-### Chip IR
-**First design this IR in full form**
-
-* Don't reset if we are going to fill the entire grid anyways
-    * If you do need to reset (like one short operation like x[0] == 0), then call it
-
-* use IA instead of IR/IC
-
-* if we are setting the same w matrix and doing some operations repetively, 
-    * move the operation up, and perform it!
-    * you don't need to load the same w matrix again.
-
-* Smart memory allocation?
-    * This is kind of hard. Try to optimize for values that stick together
-    * Else, wasted memory on swap...
-        * swap needs to be added to the chip btw
-
-* You still have to perform logic in terms of the automatic fp --> int --> fp idea that you have.
-
-* Inequalities optimization
-    * if performing dot product --> equality; you can set the equality compartor BEFORE doing dot product. 
-    * Then, during GI, you will get both dot product and equality operation at the same time.
