@@ -3,7 +3,7 @@
 // Node, Tensor, Ops, etc. are classes used to just build the computation graph. 
 
 use crate::{IRCmds, ValueData};
-use super::{add_to_dep, ir_b_add, ir_b_id, ConstantNode, Tensor, TensorNode, IR_BUILDER};
+use super::{add_to_dep, ir_b_add, ir_b_id, ConstantNode, Tensor, TensorNode, DEVICE};
 
 // Value just stores the dimension as we go through forward and backward propogation. However, the actual value is computed when we execute IR
 #[derive(Clone, Debug)]
@@ -80,7 +80,7 @@ impl Value {
     }
 
     pub fn get (&self) -> ValueData {
-        let mut guard = IR_BUILDER.lock().unwrap();
+        let mut guard = DEVICE.lock().unwrap();
         let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
 
         let res = ir_b.get_tensor(&self.id);

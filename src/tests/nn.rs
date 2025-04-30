@@ -5,7 +5,7 @@ mod tests {
     
     #[test]
     fn nn () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());
+        autodiff::set_device(autodiff::devices::CPU::new());
         autodiff::eager_dep_opt();
 
         let l1_w = autodiff::tensor(vec![

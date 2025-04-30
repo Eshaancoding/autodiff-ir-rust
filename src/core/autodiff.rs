@@ -5,15 +5,15 @@ use rand_distr::{Normal, Distribution};
 
 pub use crate::graph::data::concat::concat;
 pub use crate::graph::linear_alg::dot_product::dot;
+pub use crate::devices;
 use crate::{core::add_to_dep, ir::optimizations::optimize::*};
 
 pub use crate::{
-    IRBuilderTrait, 
+    Device, 
     Tensor, 
     TensorNode, 
     Value, 
-    IR_BUILDER, 
-    TensorRsIRBuilder,
+    DEVICE, 
     nn,
     SeqF
 };
@@ -90,15 +90,15 @@ pub fn randn (dim: Vec<usize>) -> Tensor {
     tensor(samples, dim)
 }
 
-pub fn set_irbuilder <T: IRBuilderTrait + Send + Sync + 'static> (ir_builder: T) {
+pub fn set_device <T: Device + Send + Sync + 'static> (device: T) {
     // set base
     let mut guard = IRB.lock().expect("Can't lock IR builder");
     *guard = Some(IRBase::new());
     drop(guard);
 
     // set custom ir builder
-    let mut guard = IR_BUILDER.lock().expect("Can't lock IR builder");
-    *guard = Some(Box::new(ir_builder));
+    let mut guard = DEVICE.lock().expect("Can't lock IR builder");
+    *guard = Some(Box::new(device));
     drop(guard);
 
     // set dep tracker

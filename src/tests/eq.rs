@@ -5,7 +5,7 @@ mod tests {
 
     #[test]
     fn eq () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());        
+        autodiff::set_device(autodiff::devices::CPU::new());
 
         // ============ Equality test ============ 
         let x = autodiff::tensor(

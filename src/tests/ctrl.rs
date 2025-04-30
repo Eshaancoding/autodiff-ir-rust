@@ -6,7 +6,7 @@ mod tests {
     
     #[test]
     fn if_ctrl () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());        
+        autodiff::set_device(autodiff::devices::CPU::new());
 
         let x = autodiff::scalar(1.0);
         let mut y = autodiff::scalar(3.0);
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn if_else_ctrl () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());        
+        autodiff::set_device(autodiff::devices::CPU::new());
 
         let x = autodiff::scalar(1.0);
         let mut y = autodiff::scalar(3.0);
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn for_ctrl () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());        
+        autodiff::set_device(autodiff::devices::CPU::new());
         
         let mut y = autodiff::scalar(10.0);
         autodiff::ir_for(-3..5, |i| {
@@ -91,7 +91,7 @@ mod tests {
     // for loop and everything ctrl
     #[test] 
     fn evrty_ctrl () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());        
+        autodiff::set_device(autodiff::devices::CPU::new());
 
         let mut y = autodiff::scalar(3.0);
         let mut y_two = autodiff::scalar(3.0);

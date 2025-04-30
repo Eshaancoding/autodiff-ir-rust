@@ -1,22 +1,24 @@
 // Using Tensor Rs library, we can create matrix and create operations
+// Only single threaded operations
+
 use indexmap::IndexMap;
-use crate::{IRBuilderTrait, IRCmds, ValueData};
+use crate::{Device, IRCmds, ValueData};
 use super::exec::exec;
 use tensor_rs::tensor_impl::gen_tensor::GenTensor;
 
-pub struct TensorRsIRBuilder {
+pub struct CPU {
     hmap: IndexMap<String, ValueData>,
 }
 
-impl TensorRsIRBuilder {
-    pub fn new () -> TensorRsIRBuilder  {
-        TensorRsIRBuilder  {
+impl CPU  {
+    pub fn new () -> CPU {
+        CPU  {
             hmap: IndexMap::new(),
         }
     }
 }
 
-impl IRBuilderTrait for TensorRsIRBuilder {
+impl Device for CPU {
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
         let mut hms: IndexMap<String, GenTensor<f64>> = IndexMap::new();
         

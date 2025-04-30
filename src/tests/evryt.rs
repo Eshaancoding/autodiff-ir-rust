@@ -7,7 +7,7 @@ mod tests {
 
     #[test]
     fn everything () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());        
+        autodiff::set_device(autodiff::devices::CPU::new());
 
         let x = autodiff::tensor(
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], 

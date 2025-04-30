@@ -67,10 +67,10 @@ pub struct IRBase {
     pub cmds: IndexMap<String, Vec<IRCmds>>
 }
 
-pub static IR_BUILDER: Mutex<Option<Box<dyn IRBuilderTrait + Send + Sync>>> = Mutex::new(None);
+pub static DEVICE: Mutex<Option<Box<dyn Device + Send + Sync>>> = Mutex::new(None);
 pub static IRB: Mutex<Option<IRBase>> = Mutex::new(None);
 
-pub trait IRBuilderTrait {
+pub trait Device {
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>);
     fn get_tensor (&self, id: &String) -> ValueData;
 }
@@ -104,7 +104,7 @@ pub fn ir_b_execute () {
     let cmds = ir_b.cmds.clone();
     drop(guard);
 
-    let mut guard = IR_BUILDER.lock().unwrap();
+    let mut guard = DEVICE.lock().unwrap();
     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
     ir_b.execute(cmds);
     drop(guard);

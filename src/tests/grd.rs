@@ -9,7 +9,7 @@ mod tests {
     
     #[test]
     fn grd () {
-        autodiff::set_irbuilder(autodiff::TensorRsIRBuilder::new());
+        autodiff::set_device(autodiff::devices::CPU::new());
 
         autodiff::add_heading("Declaring tensors");
         let mut a = autodiff::tensor(vec![3.0, 2.0, 1.0, 3.0], vec![2, 2]);
