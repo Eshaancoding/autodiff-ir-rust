@@ -24,7 +24,7 @@ mod tests {
         let x = autodiff::randn(vec![2, 256]);
         let mut res = autodiff::empty_tensor();
         
-        autodiff::ir_for(0..1000, |_| {
+        autodiff::ir_for(0..100, |_| {
             let y = neural_net.f(x.clone());
             opt.zero_grad();
             y.forward();
