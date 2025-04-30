@@ -24,17 +24,11 @@ mod tests {
         let x = autodiff::randn(vec![2, 256]);
         let mut res = autodiff::empty_tensor();
         
-        autodiff::ir_for(0..100, |_| {
+        autodiff::ir_for(0..1000, |_| {
             let y = neural_net.f(x.clone());
             opt.zero_grad();
-
-            autodiff::add_heading("Forward");
             y.forward();
-
-            autodiff::add_heading("Backward");
             y.backward();
-
-            autodiff::add_heading("Stepping");
             opt.step();
 
             res = y;
