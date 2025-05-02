@@ -57,6 +57,16 @@ impl Tensor {
         let orig_dim = p_dim.get(dim as usize).unwrap().clone();
         self.sum(dim) / (orig_dim as f64)
     }
+
+    pub fn var (&self, dim:i32, correction:usize) -> Tensor {
+        let a = (self.clone() - self.mean(dim).unsqueeze(dim)).pow2();
+
+        let p_dim = self.dim();
+        let dim_size = if dim < 0 { p_dim.len() as i32 + dim } else { dim } as usize;
+        let div = p_dim.get(dim_size).unwrap();
+
+        a.sum(dim) / (div - correction) as f64
+    }
 }
 
 fn c_sum (a: &Value, dim: usize) -> Value {
