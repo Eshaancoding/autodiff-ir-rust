@@ -69,7 +69,7 @@ pub fn zeros (dim: Vec<usize>) -> Tensor {
     fill(0.0, dim) 
 }
 
-pub fn empty_tensor () -> Tensor {
+pub fn empty () -> Tensor {
     Tensor::new(TensorNode {
         v: Value::empty(),
         gd: None
@@ -97,7 +97,7 @@ pub fn set_device <T: Device + Send + Sync + 'static> (device: T) {
     drop(guard);
 
     // set custom ir builder
-    let mut guard = DEVICE.lock().expect("Can't lock IR builder");
+    let mut guard = DEVICE.lock().expect("Can't lock Device");
     *guard = Some(Box::new(device));
     drop(guard);
 

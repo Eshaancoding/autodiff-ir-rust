@@ -27,18 +27,23 @@ pub enum IRCmds {
     MoreZero  {a: String, res: String}, // a > 0 --> res
     LessZero  {a: String, res: String}, // a < 0 --> res
 
-    // Tensor operations
+    // Reduce operations
     Sum {a: String, dim: usize, res: String}, // different than ElwSum (two matrixes); this all from one matrix
-    
-    // Linear Alg    
+    // add max, min (min can be in terms of max), etc.
+    // add max within the elew kernel
+
+    // Technically, Dot Product CAN BE expressed with Sum and ElwMult. In fact, this is what TinyGrad does
+    // However, I recognize that there are very specific, optimized implementations of Dot Product (ex: CUBLAS) 
+    // Considering its importance in machine learning, I decided to seperate it to a seperate command itself.
     DotProduct {a: String, b: String, res: String},         // (a,b) x (b,c) --> (a,c). Both tensors are 2-dim.
 
-    // Data Manipulation --> every operation is 0-cost (unless optimization deem otherwise)
+    // Data Manipulation --> every operation is 0-cost (unless optimization decides otherwise)
+    // At kernel level, we just use indexing maths
     View      {a: String, target_dim: Vec<usize>, res: String},
-    Index     {a: String, index: usize, dim: usize, res: String}, // attempts to do without memory copying
+    Index     {a: String, index: usize, dim: usize, res: String}, 
     Concat    {a: String, b: String, dim: usize, res: String},
     Permute   {a: String, p: Vec<usize>, res: String}, 
-    Broadcast {a: String, dim: usize, r: usize, res: String}, // without memory copying 
+    Broadcast {a: String, dim: usize, r: usize, res: String}, 
 
     // Single-input Functions
     Exp2  {a: String, res: String},   // fine: shift?
@@ -50,11 +55,11 @@ pub enum IRCmds {
 
     // Control Functions
     BR {block_id: String},
-    BRE {block_id: String, a: String}, // if a == 1, then branch; if not go to the next
-    BRZ {block_id: String, a: String}, // if a == 0, then branch; if not go to the next
+    BRE {block_id: String, a: String}, // if a == 1, then branch; if not go to the next cmd
+    BRZ {block_id: String, a: String}, // if a == 0, then branch; if not go to the next cmd
     EX,
 
-    // Debug
+    // Debug (does not get executed in the slightest)
     Heading {cmt: String},                       // just a comment
     Subheading {h: Option<String>, cmt: String}, // comment that will only appear if at heading (if None, then displays everywhere)
 }

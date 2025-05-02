@@ -162,6 +162,6 @@ where
 
         let mut v = x.clone(); 
         v += 1.0;
-        v.forward(); // will still apply to x's variable; we just need to satisfy the borrow checker
+        v.forward(); // will still apply to x's variable at IR; we just need to satisfy the borrow checker
     });
 }

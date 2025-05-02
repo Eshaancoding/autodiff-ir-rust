@@ -41,7 +41,7 @@ mod tests {
             0.063, 0.07, 0.08, 0.09, 0.013
         ], vec![2, 5]);
 
-        let mut res = autodiff::empty_tensor();
+        let mut res = autodiff::empty();
         
         autodiff::ir_for(0..10, |_| {
             let y = neural_net.f(x.clone());

@@ -32,7 +32,8 @@ pub trait NodeTrait {
 // this is just a concrete type over the traits; so we can use operation overloading
 #[derive(Clone)]
 pub struct Tensor {
-    // all usages of n should be unit tested correctly to ensure correct compilation
+    // Yes, it's not the most safest implementation. Let me know if there's any other methods
+    // I skimmed over df/dx, which doesn't use Rc<RefCell<>>. However, a refactor that big will take some time.
     pub n: Rc<RefCell<dyn NodeTrait>>,
 }
 

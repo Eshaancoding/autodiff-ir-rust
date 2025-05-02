@@ -22,7 +22,7 @@ mod tests {
         let mut opt = nn::opt::SGD(neural_net.params(), 0.1);
 
         let x = autodiff::randn(vec![2, 256]);
-        let mut res = autodiff::empty_tensor();
+        let mut res = autodiff::empty();
         
         autodiff::ir_for(0..100, |_| {
             let y = neural_net.f(x.clone());
