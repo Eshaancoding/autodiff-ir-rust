@@ -27,7 +27,7 @@ impl NodeTrait for BroadcastNode {
 
     fn backward (&mut self, grad:Value) {
         self.parent.n.borrow_mut().backward(
-            grad.to_node().sum(self.dim).forward()
+            grad.to_node().sum(self.dim as i32).forward()
         );
     }      
 

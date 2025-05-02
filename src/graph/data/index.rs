@@ -48,7 +48,7 @@ impl NodeTrait for IndexNode {
         let grad_n = grad.to_node();
 
         self.parent.n.borrow_mut().backward(
-            concat(vec![first_zero, grad_n.unsqueeze(0), second_zero], self.dim).forward()
+            concat(vec![first_zero, grad_n.unsqueeze(0), second_zero], self.dim as i32).forward()
         ); 
     }
 
@@ -60,7 +60,10 @@ impl NodeTrait for IndexNode {
 // ================== Creating Node ================== 
 impl Tensor {
     // select index at dim
-    pub fn i (&self, i: usize, dim: usize) -> Tensor {
+    pub fn i (&self, i: usize, dim: i32) -> Tensor {
+        let n_dim = self.dim().len();
+        let dim = if dim < 0 { n_dim as i32 + dim } else { dim } as usize;
+
         Tensor::new(IndexNode {
             parent: self.clone(),
             idx: i,
@@ -70,7 +73,7 @@ impl Tensor {
     }
 
     // add more using permute & map
-    pub fn r (&self, r: Range<usize>, dim: usize) -> Tensor {
+    pub fn r (&self, r: Range<usize>, dim: i32) -> Tensor {
         autodiff::concat(
             r.map(|i| self.i(i, dim).unsqueeze(dim)).collect::<Vec<Tensor>>(), 
             dim

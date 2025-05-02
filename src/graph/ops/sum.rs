@@ -30,7 +30,7 @@ impl NodeTrait for SumNode {
             grad.to_node().repeat(
                 |n, _| n.clone(), 
                 repeat_n, 
-                self.dim
+                self.dim as i32
             ).forward()
         ); 
     }
@@ -41,12 +41,21 @@ impl NodeTrait for SumNode {
 }
 
 impl Tensor {
-    pub fn sum (&self, dim:usize) -> Tensor {
+    pub fn sum (&self, dim:i32) -> Tensor {
+        let p_dim = self.dim().len();        
+
         Tensor::new(SumNode {
             parent: self.clone(),
-            dim,
+            dim: if dim < 0 { (p_dim as i32 + dim) as usize } else { dim as usize },
             val: None
         })
+    }
+
+    pub fn mean (&self, dim:i32) -> Tensor {
+        let p_dim = self.dim();
+        let dim = if dim < 0 { p_dim.len() as i32 + dim } else { dim };
+        let orig_dim = p_dim.get(dim as usize).unwrap().clone();
+        self.sum(dim) / (orig_dim as f64)
     }
 }
 

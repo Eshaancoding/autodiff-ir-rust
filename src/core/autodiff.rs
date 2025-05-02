@@ -140,8 +140,18 @@ pub fn execute () {
     ir_b_main_block();
     ir_b_add(EX); // add exit
     ir_optimize();
-    
+
     ir_b_execute();    // execute
+}
+
+pub fn print_and_exec () {
+    ir_b_main_block();
+    ir_b_add(EX); // add exit
+    ir_optimize();
+
+    ir_print();
+
+    ir_b_execute();
 }
 
 

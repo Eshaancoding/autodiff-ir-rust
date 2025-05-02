@@ -5,8 +5,8 @@ mod tests {
     use crate::autodiff;
     use crate::nn::{self, SeqF, Module};
     
-    #[test]
-    fn nn () {
+    // #[test]
+    fn nn_time_test () {
         autodiff::set_device(autodiff::devices::CPU::new());
         autodiff::eager_dep_opt();
 

@@ -178,10 +178,20 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
                 hms.get(a).unwrap().log2()
             );
         },
-        IRCmds::Broadcast { a, res, dim, .. } => {
+        IRCmds::Broadcast { a, res, dim, r } => {
+            // have to repeat insteda of broadcasting
+            // tensor rs has right hand broadcasting, but it's too finicky to incorperate into this.
+            // This is a naive CPU implementation... use OpenCL or other backends
+
+            let a = hms.get(a).unwrap();
+            let a_dim_len = a.size().len();
+            let mut dim_repeat: Vec<usize> = vec![];
+            for _ in 0..a_dim_len { dim_repeat.push(1); }
+            dim_repeat[*dim] = *r;
+
             hms.insert(
                 res.clone(),
-                hms.get(a).unwrap().squeeze(Some(*dim)) // tensor_rs already has right broadcasting (no left however, this may be an error in the future cases)
+                a.repeat(&dim_repeat) 
             );
         },
         IRCmds::EX => {},        // handled by execute

@@ -60,7 +60,10 @@ impl Tensor {
         Self::view(self, vec![total_size])
     }
 
-    pub fn unsqueeze (&self, dim:usize) -> Tensor {
+    pub fn unsqueeze (&self, dim:i32) -> Tensor {
+        let p_dim = self.dim().len();
+        let dim = if dim < 0 { p_dim as i32 + dim + 1 } else { dim } as usize;
+
         let mut new_dim = self.dim().clone();
         new_dim.insert(dim, 1);
         Self::view(self, new_dim)

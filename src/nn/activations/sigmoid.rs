@@ -19,3 +19,9 @@ impl SeqF for Sigmoid {
 pub fn Sigmoid () -> Sigmoid {
     Sigmoid {}
 }
+
+impl Tensor {
+    pub fn sigmoid (&self) -> Tensor {
+        1.0 / (1.0 + self.neg().exp())
+    }
+}

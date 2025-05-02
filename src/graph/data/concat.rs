@@ -42,7 +42,7 @@ impl NodeTrait for ConcatNode {
         let mut c: usize = 0;
         for i in 0..self.nodes.len() {
             let d_interest = self.nodes[i].dim()[self.dim];
-            let g = grad.to_node().r(c..(c+d_interest), self.dim).forward();
+            let g = grad.to_node().r(c..(c+d_interest), self.dim as i32).forward();
             self.nodes[i].n.borrow_mut().backward(g);
             c += d_interest;
         } 
@@ -54,7 +54,9 @@ impl NodeTrait for ConcatNode {
 }
 
 // =================== Creating Node =================== 
-pub fn concat (nodes: Vec<Tensor>, dim: usize) -> Tensor { // light wrapper in autodiff.rs
+pub fn concat (nodes: Vec<Tensor>, dim: i32) -> Tensor { // light wrapper in autodiff.rs
+    let n_dim = nodes.first().expect("Empty concat tensor").dim().len();
+    let dim = if dim < 0 { n_dim as i32 + dim } else { dim } as usize;
     Tensor::new(ConcatNode {
         nodes,
         dim,

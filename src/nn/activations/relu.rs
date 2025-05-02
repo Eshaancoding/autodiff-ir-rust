@@ -19,3 +19,9 @@ impl SeqF for ReLU {
 pub fn ReLU () -> ReLU {
     ReLU {}
 }
+
+impl Tensor {
+    pub fn relu (&self) -> Tensor {
+        self.clone() * self.more_than(&autodiff::const_val(0.0))
+    }
+}
