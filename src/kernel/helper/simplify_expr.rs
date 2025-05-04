@@ -1,6 +1,11 @@
 // The actual baseline of this code was written in ChatGPT...
 // Thanks ChatGPT!
 
+/**
+ * There is a simpler way of doing this; just optimizing at `make_minus` etc.
+ * When doing dynamic shapes, you should probably use this optimization
+ */
+
 use super::kernel_decl::{Expression, Value};
 
 impl Expression {
@@ -18,6 +23,7 @@ impl Expression {
             Remainder { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| x % y, "remainder", Expression::make_remainder),
             ShiftRight { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| x >> y, "shiftleft", Expression::make_shiftleft),
             ShiftLeft { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| x << y, "shiftright", Expression::make_shiftright),
+            BitwiseAnd { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| x & y, "bitwiseand", Expression::make_bitwiseand)
         }
     }
 
@@ -34,6 +40,19 @@ impl Expression {
         let a_simplified = Expression::simplify(a);
         let b_simplified = Expression::simplify(b);
 
+        // ================== Constant Evaluation ================== 
+        match (&a_simplified, &b_simplified) {
+            // const eval
+            (
+                Expression::Val { v: Value::Constant { val: va } },
+                Expression::Val { v: Value::Constant { val: vb } },
+            ) => {
+                return Expression::make_const(op(*va, *vb))
+            },
+            _ => {}
+        }
+
+        // ================== Equation identities ================== 
         if op_str == "add" {
             // x + 0 = x 
             match (&a_simplified, &b_simplified) {
@@ -58,6 +77,29 @@ impl Expression {
                 (expr, Expression::Val { v: Value::Constant { val: 1 } }) => { return expr.clone() },
                 _ => {}
             }
+
+            // x * 2^b = x << b (we assume that all integers are positive, not necessary true for negative)
+            match (&a_simplified, &b_simplified) {
+                (Expression::Val { v: Value::Constant { val } }, expr) => {
+                    let log_two_res = (*val as f32).log2();
+                    if log_two_res.fract() == 0.0 {
+                        return Expression::make_shiftleft(
+                            expr.clone(),
+                            Expression::make_const(log_two_res as i32),
+                        );
+                    }
+                },
+                (expr, Expression::Val { v: Value::Constant { val } }) => {
+                    let log_two_res = (*val as f32).log2();
+                    if log_two_res.fract() == 0.0 {
+                        return Expression::make_shiftleft(
+                            expr.clone(),
+                            Expression::make_const(log_two_res as i32),
+                        );
+                    }
+                },
+                _ => {}
+            }
         }
 
         if op_str == "div" {
@@ -66,6 +108,43 @@ impl Expression {
                 (expr, Expression::Val { v: Value::Constant { val: 1 } }) => { return expr.clone() },
                 _ => {}
             }
+
+            // x / (2^b) = x >> b (we assume all integers are positive; not necessary true for negative)
+            match (&a_simplified, &b_simplified) {
+                (Expression::Val { v: Value::Constant { val } }, expr) => {
+                    let log_two_res = (*val as f32).log2();
+                    if log_two_res.fract() == 0.0 {
+                        return Expression::make_shiftright(
+                            expr.clone(),
+                            Expression::make_const(log_two_res as i32),
+                        );
+                    }
+                },
+                (expr, Expression::Val { v: Value::Constant { val } }) => {
+                    let log_two_res = (*val as f32).log2();
+                    if log_two_res.fract() == 0.0 {
+                        return Expression::make_shiftright(
+                            expr.clone(),
+                            Expression::make_const(log_two_res as i32),
+                        );
+                    }
+                },
+                _ => {}
+            }
+            
+        }
+
+        fn make_opt_remainder (a: Expression, b: Expression) -> Expression {
+            if let Some(b_val) = b.get_const() {
+                let log_two_res = (b_val as f32).log2();
+                if log_two_res.fract() == 0.0 {
+                    return Expression::make_bitwiseand(
+                        a, 
+                        Expression::make_const((1 << (log_two_res as i32)) - 1)
+                    )
+                }
+            }
+            Expression::make_remainder(a, b)
         }
 
         if op_str == "remainder" {
@@ -79,29 +158,17 @@ impl Expression {
 
                     if let Some(val_a) = b.get_const() {
                         if val_b >= val_a {
-                            return Expression::make_remainder(
-                                *a.clone(), 
-                                Expression::make_const(val_a)
-                            )
+                            return make_opt_remainder(*a.clone(), Expression::make_const(val_a));
                         }
                     }
                 },
-                _ => {}
+                _ => {
+                    return make_opt_remainder(a_simplified, b_simplified);
+                }
             }
         }
 
-        match (&a_simplified, &b_simplified) {
-            
-            // const eval
-            (
-                Expression::Val { v: Value::Constant { val: va } },
-                Expression::Val { v: Value::Constant { val: vb } },
-            ) => Expression::Val {
-                v: Value::Constant { val: op(*va, *vb) },
-            },
-            
-            // else, leave untouched
-            _ => constructor(a_simplified, b_simplified),
-        }
+        // if not, just return the orig expression
+        constructor(a_simplified, b_simplified)
     }
 }

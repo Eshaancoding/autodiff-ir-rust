@@ -19,7 +19,8 @@ pub enum Expression {
     Div {a: Box<Expression>, b: Box<Expression>},
     Remainder {a: Box<Expression>, b: Box<Expression>},
     ShiftRight {a: Box<Expression>, b: Box<Expression>},
-    ShiftLeft {a: Box<Expression>, b: Box<Expression>}
+    ShiftLeft {a: Box<Expression>, b: Box<Expression>},
+    BitwiseAnd {a: Box<Expression>, b: Box<Expression>}
 }
 
 #[derive(Clone, Debug)]

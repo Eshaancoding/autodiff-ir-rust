@@ -79,7 +79,7 @@ impl<'a> MatrixTracker<'a> {
                         ndim = new_dim;
                     },
                     DataCmds::View { sink_dim, source_dim } => {
-                        let global = Expression::simplify(MatrixTracker::ndim_to_global(ndim, sink_dim));
+                        let global = MatrixTracker::ndim_to_global(ndim, sink_dim);
                         ndim = MatrixTracker::global_to_ndim(
                             global,
                             source_dim

@@ -53,6 +53,13 @@ impl Expression {
         }
     }
 
+    pub fn make_bitwiseand (a: Expression, b: Expression) -> Expression {
+        Expression::BitwiseAnd { 
+            a: Box::new(a),
+            b: Box::new(b) 
+        }
+    }
+
     pub fn make_shiftright (a: Expression, b: Expression) -> Expression {
         Expression::ShiftRight { 
             a: Box::new(a), 
@@ -61,7 +68,7 @@ impl Expression {
     }
 
     pub fn make_shiftleft (a: Expression, b: Expression) -> Expression {
-        Expression::ShiftRight { 
+        Expression::ShiftLeft { 
             a: Box::new(a), 
             b: Box::new(b) 
         }

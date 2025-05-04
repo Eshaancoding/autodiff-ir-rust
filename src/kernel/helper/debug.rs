@@ -30,9 +30,12 @@ impl Display for Expression {
             Expression::ShiftRight { a, b } => {
                 write!(f, "({} >> {})", a, b)
             },
+            Expression::BitwiseAnd { a, b } => {
+                write!(f, "({} & {})", a, b)
+            }
             Expression::Val { v }  => {
                 write!(f, "{}", v)
-            }
+            },
         }
     }
 }
