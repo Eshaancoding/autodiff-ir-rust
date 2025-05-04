@@ -6,7 +6,10 @@ This is how memory is handled within all backend kernels.
 */
 
 use std::collections::HashMap;
-use crate::{decl::{Expression, Input, Matrix}, ir::optimizations::helper::ir_to_res, IRCmds};
+use crate::{
+    ir::optimizations::helper::ir_to_res, 
+    IRCmds
+};
 use super::{AllocTracker, ShapeTracker};
 
 // Cmds that are only pertinent to data manipulation
@@ -21,24 +24,24 @@ pub enum DataCmds {
 
 #[derive(Clone, Debug)]
 pub struct VarDependency {
-    alloc_id: String,
-    source_dims: Vec<usize>,
-    sink_dims: Vec<usize>,
-    data_cmds: Vec<DataCmds>
+    pub alloc_id: String,
+    pub source_dims: Vec<usize>,
+    pub sink_dims: Vec<usize>,
+    pub data_cmds: Vec<DataCmds>
 }
 
 #[derive(Clone, Debug)]
 pub struct VarSource {
-    alloc_id: String,
-    dim: Vec<usize>
+    pub alloc_id: String,
+    pub dim: Vec<usize>
 }
 
 pub struct MatrixTracker<'a> {
     // given sink variable, get source variable and the steps to reach to sink var
-    vars: HashMap<String, VarDependency>,  
-    sources: HashMap<String, VarSource>,            // tracks source variables (no var dependency)
-    shape_tracker: ShapeTracker,                     // tracks the shape of variables
-    alloc_tracker: &'a AllocTracker<'a>
+    pub vars: HashMap<String, VarDependency>,  
+    pub sources: HashMap<String, VarSource>,            // tracks source variables (no var dependency)
+    pub shape_tracker: ShapeTracker,                     // tracks the shape of variables
+    pub alloc_tracker: &'a AllocTracker<'a>
 }
 
 impl<'a> MatrixTracker<'a> {
@@ -110,29 +113,23 @@ impl<'a> MatrixTracker<'a> {
             }
         }
 
+        // All examples are from test::nn_test::tests::nn_time_test
         if let Some(cmd) = data_cmd {
             let sink_dims = self.shape_tracker.get_shape(&res_cmp).clone();
 
-            if res_cmp == a_cmp { // referencing itself, so append to the list
-                if self.vars.contains_key(&res_cmp) {
-                    let var_m = self.vars.get_mut(&res_cmp).unwrap();
-                    var_m.data_cmds.push(cmd);
-                    var_m.sink_dims = sink_dims;
-                }
-                else {
-                    let var_source = self.sources.get(&a_cmp).unwrap().clone();
-                    self.vars.insert(
-                        res_cmp.clone(),
-                        VarDependency {
-                            alloc_id: var_source.alloc_id,
-                            source_dims: var_source.dim,
-                            data_cmds: vec![cmd],
-                            sink_dims,
-                        }
-                    );
-                    self.sources.remove_entry(&res_cmp);
-                }
+            /*
+            (14): l = l.broadcast(dim=0, r=2)
+            (15): l = l.broadcast(dim=1, r=128)           
+             */
+            if res_cmp == a_cmp && self.vars.contains_key(&res_cmp) { 
+                let var_m = self.vars.get_mut(&res_cmp).unwrap();
+                var_m.data_cmds.push(cmd);
+                var_m.sink_dims = sink_dims;
             }
+            /*
+            (7): g = 1
+            (8): o = g.view(dim=[1, 1])
+             */
             else if self.sources.contains_key(&a_cmp) { // references sources
                 let var_source = self.sources.get(&a_cmp).unwrap().clone();
                 self.vars.insert(
@@ -144,7 +141,20 @@ impl<'a> MatrixTracker<'a> {
                         sink_dims
                     }
                 );
+
+                /*
+                (12): l = 1.4426950408889634
+                (13): l = l.view(dim=[1, 1])
+                 */
+                if res_cmp == a_cmp {
+                    self.sources.remove_entry(&res_cmp);
+                }
             }
+            /*
+            (27): bz = 0.1
+            (29): ca = bz.view(dim=[1, 1])
+            (33): cb = ca.broadcast(dim=0, r=256)
+             */
             else { // referencing another variable that is in vars
                 let mut dep = self.vars.get(&a_cmp).unwrap().clone();
                 dep.data_cmds.push(cmd);
@@ -157,109 +167,9 @@ impl<'a> MatrixTracker<'a> {
         }
     }
 
-    pub fn global_to_ndim (index:Expression, shape: &Vec<usize>) -> Vec<Expression> {
-        let n = shape.len();
-        let mut strides: Vec<Expression> = vec![Expression::make_const(1); n];
-        for i in (0..(n - 1)).rev() {
-            strides[i] = Expression::make_const(strides[i+1].get_const().unwrap() * shape[i+1] as i32);
-        }
-
-        let nd_index: Vec<Expression> = (0..n)
-            .map(|i| 
-                Expression::make_remainder(
-                    Expression::make_div(
-                        index.clone(),
-                        strides[i].clone()
-                    ), 
-                    Expression::make_const(shape[i] as i32)
-                )
-            )
-            .collect();
-
-        nd_index
+    pub fn print_alloc_tracker (&self) {
+        println!("{}", self.alloc_tracker);
     }
 
-    pub fn ndim_to_global (dim: Vec<Expression>, shape: &Vec<usize>) -> Expression {
-        let mut global_expr = Expression::make_mult(
-            dim[0].clone(),
-            Expression::make_const(shape[0] as i32)
-        );
-
-        for i in 1..shape.len() {
-            global_expr = Expression::make_add(
-                global_expr,
-                Expression::make_mult(
-                    dim[i].clone(), 
-                    Expression::make_const(shape[i] as i32) 
-                )
-            );
-        }
-
-        global_expr
-    }
-
-    pub fn get_input (&self, id: String) -> Input {
-        if self.vars.contains_key(&id) {
-            let var_dep = self.vars.get(&id).unwrap();
-            let sink_shape = &var_dep.sink_dims;
-            let source_shape = &var_dep.source_dims;
-
-            // go from global index --> N-dim index
-            let mut ndim = MatrixTracker::global_to_ndim(
-                Expression::make_global(),
-                &sink_shape
-            );
-            
-            // manipulate the ndim expression thru data cmds in reverse
-            for cmd in var_dep.data_cmds.iter().rev() {
-                match cmd { 
-                    DataCmds::Broadcast { dim, .. } => {
-                        ndim[*dim] = Expression::make_const(0);
-                    },
-                    DataCmds::Index { index, dim } => {
-                        ndim[*dim] = Expression::make_const(*index as i32);
-                    },
-                    DataCmds::Permute { p } => {
-                        let mut new_dim = vec![Expression::make_const(0); ndim.len()];
-                        for i in 0..ndim.len() {
-                            new_dim[i] = ndim[p[i]].clone()
-                        }
-                        ndim = new_dim;
-                    },
-                    DataCmds::View { sink_dim, source_dim } => {
-                        ndim = MatrixTracker::global_to_ndim(
-                            MatrixTracker::ndim_to_global(ndim, sink_dim),
-                            source_dim
-                        );
-                    },
-                    DataCmds::Concat => {} // TODO!
-                }
-            }
-
-            // then, we can return the expression
-            Input::Mat { 
-                mat: Matrix {
-                    id: var_dep.alloc_id.clone(),
-                    access: MatrixTracker::ndim_to_global(ndim, source_shape),
-                }
-            }
-        } 
-        else if self.sources.contains_key(&id) {
-            let source_res = self.sources.get(&id).unwrap().clone();
-
-            Input::Mat { 
-                mat: Matrix { 
-                    id: source_res.alloc_id,
-                    access: Expression::make_global()
-                }
-            }
-        } else {
-            panic!("Unable to get matrix information on var {}", id);
-        }
-    }
-
-    pub fn print (&self) {
-        println!("Sources: {:#?}", self.sources);
-        println!("Vars: {:#?}", self.vars);
-    }
+   
 }

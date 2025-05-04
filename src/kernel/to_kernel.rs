@@ -10,14 +10,18 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
             alloc_tracker.step(cmd);
         }     
     }
-    alloc_tracker.print();
 
-    let mut idx_tracker = MatrixTracker::new(&alloc_tracker);
+    let mut mat_tracker = MatrixTracker::new(&alloc_tracker);
     for (_, b_cmds) in cmds.iter() { 
         for cmd in b_cmds {
-            idx_tracker.step(cmd);
+            mat_tracker.step(cmd);
         }
-        idx_tracker.print();
-        break;
     }
+
+    mat_tracker.print_alloc_tracker();
+
+    // DEBUG MAT TRACKER AND ACCESS EXPR
+    let var_name = "bn";
+    mat_tracker.print_raw(&var_name.to_string());
+    println!("{}:\n\t{}", var_name, mat_tracker.get_input(var_name.to_string()));
 }

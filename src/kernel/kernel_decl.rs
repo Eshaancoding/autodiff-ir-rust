@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Value {
     Constant { val: i32 },
     BlockX,  // block x - unique to each thread 
@@ -10,27 +10,26 @@ pub enum Value {
 
 // shorthand expressions
 // mostly used for index accessing
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Expression {
     Val {v: Value},
     Add {a: Box<Expression>, b: Box<Expression>},
     Minus {a: Box<Expression>, b: Box<Expression>},
     Mult {a: Box<Expression>, b: Box<Expression>},
     Div {a: Box<Expression>, b: Box<Expression>},
-    IntDiv {a: Box<Expression>, b: Box<Expression>},
     Remainder {a: Box<Expression>, b: Box<Expression>},
     ShiftRight {a: Box<Expression>, b: Box<Expression>},
     ShiftLeft {a: Box<Expression>, b: Box<Expression>}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Matrix {
     pub id: String,        // id of the alloc (we replace this id with a pointer at device)
     pub access: Expression // note that access expressions can vary between the type of kernels.
 }
 
 // input matrix could be two types: a matrix or a matrix concat (if matrix concat, then we have to access two seperate memory locations within kernel)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Input {
     Constant { val: f64 }, 
     Mat { mat: Matrix },
@@ -42,19 +41,19 @@ pub enum Input {
     }, 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum BinaryOp {
     Add,
     Multiply
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ReduceOp {
     Sum,
     Max 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum UnaryOp {
     Exp2,
     Log2,
@@ -67,7 +66,7 @@ pub enum UnaryOp {
     LessZero
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Kernels {
     // binary kernels, such as a + b or a * b
     Binary {  

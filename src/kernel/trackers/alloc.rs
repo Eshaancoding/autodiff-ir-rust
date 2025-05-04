@@ -16,7 +16,7 @@ pub struct AllocEntry<'a> {
 pub struct AllocTracker<'a> {
     id_var: u32,
     shape_tracker: ShapeTracker,
-    vars: HashMap<String, AllocEntry<'a>>,  // ir id --> Var Entry
+    pub vars: HashMap<String, AllocEntry<'a>>,  // ir id --> Var Entry
     // note that var entry id IS NOT THE SAME as IR id
 }
 
@@ -90,10 +90,6 @@ impl<'a> AllocTracker<'a> {
 
     pub fn get_alloc (&self, id: &String) -> &AllocEntry {
         self.vars.get(id).unwrap()
-    }
-    
-    pub fn print (&self) {
-        println!("{:#?}", self.vars);
     }
     
 }

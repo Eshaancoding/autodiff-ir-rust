@@ -1,4 +1,4 @@
-use super::decl::{Expression, Value};
+use super::kernel_decl::{Expression, Value};
 
 
 impl Expression {
@@ -18,17 +18,24 @@ impl Expression {
         Expression::Val { v: Value::Constant { val: v } }
     }
 
-    pub fn make_mult (a: Expression, b: Expression) -> Expression {
-        Expression::Mult { 
+    pub fn make_add (a: Expression, b: Expression) -> Expression {
+        Expression::Add { 
+            a: Box::new(a),
+            b: Box::new(b)
+        }
+    }
+    
+    pub fn make_minus (a: Expression, b: Expression) -> Expression {
+        Expression::Minus { 
             a: Box::new(a),
             b: Box::new(b) 
         }
     }
 
-    pub fn make_add (a: Expression, b: Expression) -> Expression {
-        Expression::Add { 
+    pub fn make_mult (a: Expression, b: Expression) -> Expression {
+        Expression::Mult { 
             a: Box::new(a),
-            b: Box::new(b)
+            b: Box::new(b) 
         }
     }
 
@@ -46,13 +53,23 @@ impl Expression {
         }
     }
 
+    pub fn make_shiftright (a: Expression, b: Expression) -> Expression {
+        Expression::ShiftRight { 
+            a: Box::new(a), 
+            b: Box::new(b) 
+        }
+    }
+
+    pub fn make_shiftleft (a: Expression, b: Expression) -> Expression {
+        Expression::ShiftRight { 
+            a: Box::new(a), 
+            b: Box::new(b) 
+        }
+    }
+
     pub fn make_global () -> Expression {
         Expression::Val { v: Value::Global }
     }
 
-    pub fn optimize () {
-        // optimize expression
-        // constant simplification
-        // shift right and shift left!
-    }
+    
 }

@@ -1,6 +1,5 @@
-use crate::decl::{Input, Matrix};
-
-use super::decl::Kernels;
+use crate::kernel_decl::{Input, Matrix};
+use super::kernel_decl::Kernels;
 
 // get the needed input matrixes for a kernel
 // this is necessary to find the number of matrixes to enter into the kernel function
