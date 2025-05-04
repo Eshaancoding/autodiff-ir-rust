@@ -112,12 +112,43 @@ Our IR also consists of basic control, including
 4. While loops
 
 ## To do
+
+### Rust Codebase
 * In general:
     * use references instead of excessive clones
 
-========== To complete the autodiff lib ========== 
-==== All of this will prolly be completed at Stanford itself ====
+### Backend
 
+* automatic allocation and deallocation within CUDA graph
+    * tracing through BRs will be challenging, however...
+    * for now, we are allocating everything at the beginning of program and deallocating everything at the end of the program
+        * terrible memory optimization D:
+
+* Kernel Fusion
+    * do basic multiple binary/unary kernel fusion
+    * anyway to do dotprod fusion?  
+        * similar to flash attention
+        * look into optimized [cuda matmul kernel](https://siboehm.com/articles/22/CUDA-MMM)
+        * even better optimization for [kernels](https://salykova.github.io/sgemm-gpu)
+        * technically, there's even more [kernels at llm.c](https://github.com/karpathy/llm.c/tree/master/dev/cuda)
+        * life is not all that simple now is it hehe
+
+* parameter launch optimization + others you see at pytorch.
+
+* CPU --> GPU feeder 
+    * aka dataset
+
+* Dynamic Shape
+
+* Cuda graphs
+    * have to use BR compiler hints in order to determine while or if statement
+    * you may also need to send extra compiler hints 
+    * skdjfksjdfkjsdkfjskdfjksdjf that's also going to be pretty weird.
+
+* Support for kernel fusion of dot prod + other operations
+    * this is essential to 
+     
+### NN
 * ~~Softmax~~
 * ~~ReLU~~
 * Different losses: 
@@ -153,9 +184,7 @@ Our IR also consists of basic control, including
     * vstack, hstack <-- simple wrapper over cat
     * split tensor
     * tile
-
-* DataLoader
-
+* DataLoader (use feeder)
 * Simple operations:
     * abs
     * random trig/almost trig funcs: 
@@ -169,26 +198,13 @@ Our IR also consists of basic control, including
     * more random distribution generators
         * berournelli, etc.
 
-## IR Optimization
-
 ### LN (linear algbera) IR
-* ~~Memory stop redudancy~~
-    * ~~Then after that, you can turn into +=, *=, etc. (last stage of pipeline)~~
-
-* ~~Graph pruning for useless/unread values~~
-    * ~~If ids will never read and are still be computed/no dependency, then don't include the operation at all~~
-    * ~~Need to turn a sequence of instructions into a graph first~~
-
 * View removal
     * If multiple views in sequence, just turn it into the one single view (the last view operation)
+    * if view is already in shape, then delete
 
 * Remove double permutations
     * if `b = a.permute([1, 0])` followed by `c = b.permute([1, 0])`, this is the same as the original input `a`
-
-* ~~Duplicate operations / branches~~
-    * ~~if the operation references same application and operation, then just keep one & calculate~~
-    * ~~note that this can be for entire branches (sum, sum, view) or (view, broadcast, broadcast);~~
-        * ~~find some way to graphically/algorithmically find this~~
 
 * Constant evaluator: including 0 and 1 tracking
     * 0 * val --> 0; optimize
@@ -201,16 +217,10 @@ Our IR also consists of basic control, including
     * Then you can improve the IR optimizations as well. 
         * etc. etc. etc. 
 
-* ~~Put references as close as possible to decl~~
-    * ~~Proximity optimization~~
-    * ~~Good for future for memory.~~
-    * ~~bottom->up opt~~
-    * ~~up->bottom opt~~
-
 ## Why Rust?
 
 Put simply, I can write a lot less code with Rust rather than C++. I love the organization of files in Rust. Plus, the memory safety features are a big plus (although, I do abuse them somewhat with `Rc<RefCell>`). 
 
 Admittedly, it took a while for me to organize the overall organization of this repository (took over 3 rewrites). But after that, it was smooth sailing from there.
 
-However, some of Rust is a hindrance. Namely, the fact that AVX512 are not fully supported (even if it is, I would have to use nightly rust). I would love [that feature](https://github.com/rust-lang/rust/issues/111137). Second, most underlying backends - NVIDIA Toolkit, OpenCL, etc. - *anyways* use C++ (who said safety was guaranteed in this repo?). Hell, I am generating kernels written in C++ syntax within rust. This is not necessarily a "hindrance", but it's kinda funny to me.
+However, some of Rust is a hindrance. Namely, the fact that AVX512 are not fully supported (even if it is, I would have to use nightly rust). I would love [that feature](https://github.com/rust-lang/rust/issues/111137). Second, most underlying backends - NVIDIA Toolkit, OpenCL, etc. - *anyways* use C++. Hell, I am generating kernels written in C++ syntax within rust. This is not necessarily a "hindrance", but it's kinda funny to me.

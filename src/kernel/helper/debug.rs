@@ -4,7 +4,7 @@ Extremely helpful for debugging everything (kernel fusion, expression, trackers,
 */
 
 use std::fmt::Display;
-use super::{kernel_decl::{Expression, Input, Matrix, Value}, trackers::{AllocTracker, MatrixTracker}};
+use super::{kernel_decl::{Expression, Input, Matrix, Value}, trackers::AllocTracker};
 
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -49,18 +49,6 @@ impl Display for Value {
         match self {
             Value::Constant { val } => {
                 write!(f, "{}", val)
-            },
-            Value::BlockX => {
-                write!(f, "#blockX")
-            },
-            Value::BlockY => {
-                write!(f, "#blockY")
-            },
-            Value::ThreadX => {
-                write!(f, "#threadX")
-            },
-            Value::ThreadY => {
-                write!(f, "#threadY")
             },
             Value::Global => {
                 write!(f, "#global")

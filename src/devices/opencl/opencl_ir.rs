@@ -1,19 +1,18 @@
 use indexmap::IndexMap;
 
-use crate::{to_kernel::to_kernel, Device, ValueData};
+use crate::{to_kernel::to_kernel, Device, ValueData, IRCmds};
 
 pub struct OpenCL {
-    tensor_hmap: IndexMap<String, ValueData>
 }
 
 impl OpenCL {
     pub fn new () -> OpenCL {
-        OpenCL { tensor_hmap: IndexMap::new() }
+        OpenCL {  }
     }
 }
 
 impl Device for OpenCL {
-    fn execute (&mut self, cmds: IndexMap<String, Vec<crate::IRCmds>>) {
+    fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
         let _ = to_kernel(&cmds); // use to kernel method
     }
 

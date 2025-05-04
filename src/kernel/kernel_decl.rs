@@ -1,10 +1,6 @@
 #[derive(Clone, Debug)]
 pub enum Value {
     Constant { val: i32 },
-    BlockX,  // block x - unique to each thread 
-    BlockY,  // block y - unique to each thread
-    ThreadX, // thread X - unique to each thread
-    ThreadY, // thread Y - unique to each thread.
     Global,  // global idx - unique to each thread
 }
 
@@ -26,7 +22,8 @@ pub enum Expression {
 #[derive(Clone, Debug)]
 pub struct Matrix {
     pub id: String,        // id of the alloc (we replace this id with a pointer at device)
-    pub access: Expression // note that access expressions can vary between the type of kernels.
+    pub access: Expression // note that access expressions can vary between the type of kernels. (sum vs. elw)
+    // we use row-major (C++ like) and zero-indexing (C++ like)
 }
 
 // input matrix could be two types: a matrix or a matrix concat (if matrix concat, then we have to access two seperate memory locations within kernel)
@@ -68,7 +65,7 @@ pub enum UnaryOp {
 }
 
 #[derive(Clone, Debug)]
-pub enum Kernels {
+pub enum ComputeInstr {
     // binary kernels, such as a + b or a * b
     Binary {  
         a: Input,
@@ -85,6 +82,8 @@ pub enum Kernels {
     },  
 
     // dot product kernels
+    // note that the access expression for a, b, and res are in terms of global idx. You'd have to convert to local group --> global at dot prod kernel
+    // This could be improved in the future
     DotProd { 
         a: Input,
         b: Input,
@@ -104,6 +103,15 @@ pub enum Kernels {
     Movement { 
         a: Input,
         res: Matrix
-    }
+    },
+
+    // Control functions
+    BR {block_id: String},
+    BRE {block_id: String, a: String},
+    BRZ {block_id: String, a: String},
+    EX
 }
 
+
+
+// General kernel class (compute instr --> kernel --> device)

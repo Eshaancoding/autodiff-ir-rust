@@ -1,5 +1,5 @@
 use crate::kernel_decl::{Expression, Input, Matrix};
-use super::trackers::{DataCmds, MatrixTracker, VarDependency, VarSource};
+use super::trackers::{DataCmds, MatrixTracker};
 
 impl<'a> MatrixTracker<'a> {
     pub fn calc_stride (shape: &Vec<usize>) -> Vec<Expression> {
@@ -50,9 +50,9 @@ impl<'a> MatrixTracker<'a> {
         global_expr
     }
 
-    pub fn get_input (&self, id: String) -> Input {
-        if self.vars.contains_key(&id) {
-            let var_dep = self.vars.get(&id).unwrap();
+    pub fn get_mat (&self, id: &String) -> Matrix {
+        if self.vars.contains_key(id) {
+            let var_dep = self.vars.get(id).unwrap();
             let sink_shape = &var_dep.sink_dims;
             let source_shape = &var_dep.source_dims;
 
@@ -90,27 +90,30 @@ impl<'a> MatrixTracker<'a> {
             }
 
             // then, we can return the expression
-            Input::Mat { 
-                mat: Matrix {
-                    id: var_dep.alloc_id.clone(),
-                    access: Expression::simplify(
-                        MatrixTracker::ndim_to_global(ndim, source_shape)
-                    ),
-                }
+            Matrix {
+                id: var_dep.alloc_id.clone(),
+                access: Expression::simplify(
+                    MatrixTracker::ndim_to_global(ndim, source_shape)
+                )
             }
         } 
-        else if self.sources.contains_key(&id) {
-            let source_res = self.sources.get(&id).unwrap().clone();
+        else if self.sources.contains_key(id) {
+            let source_res = self.sources.get(id).unwrap().clone();
 
-            Input::Mat { 
-                mat: Matrix { 
-                    id: source_res.alloc_id,
-                    access: Expression::make_global()
-                }
+            Matrix { 
+                id: source_res.alloc_id,
+                access: Expression::make_global()
             }
         } else {
             panic!("Unable to get matrix information on var {}", id);
         }
+    }
+
+    pub fn get_input (&self, id: &String) -> Input {
+        // check if constant
+        // check if concat
+
+        Input::Mat { mat: self.get_mat(id) } 
     }
 
     // for debugging
