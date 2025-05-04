@@ -83,7 +83,7 @@ pub enum ComputeInstr {
 
     // dot product kernels
     // note that the access expression for a, b, and res are in terms of global idx. You'd have to convert to local group --> global at dot prod kernel
-    // This could be improved in the future
+    // This will be improved in the future; dot product kernels are an entire can of worms that you really don't want to enter.
     DotProd { 
         a: Input,
         b: Input,
@@ -113,5 +113,3 @@ pub enum ComputeInstr {
 }
 
 
-
-// General kernel class (compute instr --> kernel --> device)

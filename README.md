@@ -126,12 +126,16 @@ Our IR also consists of basic control, including
 
 * Kernel Fusion
     * do basic multiple binary/unary kernel fusion
+    * dot prod impl is kinda wacky
+        * access expression assumes global id...
     * anyway to do dotprod fusion?  
         * similar to flash attention
         * look into optimized [cuda matmul kernel](https://siboehm.com/articles/22/CUDA-MMM)
         * even better optimization for [kernels](https://salykova.github.io/sgemm-gpu)
         * technically, there's even more [kernels at llm.c](https://github.com/karpathy/llm.c/tree/master/dev/cuda)
         * life is not all that simple now is it hehe
+    * you need more knowledge of all of this before you go into this optimizations
+        * not sure if you can beat hand-tune optimizations
 
 * parameter launch optimization + others you see at pytorch.
 
