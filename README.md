@@ -118,14 +118,14 @@ Our IR also consists of basic control, including
 ========== To complete the autodiff lib ========== 
 ==== All of this will prolly be completed at Stanford itself ====
 
-* Softmax 
-* ReLU (grad would be interesting; maybe add a piecewise forward node or something)
+* ~~Softmax~~
+* ~~ReLU~~
 * Different losses: 
     * Cross entropy
     * MSE
     * etc.
-* RmsNorm   <-- Needed for Transformer
-* LayerNorm <-- Needed for Transformer
+* ~~RmsNorm   <-- Needed for Transformer~~
+* ~~LayerNorm <-- Needed for Transformer~~
 * Dropout   <-- Dropout
 * All of the above operations should be enough for building up to attention
 * Transformer

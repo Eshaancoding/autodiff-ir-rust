@@ -29,6 +29,7 @@ impl IRBase {
 
         result.chars().rev().collect() 
     }
+
     pub fn add_cmd (&mut self, cmd: IRCmds) {
         let v = self.cmds.entry(self.current_block.clone()).or_insert(vec![]);
         v.push(cmd);

@@ -1,19 +1,23 @@
-use std::collections::HashMap;
-
 use indexmap::IndexMap;
 use crate::IRCmds;
-use super::decl::{Kernels, Matrix};
+use super::trackers::{AllocTracker, MatrixTracker};
 
 pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
-    let mut kernels: IndexMap<String, Vec<Kernels>> = IndexMap::new();
-    let mut matrixes: HashMap<String, Matrix> = HashMap::new();
-    let mut constants: HashMap<String, f64> = HashMap::new();
-    let mut allocations: HashMap<String, usize> = HashMap::new(); // allocations to define with length of allocation provided.
+    let mut alloc_tracker = AllocTracker::new();
 
-    // 
-    for (block_name, b_cmds) in cmds.iter() { 
+    for (_, b_cmds) in cmds.iter() { 
         for cmd in b_cmds {
-            
+            alloc_tracker.step(cmd);
+        }     
+    }
+    alloc_tracker.print();
+
+    let mut idx_tracker = MatrixTracker::new(&alloc_tracker);
+    for (_, b_cmds) in cmds.iter() { 
+        for cmd in b_cmds {
+            idx_tracker.step(cmd);
         }
+        idx_tracker.print();
+        break;
     }
 }

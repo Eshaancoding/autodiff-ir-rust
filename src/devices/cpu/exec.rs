@@ -131,9 +131,6 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
             );
         },
         IRCmds::Sum { a, dim, res } => {
-            if hms.get(a).is_none() {
-                println!("SUM A: {}", a);
-            }
             hms.insert(
                 res.clone(),
                 hms.get(a).unwrap().sum(Some(&[*dim]), false)
