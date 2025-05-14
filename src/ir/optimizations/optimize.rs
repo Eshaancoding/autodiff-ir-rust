@@ -43,8 +43,6 @@ pub fn ir_optimize () {
         
         prev_max_val = Some(max_val);
     }
-    // prox_rev_opt(&mut irb.cmds);
-    // aggr_spatial_opt(&mut irb.cmds);
 
     dep_opt(&mut irb.cmds);  // we may have deleted a few things, so it doesn't hurt to delete things that are not referenced again
 

@@ -16,9 +16,14 @@ impl CPU  {
             hmap: IndexMap::new(),
         }
     }
+
+    pub fn better_execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
+    }
 }
 
 impl Device for CPU {
+    
+
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
         let mut hms: IndexMap<String, GenTensor<f64>> = IndexMap::new();
         

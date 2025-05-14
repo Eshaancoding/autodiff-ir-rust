@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use indexmap::IndexMap;
-use crate::{kernel_decl::{BinaryOp, ComputeInstr, ReduceOp, UnaryOp}, to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, IRCmds};
+use crate::{kernel_decl::{ComputeInstr, ReduceOp}, to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, IRCmds};
 use super::trackers::{AllocTracker, MatrixTracker};
 
 pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {

@@ -133,6 +133,13 @@ Our IR also consists of basic control, including
         * look into optimized [cuda matmul kernel](https://siboehm.com/articles/22/CUDA-MMM)
         * even better optimization for [kernels](https://salykova.github.io/sgemm-gpu)
         * technically, there's even more [kernels at llm.c](https://github.com/karpathy/llm.c/tree/master/dev/cuda)
+        * more kernel opt (+ read kernel fusion) [here](https://mesozoic-egg.github.io/tinygrad-notes/20241203_beam.html)
+        * transpose operator faster: [here](https://veitner.bearblog.dev/making-matrix-transpose-really-fast-on-hopper-gpus/)
+            * prolly uses this: [here](https://veitner.bearblog.dev/tma-introduction/)
+        * even faster kernel stuff for generation: [here](https://www.together.ai/blog/chipmunk)
+            * The entire purpose of **TogetherAI** is optimizing kernels in a way.
+        * There are more and more special features of hardware on more and more GPUs:
+            * [link](https://tridao.me/blog/2024/flash3/)
         * life is not all that simple now is it hehe
     * you need more knowledge of all of this before you go into this optimizations
         * not sure if you can beat hand-tune optimizations
@@ -227,4 +234,4 @@ Put simply, I can write a lot less code with Rust rather than C++. I love the or
 
 Admittedly, it took a while for me to organize the overall organization of this repository (took over 3 rewrites). But after that, it was smooth sailing from there.
 
-However, some of Rust is a hindrance. Namely, the fact that AVX512 are not fully supported (even if it is, I would have to use nightly rust). I would love [that feature](https://github.com/rust-lang/rust/issues/111137). Second, most underlying backends - NVIDIA Toolkit, OpenCL, etc. - *anyways* use C++. Hell, I am generating kernels written in C++ syntax within rust. This is not necessarily a "hindrance", but it's kinda funny to me.
+However, some of Rust is a hindrance. I would love [that feature](https://github.com/rust-lang/rust/issues/111137). Second, most underlying backends - NVIDIA Toolkit, OpenCL, etc. - *anyways* use C++. Hell, I am generating kernels written in C++ syntax within rust. This is not necessarily a "hindrance", but it's kinda funny to me.

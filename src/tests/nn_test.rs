@@ -8,7 +8,7 @@ mod tests {
     #[test]
     // #[ignore]
     fn nn_time_test () {
-        autodiff::set_device(autodiff::devices::OpenCL::new());
+        autodiff::set_device(autodiff::devices::CPU::new());
         autodiff::eager_dep_opt();
 
         let mut neural_net = nn::Sequential();
@@ -22,7 +22,7 @@ mod tests {
         let mut res = autodiff::empty();
         
         // prev: 0..1000        
-        autodiff::ir_for(0..1, |_| {
+        autodiff::ir_for(0..100, |_| {
             let y = neural_net.f(x.clone());
             opt.zero_grad();
             y.forward();
