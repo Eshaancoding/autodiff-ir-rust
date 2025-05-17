@@ -7,6 +7,7 @@ pub mod constant;
 pub mod ir;
 pub mod control;
 pub mod dependency;
+pub mod env;
 
 pub use autodiff::*;
 pub use node::*;
@@ -16,3 +17,4 @@ pub use value_data::*;
 pub use constant::*;
 pub use ir::*;
 pub use dependency::*;
+pub use env::*;

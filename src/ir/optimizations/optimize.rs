@@ -1,10 +1,12 @@
 // use crate::ir_print;
-use crate::IRB;
+use crate::{core::env_flags::disable_ir_opt, IRB};
 
 use super::{helper::get_score, opts::*};
 
 pub fn ir_optimize () {
-
+    // skip opt if we don't want it
+    if disable_ir_opt() { return; }
+    
     let mut guard = IRB.lock().unwrap();
     let irb = guard.as_mut().expect("Can't unpack IRBuilder");
     

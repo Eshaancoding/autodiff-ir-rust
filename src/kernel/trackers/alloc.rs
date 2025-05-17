@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-
 use crate::{ir::optimizations::helper::ir_to_res, IRCmds};
-
 use super::ShapeTracker;
 
 #[derive(Clone, Debug)]

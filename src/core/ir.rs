@@ -34,7 +34,8 @@ pub enum IRCmds {
 
     /* 
     Technically, Dot Product CAN BE expressed with Sum and ElwMult. In fact, this is what TinyGrad does
-    However, I recognize that there are very specific, optimized implementations of Dot Product (ex: CUBLAS) 
+    However, I recognize that there are very specific, optimized implementations of Dot Product (CUBLAS)
+    TinyGrad does recognizes this and applies these specific opts implementations if necessary, but descerning them from list of IR instructions POV is weird.
     Considering its importance in machine learning, I decided to seperate it to a seperate command itself.
     */
     DotProduct {a: String, b: String, res: String},         // (a,b) x (b,c) --> (a,c). Both tensors are 2-dim.

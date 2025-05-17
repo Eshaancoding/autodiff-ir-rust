@@ -39,7 +39,7 @@ pub struct VarSource {
 pub struct MatrixTracker<'a> {
     // given sink variable, get source variable and the steps to reach to sink var
     pub vars: HashMap<String, VarDependency>,  
-    pub sources: HashMap<String, VarSource>,            // tracks source variables (no var dependency)
+    pub sources: HashMap<String, VarSource>,             // tracks source variables (no var dependency)
     pub shape_tracker: ShapeTracker,                     // tracks the shape of variables
     pub alloc_tracker: &'a AllocTracker<'a>
 }
