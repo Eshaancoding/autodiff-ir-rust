@@ -43,11 +43,44 @@ impl NodeTrait for ViewNode {
 
 // ================== Creating Node ================== 
 impl Tensor {
+    pub fn handle_minus_dim (source_dim: Vec<usize>, target_dim: Vec<usize>) -> Vec<usize> {
+        // check if -1
+        let mut minus_one_dim: Option<usize> = None;
+        let mut new_dim = target_dim.clone();
+        let mut res_dim: i32 = 1
+        let mut total_dim: i32 = 1;
+
+        for i, dim in target_dim.iter().enumerate() {
+            if dim == -1 {
+                if minus_one_dim.is_some() { panic!("-1 at view is allowed only once") }
+                minus_one_dim = Some(i);
+            }
+            else {
+                res_dim *= dim;
+            }
+            total_dim *= source_dim.get(i).unwrap()
+        }
+
+        // change
+        if let Some(idx) = minus_one_dim {
+            assert_eq(total_dim % res_dim == 0, "Can't fill -1 dim")
+            minus_one_dim[idx] = total_dim / res_dim;
+        }
+
+        new_dim
+    }
+
+    // you have to refactor the target dim such that it is i32 instead of usize
+
     pub fn view (&self, target_dim: Vec<usize>) -> Tensor {
-        if target_dim != self.dim() {
+        let source_dim = self.dim();
+        if target_dim != source_dim {
+            
+            
+            // new view node
             Tensor::new(ViewNode {
                 parent: self.clone(),
-                target_dim,
+                target_dim: new_dim,
                 val: None
             })
         } else {

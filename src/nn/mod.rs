@@ -4,9 +4,11 @@ pub mod module;
 pub mod opt;
 pub mod sequential;
 pub mod norm;
+pub mod transformer;
 
 pub use activations::*;
 pub use linear::*;
 pub use module::*;
 pub use sequential::*;
 pub use norm::*;
+pub use transformer::*;
