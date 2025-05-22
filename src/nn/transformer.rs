@@ -2,10 +2,13 @@
 use crate::{autodiff, Tensor, Module};
 use crate::nn::Linear;
 
+use super::SeqF;
+
 // ======================= Attention ======================= 
 
 // add masking
 // change to bmm (impl first, using view and dot)
+#[allow(non_snake_case)]
 pub fn Attention (Q:Tensor, K:Tensor, V:Tensor, d_model:i32) -> Tensor {
     autodiff::dot(
         (
@@ -19,27 +22,27 @@ pub fn Attention (Q:Tensor, K:Tensor, V:Tensor, d_model:i32) -> Tensor {
 // ======================= MultiHead Attention ======================= 
 
 pub struct MultiHeadAttention {
-    pub WQ: Linear,
-    pub WK: Linear,
-    pub WV: Linear,
+    pub wq: Linear,
+    pub wk: Linear,
+    pub wv: Linear,
     pub num_heads: u32, 
 }
 
-pub Module for MultiHeadAttention {
+impl Module for MultiHeadAttention {
     fn params (&self) -> Vec<Tensor> { 
-        vec![self.WQ.clone(), self.WK.clone(), self.WV.clone() ] 
+        vec![self.wq.params(), self.wk.params(), self.wv.params() ].concat()
     }
 }
 
-pub SeqF for MultiHeadAttention {
-    fn f (&self, x: Tensor) -> Tensor {
-        
-    }
-}
+// impl SeqF for MultiHeadAttention {
+//     fn f (&self, x: Tensor) -> Tensor {
+         
+//     }
+// }
 
-#[allow(non_snake_case)]
-pub fn MultiHeadAttention (d_model: u32, num_heads: u32) -> MultiHeadAttention {
-    
-}
+// #[allow(non_snake_case)]
+// pub fn MultiHeadAttention (d_model: u32, num_heads: u32) -> MultiHeadAttention {
+     
+// }
 
 // ======================= MultiHead Attention ======================= 
