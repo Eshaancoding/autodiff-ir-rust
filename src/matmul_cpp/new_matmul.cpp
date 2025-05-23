@@ -9,23 +9,30 @@
 #include <string.h>
 #include <stdint.h>
 #include <sys/stat.h>
+#include <random>
 
 // confirmed by lscpu
 #ifndef NTHREADS
     #define NTHREADS 8
 #endif
 
+#define DEBUG 
+
 #define PRAGMA_OMP_PARALLEL_FOR _Pragma("omp parallel for schedule(dynamic) num_threads(8)")
 
 // params (all should be powers of 2, ideally)
-#define B 64
-#define I 512
-#define O 512
+#define B 256
+#define I 256
+#define O 256
 
 #define O_CACHE 8
 #define B_CACHE 16
 
-#define NUM_TRIALS 20
+#ifdef DEBUG
+    #define NUM_TRIALS 1
+#else
+    #define NUM_TRIALS 100
+#endif
 
 // if using __mm256, use 8
 // if using __mm512, use 16
@@ -38,12 +45,15 @@ float temp = 0.0;
 
 // Initialize randomized matrix
 void init_rand(float* mat, size_t n_elem) {
+    const unsigned int seed = 42;
+    std::mt19937 generator(seed); // ensures that the random number generator will be the same throughout iterations
+
+    // Mean = 0.0, Standard deviation = 1.0 (standard normal distribution)
+    std::normal_distribution<double> distribution(0.0, 1.0);
+   
+    srand(time(NULL));
     for (size_t i = 0; i < n_elem; i++) {
-        if (rand() % 2 == 0) {
-            mat[i] = rand() / (float)RAND_MAX;
-        } else {
-            mat[i] = -rand() / (float)RAND_MAX;
-        }
+        mat[i] = distribution(generator);
     }
 }
 
@@ -54,26 +64,17 @@ uint64_t timer() {
     return (uint64_t)start.tv_sec * 1000000000 + (uint64_t)start.tv_nsec;
 }
 
-// ============= Reverse Skip Caching =============
-inline void rs_cache (float* arr, size_t W, size_t H) {
-    /* 
-    cache size usually 64 bytesfloat is 4 bytes
-    for less branch stuff --> we use 4 bytes
-    idea: start from the size of L2 cache?
-    also do an ablation test on whether rs cache actually works (and skipping works)
-    */
 
-    for (int i = W*H-16; i >= 0; i -= 96) {  
-        volatile float* vptr = &arr[i]; // tell compiler not to delete the memory loads (for cache)
-        float v = vptr[0];
-        v = vptr[-16];
-        v = vptr[-32];
-        v = vptr[-48];
-        v = vptr[-64];
-        v = vptr[-80];
+void print_m256(__m256 vec) {
+    alignas(32) float values[8];  // aligned memory for AVX
+    _mm256_storeu_ps(values, vec);  // store vec into values
+
+    std::cout << "Contents of __m256: ";
+    for (int i = 0; i < 8; ++i) {
+        std::cout << values[i] << " ";
     }
+    std::cout << std::endl;
 }
-
 
 // ============= Dot prod =============
 // function computation that happens at each core
@@ -99,7 +100,7 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
                 At GPU there will be multiple types of kernels that will specialize in specific dimensions & operations (if needed)
                 */
                 float* a_start = &A[B_size*i_idx + b_cache_idx]; 
-                float* w_start = &W[O_size*i_idx + o_cache_idx + w_loc_offset];
+                float* w_start = &W[total_O*i_idx + o_cache_idx + w_loc_offset];
                  
                 for (int w_tiny = 0; w_tiny < (O_CACHE/8); w_tiny += 1) { // change 8 to 16 to _mm512
                     __m256 m = _mm256_load_ps(&w_start[w_tiny*8]);
@@ -135,7 +136,9 @@ void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_siz
     assert(O_CACHE % 8 == 0);
     assert(B_size % B_CACHE == 0);
 
-    PRAGMA_OMP_PARALLEL_FOR 
+    #ifndef DEBUG
+        PRAGMA_OMP_PARALLEL_FOR 
+    #endif
     for (int core_idx = 0; core_idx < NTHREADS; core_idx++) {
         dot_prod_core(
             // A - col-major marix
@@ -161,7 +164,8 @@ void matmul_naive (const float* A, const float* W, float* Res, int Bsize, int Is
         for (int o = 0; o < Osize; ++o) {
             float sum = 0.0f;
             for (int i = 0; i < Isize; ++i) {
-                sum += A[b * Isize + i] * W[i * O + o];
+                // sum += A[b * Isize + i] * W[i * O + o];  // this assumes that A and W are both row major
+                sum += A[i * Bsize + b] * W[i * O + o]; // we are assuming A is col major
             }
             Res[b * Osize + o] = sum;
         }
@@ -178,7 +182,7 @@ int main () {
     float* A = (float*)_mm_malloc(B * I * sizeof(float), 64);   // input matrix  (aligned 64; cache length)
     float* W = (float*)_mm_malloc(I * O * sizeof(float), 64);   // weight matrix (aligned 64; cache length)
     float* Res;
-    float* ResCorrect = (float*)_mm_malloc(B * O * sizeof(float), 64); // output matrix (aligned 64; cache length)
+    float* ReC = (float*)_mm_malloc(B * O * sizeof(float), 64); // output matrix (aligned 64; cache length)
     init_rand(A, B * I);
     init_rand(W, I * O);
 
@@ -186,7 +190,7 @@ int main () {
 
     printf("Total time alloc: %f s\n", (end_alloc - start_alloc) * 1e-9);
            
-    matmul_naive(A, W, ResCorrect, B, I, O);
+    matmul_naive(A, W, ReC, B, I, O);
 
     // ============== Run trials =============
     float avg = 0.0;
@@ -204,23 +208,29 @@ int main () {
         double FLOP = 2 * (double)B * I * O;
         float gflops = (float)(FLOP / exec_time / 1e9);       
 
-        printf("Test matmul: %f %f %f %f ", Res[0], Res[1], Res[2], Res[3]);
         printf("Trials: %d, Time: %f GFLOPS: %f\n", trials + 1, exec_time, gflops);    
-        avg += exec_time;
+        if (trials > 0) { // first usually is warmup
+            avg += exec_time;
+        }
     }
 
-    float avg_time = avg / NUM_TRIALS;
+    float avg_time = avg / (NUM_TRIALS-1);
     double FLOP = 2 * (double)B * I * O;
     float gflops = (float)(FLOP / avg_time / 1e9);       
     printf("Avg time: %f sec | GFLOPS: %f\n", avg_time, gflops);
-
+    
     printf("\n");
-    printf("First correct: %f %f %f %f\n", ResCorrect[0], ResCorrect[1], ResCorrect[2], ResCorrect[3]);
+    for (int i = 0; i < 16; i++) {
+        printf("Idx %d | Test: %f Correct: %f\n", i, Res[i], ReC[i]);
+    }
+    printf("...\n");
+    printf("Idx last | Test: %f Correct: %f", Res[B * O - 1], ReC[B * O - 1]);
 
     // ============== Free variables =============
     _mm_free(A);
     _mm_free(W);
     _mm_free(Res);
+    _mm_free(ReC);
 }
 
 /*
