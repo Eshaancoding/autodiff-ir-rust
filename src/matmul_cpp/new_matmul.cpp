@@ -22,8 +22,8 @@
 #define I 512
 #define O 512
 
-#define O_CACHE 4
-#define B_CACHE 8
+#define O_CACHE 8
+#define B_CACHE 16
 
 #define NUM_TRIALS 20
 
@@ -39,7 +39,11 @@ float temp = 0.0;
 // Initialize randomized matrix
 void init_rand(float* mat, size_t n_elem) {
     for (size_t i = 0; i < n_elem; i++) {
-        mat[i] = rand() / (float)RAND_MAX;
+        if (rand() % 2 == 0) {
+            mat[i] = rand() / (float)RAND_MAX;
+        } else {
+            mat[i] = -rand() / (float)RAND_MAX;
+        }
     }
 }
 
@@ -82,7 +86,7 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
         for (int b_cache_idx = 0; b_cache_idx < B_size; b_cache_idx += B_CACHE) {
             const int w_loc_offset = w_glob_offset + o_cache_idx;        
             // initialize res matrix
-            __m256 res [B_CACHE * O_CACHE / 8]; // might register overspill since it's an array
+            __m256 res [B_CACHE * O_CACHE / 8] = {}; // might register overspill since it's an array
 
             // Go through I size
             for (int i_idx = 0; i_idx < I_size; i_idx++) {
@@ -96,14 +100,14 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
                 */
                 float* a_start = &A[B_size*i_idx + b_cache_idx]; 
                 float* w_start = &W[O_size*i_idx + o_cache_idx + w_loc_offset];
-
-                for (int w_tiny = 0; w_tiny < O_CACHE; w_tiny += 8) { // change 8 to 16 to _mm512
-                    __m256 m = _mm256_load_ps(&w_start[w_tiny]);
+                 
+                for (int w_tiny = 0; w_tiny < (O_CACHE/8); w_tiny += 1) { // change 8 to 16 to _mm512
+                    __m256 m = _mm256_load_ps(&w_start[w_tiny*8]);
                     
                     #pragma GCC unroll 16
                     for (int a_tiny = 0; a_tiny < B_CACHE; a_tiny += 1) {
                         __m256 x = _mm256_broadcast_ss(&a_start[a_tiny]);
-                        __m256* res_p = &res[(w_tiny / 8) * B_CACHE + a_tiny];
+                        __m256* res_p = &res[w_tiny*B_CACHE + a_tiny];
                         *res_p = _mm256_fmadd_ps(m, x, *res_p);
                     }
                 }
@@ -124,10 +128,11 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
 }
 
 void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_size) {
-    assert(O_size % NTHREADS == 0); // condition is not always guaranteed
-    
     const int o_cache_size = O_size / NTHREADS;    
+
+    assert(O_size % NTHREADS == 0); // condition is not always guaranteed
     assert(o_cache_size % O_CACHE == 0);
+    assert(O_CACHE % 8 == 0);
     assert(B_size % B_CACHE == 0);
 
     PRAGMA_OMP_PARALLEL_FOR 
@@ -172,7 +177,7 @@ int main () {
     uint64_t start_alloc = timer();
     float* A = (float*)_mm_malloc(B * I * sizeof(float), 64);   // input matrix  (aligned 64; cache length)
     float* W = (float*)_mm_malloc(I * O * sizeof(float), 64);   // weight matrix (aligned 64; cache length)
-    float* Res = (float*)_mm_malloc(B * O * sizeof(float), 64); // output matrix (aligned 64; cache length)
+    float* Res;
     float* ResCorrect = (float*)_mm_malloc(B * O * sizeof(float), 64); // output matrix (aligned 64; cache length)
     init_rand(A, B * I);
     init_rand(W, I * O);
@@ -186,6 +191,10 @@ int main () {
     // ============== Run trials =============
     float avg = 0.0;
     for (int trials = 0; trials < NUM_TRIALS; trials++) {
+        // reset res
+        if (trials > 0) _mm_free(Res);
+        Res = (float*)_mm_malloc(B * O * sizeof(float), 64); // output matrix (aligned 64; cache length)
+
         uint64_t start_comp = timer();
         dot_prod(A, W, Res, B, I, O);
         uint64_t end_comp = timer();
@@ -195,6 +204,7 @@ int main () {
         double FLOP = 2 * (double)B * I * O;
         float gflops = (float)(FLOP / exec_time / 1e9);       
 
+        printf("Test matmul: %f %f %f %f ", Res[0], Res[1], Res[2], Res[3]);
         printf("Trials: %d, Time: %f GFLOPS: %f\n", trials + 1, exec_time, gflops);    
         avg += exec_time;
     }
@@ -206,7 +216,6 @@ int main () {
 
     printf("\n");
     printf("First correct: %f %f %f %f\n", ResCorrect[0], ResCorrect[1], ResCorrect[2], ResCorrect[3]);
-    printf("Test matmul: %f %f %f %f", Res[0], Res[1], Res[2], Res[3]);
 
     // ============== Free variables =============
     _mm_free(A);
@@ -236,8 +245,6 @@ m=n=k=256 | GFLOPS = 82
 m=n=k=256 | GFLOPS = 82
 m=n=k=256 | GFLOPS = 81
 m=n=k=256 | GFLOPS = 93
-
-I have seen it reach around 200 ish before
 
 
 */
