@@ -22,8 +22,8 @@
 #define I 512
 #define O 512
 
-#define O_CACHE 32
-#define B_CACHE 
+#define O_CACHE 4
+#define B_CACHE 8
 
 #define NUM_TRIALS 20
 
@@ -74,23 +74,69 @@ inline void rs_cache (float* arr, size_t W, size_t H) {
 // ============= Dot prod =============
 // function computation that happens at each core
 void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int O_size, int core_idx) {
-    
+    const int w_glob_offset = O_size * core_idx; // global x offset 
+    const int total_O = O_size * NTHREADS;
+
+    // maybe set i cache over here?
+    for (int o_cache_idx = 0; o_cache_idx < O_size; o_cache_idx += O_CACHE) {
+        for (int b_cache_idx = 0; b_cache_idx < B_size; b_cache_idx += B_CACHE) {
+            const int w_loc_offset = w_glob_offset + o_cache_idx;        
+            // initialize res matrix
+            __m256 res [B_CACHE * O_CACHE / 8]; // might register overspill since it's an array
+
+            // Go through I size
+            for (int i_idx = 0; i_idx < I_size; i_idx++) {
+                /* 
+                The fact that this is dependent on I and skipping is kind of pissing me off
+                but if I move it earlier, then I would have to initialize the res matrix later... less effective FMAs.
+                It's a tradeoff. If I is large (which can be in some cases!), then it might be helpful to use another kernel method. 
+                However, I am not concerned with CPU optimization for ML at the moment, as most optimizations exist at the GPU anyways.
+                There's other tradeoffs, like splitting the weight matrix... OR isntead splitting the A matrix, etc. etc. etc.
+                At GPU there will be multiple types of kernels that will specialize in specific dimensions & operations (if needed)
+                */
+                float* a_start = &A[B_size*i_idx + b_cache_idx]; 
+                float* w_start = &W[O_size*i_idx + o_cache_idx + w_loc_offset];
+
+                for (int w_tiny = 0; w_tiny < O_CACHE; w_tiny += 8) { // change 8 to 16 to _mm512
+                    __m256 m = _mm256_load_ps(&w_start[w_tiny]);
+                    
+                    #pragma GCC unroll 16
+                    for (int a_tiny = 0; a_tiny < B_CACHE; a_tiny += 1) {
+                        __m256 x = _mm256_broadcast_ss(&a_start[a_tiny]);
+                        __m256* res_p = &res[(w_tiny / 8) * B_CACHE + a_tiny];
+                        *res_p = _mm256_fmadd_ps(m, x, *res_p);
+                    }
+                }
+            }
+
+            // set res matrix into W (and do any other computation if needed as well)
+            for (int i_res = 0; i_res < B_CACHE; i_res++) {
+                #pragma GCC unroll 16
+                for (int x_res = 0; x_res < (O_CACHE / 8); x_res++) {
+                    _mm256_store_ps(
+                        &Res[(b_cache_idx + i_res)*total_O + w_loc_offset+(x_res*8)], 
+                        res[i_res*(O_CACHE/8)+x_res]
+                    );
+                }
+            }
+        }
+    }
 }
 
 void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_size) {
     assert(O_size % NTHREADS == 0); // condition is not always guaranteed
-    assert(B_size % NTHREADS == 0);
-    assert(I_size % 16 == 0);
     
     const int o_cache_size = O_size / NTHREADS;    
+    assert(o_cache_size % O_CACHE == 0);
+    assert(B_size % B_CACHE == 0);
 
     PRAGMA_OMP_PARALLEL_FOR 
     for (int core_idx = 0; core_idx < NTHREADS; core_idx++) {
         dot_prod_core(
-            // A - x (input) col-major marix
+            // A - col-major marix
             A, 
-            // W - weight row-major matrix  
-            &W[I_size * o_cache_size],
+            // W - row-major matrix  
+            W,
             // Send the result of the array to the dot product core. Each core will write to this array at different memory locations, preventing conflicts
             Res,
             // Batch size stays the same (iterated per each core)
@@ -105,6 +151,18 @@ void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_siz
     }
 };
 
+void matmul_naive (const float* A, const float* W, float* Res, int Bsize, int Isize, int Osize) {
+    for (int b = 0; b < Bsize; ++b) {
+        for (int o = 0; o < Osize; ++o) {
+            float sum = 0.0f;
+            for (int i = 0; i < Isize; ++i) {
+                sum += A[b * Isize + i] * W[i * O + o];
+            }
+            Res[b * Osize + o] = sum;
+        }
+    }
+}
+
 int main () {
     if ((I % NTHREADS != 0) || (B % NTHREADS != 0)) {
         throw std::invalid_argument("B & I is not divisible by NTHREADS for reverse skip cache multicore");
@@ -115,6 +173,7 @@ int main () {
     float* A = (float*)_mm_malloc(B * I * sizeof(float), 64);   // input matrix  (aligned 64; cache length)
     float* W = (float*)_mm_malloc(I * O * sizeof(float), 64);   // weight matrix (aligned 64; cache length)
     float* Res = (float*)_mm_malloc(B * O * sizeof(float), 64); // output matrix (aligned 64; cache length)
+    float* ResCorrect = (float*)_mm_malloc(B * O * sizeof(float), 64); // output matrix (aligned 64; cache length)
     init_rand(A, B * I);
     init_rand(W, I * O);
 
@@ -122,6 +181,8 @@ int main () {
 
     printf("Total time alloc: %f s\n", (end_alloc - start_alloc) * 1e-9);
            
+    matmul_naive(A, W, ResCorrect, B, I, O);
+
     // ============== Run trials =============
     float avg = 0.0;
     for (int trials = 0; trials < NUM_TRIALS; trials++) {
@@ -142,6 +203,10 @@ int main () {
     double FLOP = 2 * (double)B * I * O;
     float gflops = (float)(FLOP / avg_time / 1e9);       
     printf("Avg time: %f sec | GFLOPS: %f\n", avg_time, gflops);
+
+    printf("\n");
+    printf("First correct: %f %f %f %f\n", ResCorrect[0], ResCorrect[1], ResCorrect[2], ResCorrect[3]);
+    printf("Test matmul: %f %f %f %f", Res[0], Res[1], Res[2], Res[3]);
 
     // ============== Free variables =============
     _mm_free(A);
