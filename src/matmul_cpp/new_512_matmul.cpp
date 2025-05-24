@@ -29,10 +29,6 @@
 #define B_CACHE 8
 
 
-// if using __mm256, use 8
-// if using __mm512, use 16
-#define FPSIZE 8 
-
 // Initialize randomized matrix (from normal distribution)
 void init_rand(float* mat, size_t n_elem) {
     for (size_t i = 0; i < n_elem; i++) {
@@ -51,12 +47,12 @@ uint64_t timer() {
     return (uint64_t)start.tv_sec * 1000000000 + (uint64_t)start.tv_nsec;
 }
 
-void print_m512(__m256 vec) {
-    alignas(32) float values[8];  // aligned memory for AVX
-    _mm256_storeu_ps(values, vec);  // store vec into values
+void print_m512(__m512 vec) {
+    alignas(32) float values[16];  // aligned memory for AVX
+    _mm512_storeu_ps(values, vec);  // store vec into values
 
-    std::cout << "Contents of __m256: ";
-    for (int i = 0; i < 8; ++i) {
+    std::cout << "Contents of __m512: ";
+    for (int i = 0; i < 16; ++i) {
         std::cout << values[i] << " ";
     }
     std::cout << std::endl;
@@ -73,7 +69,7 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
         for (int b_cache_idx = 0; b_cache_idx < B_size; b_cache_idx += B_CACHE) {
             const int w_loc_offset = w_glob_offset + o_cache_idx;        
             // initialize res matrix
-            __m256 res [B_CACHE * O_CACHE / 8] = {}; // might register overspill since it's an array
+            __m512 res [B_CACHE * O_CACHE / 16] = {}; // might register overspill since it's an array
 
             // Go through I size
             for (int i_idx = 0; i_idx < I_size; i_idx++) {
@@ -88,14 +84,14 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
                 float* a_start = &A[B_size*i_idx + b_cache_idx]; 
                 float* w_start = &W[total_O*i_idx + w_loc_offset];
                  
-                for (int o_tiny = 0; o_tiny < (O_CACHE/8); o_tiny += 1) { // change 8 to 16 to _mm512
-                    __m256 m = _mm256_load_ps(&w_start[o_tiny*8]);
+                for (int o_tiny = 0; o_tiny < (O_CACHE/16); o_tiny += 1) { // change 8 to 16 to _mm512
+                    __m512 m = _mm512_load_ps(&w_start[o_tiny*16]);
                     
                     #pragma GCC unroll 16
                     for (int b_tiny = 0; b_tiny < B_CACHE; b_tiny += 1) {
-                        __m256 x = _mm256_broadcast_ss(&a_start[b_tiny]);
-                        __m256* res_p = &res[b_tiny*(O_CACHE/8) + o_tiny];
-                        *res_p = _mm256_fmadd_ps(m, x, *res_p);
+                        __m512 x = _mm512_set1_ps(a_start[b_tiny]);
+                        __m512* res_p = &res[b_tiny*(O_CACHE/16) + o_tiny];
+                        *res_p = _mm512_fmadd_ps(m, x, *res_p);
                     }
                 }
             }
@@ -103,10 +99,10 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
             // set res matrix into W (and do any other computation if needed as well)
             for (int b_res = 0; b_res < B_CACHE; b_res++) {
                 #pragma GCC unroll 16
-                for (int o_res = 0; o_res < (O_CACHE / 8); o_res++) {
-                    _mm256_store_ps(
-                        &Res[(b_cache_idx + b_res)*total_O + w_loc_offset+(o_res*8)], 
-                        res[b_res*(O_CACHE/8)+o_res]
+                for (int o_res = 0; o_res < (O_CACHE/16); o_res++) {
+                    _mm512_store_ps(
+                        &Res[(b_cache_idx + b_res)*total_O + w_loc_offset+(o_res*16)], 
+                        res[b_res*(O_CACHE/16)+o_res]
                     );
                 }
             }
@@ -119,7 +115,7 @@ void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_siz
 
     assert(O_size % NTHREADS == 0); // condition is not always guaranteed
     assert(o_cache_size % O_CACHE == 0);
-    assert(O_CACHE % 8 == 0);
+    assert(O_CACHE % 16 == 0);
     assert(B_size % B_CACHE == 0);
 
     PRAGMA_OMP_PARALLEL_FOR 
@@ -204,7 +200,7 @@ int main () {
     for (int i = 0; i < B * O; i++) {
         if (abs(Res[i] - ReC[i]) >= 1e-5) incorrect += 1;
     }
-    printf("Num correct: %d / %d (%.2f accuracy)", B*O-incorrect, B*O, ((float)(B*O-incorrect)/(B*O) * 100));
+    printf("Num correct: %d / %d (%.2f accuracy) for 512b", B*O-incorrect, B*O, ((float)(B*O-incorrect)/(B*O) * 100));
 
     // ============== Free variables =============
     _mm_free(A);
@@ -218,23 +214,6 @@ Command:
 
 g++ -O3 -march=native -mavx512f -Wall -fopenmp new_matmul.cpp -o matmul && objdump -d -M intel matmul > matmul_objdump.txt && ./matmul
 
-========== Reference result
-m=n=k=256 | GFLOPS = 37
-m=n=k=256 | GFLOPS = 68
-m=n=k=256 | GFLOPS = 62
-m=n=k=256 | GFLOPS = 62
-m=n=k=256 | GFLOPS = 63
-m=n=k=256 | GFLOPS = 69
-m=n=k=256 | GFLOPS = 69
-m=n=k=256 | GFLOPS = 68
-m=n=k=256 | GFLOPS = 70
-m=n=k=256 | GFLOPS = 79
-m=n=k=256 | GFLOPS = 79
-m=n=k=256 | GFLOPS = 89
-m=n=k=256 | GFLOPS = 82
-m=n=k=256 | GFLOPS = 82
-m=n=k=256 | GFLOPS = 81
-m=n=k=256 | GFLOPS = 93
-
-
+512b gets comparable performance to numpy implementation (uses aka openblas)
+So this implementation
 */
