@@ -32,11 +32,7 @@
 // Cache sizes
 #define O_CACHE 16 // prefers bigger o cache rather than b cache
 #define B_CACHE 8
-#define I_CACHE 256 // I think this was the best performing?
-
-// if using __mm256, use 8
-// if using __mm512, use 16
-#define FPSIZE 8 
+#define I_CACHE 128 // I think this was the best performing?
 
 // Initialize randomized matrix (from normal distribution)
 void init_rand(float* mat, size_t n_elem) {
@@ -56,12 +52,12 @@ uint64_t timer() {
     return (uint64_t)start.tv_sec * 1000000000 + (uint64_t)start.tv_nsec;
 }
 
-void print_m512(__m256 vec) {
-    alignas(32) float values[8];  // aligned memory for AVX
-    _mm256_storeu_ps(values, vec);  // store vec into values
+void print_m512(__m512 vec) {
+    alignas(32) float values[16];  // aligned memory for AVX
+    _mm512_storeu_ps(values, vec);  // store vec into values
 
-    std::cout << "Contents of __m256: ";
-    for (int i = 0; i < 8; ++i) {
+    std::cout << "Contents of __m512: ";
+    for (int i = 0; i < 16; ++i) {
         std::cout << values[i] << " ";
     }
     std::cout << std::endl;
@@ -73,14 +69,14 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
     // iterate over batch size
     for (int b_start = 0; b_start < B_size; b_start += B_CACHE) {
         // initialize res matrix
-        __m256 res [B_CACHE * O_CACHE / 8] = {}; // might register overspill since it's an array
+        __m512 res [B_CACHE * O_CACHE / 16] = {}; // might register overspill since it's an array
 
         // load the res matrix with the accumulation from the weight matrix.        
         #pragma GCC unroll 8
         for (int b_res = 0; b_res < B_CACHE; b_res++) {
             #pragma GCC unroll 16
-            for (int o_res = 0; o_res < (O_CACHE / 8); o_res++) {
-                res[b_res*(O_CACHE/8)+o_res] = _mm256_load_ps(&Res[(b_start + b_res) * O_size + (o_start + o_res*8)]);
+            for (int o_res = 0; o_res < (O_CACHE / 16); o_res++) {
+                res[b_res*(O_CACHE/16)+o_res] = _mm512_load_ps(&Res[(b_start + b_res) * O_size + (o_start + o_res*16)]);
             }
         }
 
@@ -90,14 +86,14 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
             float* W_tiny = &W[i_c*O_size + o_start];
             
             // in output cache, iterate and pack into 8/16 reg
-            for (int o_reg = 0; o_reg < O_CACHE; o_reg += 8) {
-                __m256 m = _mm256_load_ps(&W_tiny[o_reg]);
+            for (int o_reg = 0; o_reg < O_CACHE; o_reg += 16) {
+                __m512 m = _mm512_load_ps(&W_tiny[o_reg]);
 
                 #pragma GCC unroll 16
                 for (int b_reg = 0; b_reg < B_CACHE; b_reg += 1) {
-                    __m256 x = _mm256_broadcast_ss(&A_tiny[b_reg]);
-                    __m256* res_p = &res[b_reg * (O_CACHE/8) + (o_reg/8)];
-                    *res_p = _mm256_fmadd_ps(m, x, *res_p);
+                    __m512 x = _mm512_set1_ps(A_tiny[b_reg]);
+                    __m512* res_p = &res[b_reg * (O_CACHE/16) + (o_reg/16)];
+                    *res_p = _mm512_fmadd_ps(m, x, *res_p);
                 }
             }
         }
@@ -106,10 +102,10 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
         #pragma GCC unroll 8
         for (int b_res = 0; b_res < B_CACHE; b_res++) {
             #pragma GCC unroll 16
-            for (int o_res = 0; o_res < (O_CACHE / 8); o_res++) {
-                _mm256_store_ps(
-                    &Res[(b_start + b_res) * O_size + (o_start + o_res*8)],
-                    res[b_res*(O_CACHE/8)+o_res]
+            for (int o_res = 0; o_res < (O_CACHE/16); o_res++) { 
+                _mm512_store_ps(
+                    &Res[(b_start + b_res) * O_size + (o_start + o_res*16)],
+                    res[b_res*(O_CACHE/16)+o_res]
                 );
             }
         }
@@ -120,7 +116,7 @@ void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_siz
     assert(I_size % I_CACHE == 0);
     assert(O_size % O_CACHE == 0);
     assert(B_size % B_CACHE == 0);
-    assert(O_CACHE % 8 == 0);
+    assert(O_CACHE % 16 == 0);
 
     // iterate over each input size
     for (int i_start = 0; i_start < I_size; i_start += I_CACHE) {
@@ -223,24 +219,5 @@ int main () {
 
 /*
 Command:
-
 g++ -O3 -march=native -mavx512f -Wall -fopenmp new_matmul.cpp -o matmul && objdump -d -M intel matmul > matmul_objdump.txt && ./matmul
-
-========== Reference result
-m=n=k=256 | GFLOPS = 37
-m=n=k=256 | GFLOPS = 68
-m=n=k=256 | GFLOPS = 62
-m=n=k=256 | GFLOPS = 62
-m=n=k=256 | GFLOPS = 63
-m=n=k=256 | GFLOPS = 69
-m=n=k=256 | GFLOPS = 69
-m=n=k=256 | GFLOPS = 68
-m=n=k=256 | GFLOPS = 70
-m=n=k=256 | GFLOPS = 79
-m=n=k=256 | GFLOPS = 79
-m=n=k=256 | GFLOPS = 89
-m=n=k=256 | GFLOPS = 82
-m=n=k=256 | GFLOPS = 82
-m=n=k=256 | GFLOPS = 81
-m=n=k=256 | GFLOPS = 93
 */

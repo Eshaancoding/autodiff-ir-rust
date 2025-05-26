@@ -26,4 +26,6 @@ The 512 implementation (~200 GFLOPS) gets comparable performance to Numpy dot pr
 
 However, there's always better implementations. I am comparing myself against `sgemm.c`, which boasts a ~250 - 280 GFLOPS! This is ideally where I want the implementation to go for.
 
+`new_matmul.cpp` actually performs better than both numpy and torch in terms of CPU results, so I am using this new method. Although, admittedly, this method is very similar to `sgemm.c`. All credit still goes to them for the underlying algorithm (or well, BLIS because that's what `sgemm.c` uses).
+
 Take this results with a grain of salt however... This is tested on a really shitty tCPU with WSL enabled... a terrible platform to test this. I will test on a better CPU backend with more # of trials in the future.
