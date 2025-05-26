@@ -10,11 +10,11 @@ So, it is a pretty much win-win situation here. Plus, I get to learn more about 
 
 ## Organization
 
-* ~~new_matmul.cpp~~: The code for the matrix multiplication (using AVX 256 version to compare with `sgemm.c`)
+* ~~matmul.cpp~~: The code for the matrix multiplication (using AVX 256 version to compare with `sgemm.c`)
 
-* ~~new_512_matmul.cpp~~: The code for the matrix multiplication (using AVX 512 to compare with pytorch & numpy)
+* ~~512_matmul.cpp~~: The code for the matrix multiplication (using AVX 512 to compare with pytorch & numpy)
 
-* ~~Makefile~~: where you run `new_matmul.cpp` (`make`) and `new_512_matmul.cpp` (`make 512`). 
+* ~~Makefile~~: where you run `matmul.cpp` (`make`) and `512_matmul.cpp` (`make 512`). 
 
 * ~~test_numpy.py~~: The code for testing GFLOPS for numpy
 
@@ -22,9 +22,7 @@ So, it is a pretty much win-win situation here. Plus, I get to learn more about 
 
 ## Results
 
-The 512 implementation (~200 GFLOPS) gets comparable performance to Numpy dot product (~200 GFLOPS) - Aka a OpenBLAS backend. 256 implementation is not that far off, honestly (~180 GFLOPS). It's pretty clear that most of the bottleneck is memory accessing (which I have an idea to make this better :D)
-
-PyTorch CPU backend is not that comparable with ~160 GFLOPS (uses oneAPI or MKL? don't know exactly).
+The 512 implementation (~200 GFLOPS) gets comparable performance to Numpy dot product (~200 GFLOPS) - Aka a OpenBLAS backend. 256 implementation is not that far off, honestly (~180 GFLOPS). Pytorch is also somewhat slightly ahead with 213 GFLOPS. It's pretty clear that most of the bottleneck is memory accessing (which I have an idea to make this better :D)
 
 However, there's always better implementations. I am comparing myself against `sgemm.c`, which boasts a ~250 - 280 GFLOPS! This is ideally where I want the implementation to go for.
 

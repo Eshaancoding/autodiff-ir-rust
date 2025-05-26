@@ -27,7 +27,7 @@
 
 #define O_CACHE 16
 #define B_CACHE 8
-#define I_CACHE 128
+
 
 // if using __mm256, use 8
 // if using __mm512, use 16
@@ -65,10 +65,63 @@ void print_m512(__m256 vec) {
 // ============= Dot prod =============
 // function computation that happens at each core
 void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int O_size, int core_idx) {
+    const int w_glob_offset = O_size * core_idx; // global x offset 
+    const int total_O = O_size * NTHREADS;
 
+    // switch these for loops, see if there's any performance optimizations
+    for (int o_cache_idx = 0; o_cache_idx < O_size; o_cache_idx += O_CACHE) {
+        for (int b_cache_idx = 0; b_cache_idx < B_size; b_cache_idx += B_CACHE) {
+            const int w_loc_offset = w_glob_offset + o_cache_idx;        
+            // initialize res matrix
+            __m256 res [B_CACHE * O_CACHE / 8] = {}; // might register overspill since it's an array
+
+            // Go through I size
+            for (int i_idx = 0; i_idx < I_size; i_idx++) {
+                /* 
+                The fact that this is dependent on I and skipping is kind of pissing me off
+                but if I move it earlier, then I would have to initialize the res matrix later... less effective FMAs.
+                It's a tradeoff. If I is large (which can be in some cases!), then it might be helpful to use another kernel method. 
+                However, I am not concerned with CPU optimization for ML at the moment, as most optimizations exist at the GPU anyways.
+                There's other tradeoffs, like splitting the weight matrix... OR isntead splitting the A matrix, etc. etc. etc.
+                At GPU there will be multiple types of kernels that will specialize in specific dimensions & operations (if needed)
+                */
+                float* a_start = &A[B_size*i_idx + b_cache_idx]; 
+                float* w_start = &W[total_O*i_idx + w_loc_offset];
+                 
+                for (int o_tiny = 0; o_tiny < (O_CACHE/8); o_tiny += 1) { // change 8 to 16 to _mm512
+                    __m256 m = _mm256_load_ps(&w_start[o_tiny*8]);
+                    
+                    #pragma GCC unroll 16
+                    for (int b_tiny = 0; b_tiny < B_CACHE; b_tiny += 1) {
+                        __m256 x = _mm256_broadcast_ss(&a_start[b_tiny]);
+                        __m256* res_p = &res[b_tiny*(O_CACHE/8) + o_tiny];
+                        *res_p = _mm256_fmadd_ps(m, x, *res_p);
+                    }
+                }
+            }
+
+            // set res matrix into W (and do any other computation if needed as well)
+            for (int b_res = 0; b_res < B_CACHE; b_res++) {
+                #pragma GCC unroll 16
+                for (int o_res = 0; o_res < (O_CACHE / 8); o_res++) {
+                    _mm256_store_ps(
+                        &Res[(b_cache_idx + b_res)*total_O + w_loc_offset+(o_res*8)], 
+                        res[b_res*(O_CACHE/8)+o_res]
+                    );
+                }
+            }
+        }
+    }
 }
 
 void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_size) {
+    const int o_cache_size = O_size / NTHREADS;    
+
+    assert(O_size % NTHREADS == 0); // condition is not always guaranteed
+    assert(o_cache_size % O_CACHE == 0);
+    assert(O_CACHE % 8 == 0);
+    assert(B_size % B_CACHE == 0);
+
     PRAGMA_OMP_PARALLEL_FOR 
     for (int core_idx = 0; core_idx < NTHREADS; core_idx++) {
         dot_prod_core(
@@ -78,10 +131,12 @@ void dot_prod (float* A, float* W, float* Res, int B_size, int I_size, int O_siz
             W,
             // Send the result of the array to the dot product core. Each core will write to this array at different memory locations, preventing conflicts
             Res,
-            // Sizes of matrix
+            // Batch size stays the same (iterated per each core)
             B_size,
+            // Input size stays the same (iterated each per core)
             I_size, 
-            O_size,
+            // The size of the output is now the o_cache_size, because we split the "W" matrix per each core.
+            o_cache_size,
             // core idx
             core_idx
         );
@@ -94,7 +149,7 @@ void matmul_naive (const float* A, const float* W, float* Res, int Bsize, int Is
             float sum = 0.0f;
             for (int i = 0; i < Isize; ++i) {
                 // sum += A[b * Isize + i] * W[i * O + o];  // this assumes that A and W are both row major
-                sum += A[i * Bsize + b] * W[i * O + o]; // A is col major wise, not row major.
+                sum += A[i * Bsize + b] * W[i * O + o]; // we are assuming A is col major
             }
             Res[b * Osize + o] = sum;
         }
@@ -182,4 +237,4 @@ m=n=k=256 | GFLOPS = 81
 m=n=k=256 | GFLOPS = 93
 
 
-*
+*/
