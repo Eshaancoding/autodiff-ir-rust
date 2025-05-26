@@ -31,7 +31,7 @@
 
 // Cache sizes
 #define O_CACHE 16 // prefers bigger o cache rather than b cache
-#define B_CACHE 8
+#define B_CACHE 16
 #define I_CACHE 128 // I think this was the best performing?
 
 // Initialize randomized matrix (from normal distribution)
@@ -179,13 +179,13 @@ int main () {
         for (int t = 0; t < NUM_MM_PERTRIAL; t++) {
             dot_prod(A, W, Res, B, I, O); // technically, this doesn't work when repeating trials...
             #ifdef CHECK_ACC
-                break; // only allow one trial
+                break; // only allow one trial when checking accuracy
             #endif
         }
         uint64_t end_comp = timer();
 
         #ifdef CHECK_ACC 
-            break; // only allow one trial
+            break; // only allow one trial when checking accuracy.
         #endif
 
         float exec_time = (end_comp - start_comp) * 1e-9 / NUM_MM_PERTRIAL;
