@@ -2,11 +2,36 @@
 // Only single threaded operations
 
 use indexmap::IndexMap;
-use crate::{Device, IRCmds, ValueData};
+use crate::{to_kernel::to_kernel, Device, IRCmds, ValueData};
 use super::exec::exec;
 use tensor_rs::tensor_impl::gen_tensor::GenTensor;
 
+pub struct CPUNew {
+     
+}
+
+impl CPUNew {
+    pub fn new () -> CPUNew {
+        CPUNew { 
+            
+        }
+    }
+}
+
+impl Device for CPUNew {
+    fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
+        let _ = to_kernel(&cmds);
+    }
+
+    fn get_tensor (&self, id: &String) -> ValueData {
+        // not implemented yet
+        ValueData::none()  
+    }
+}
+
+// ==================== tensor rs ==================== 
 pub struct CPU {
+
     hmap: IndexMap<String, ValueData>,
 }
 
@@ -22,8 +47,6 @@ impl CPU  {
 }
 
 impl Device for CPU {
-    
-
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
         let mut hms: IndexMap<String, GenTensor<f64>> = IndexMap::new();
         
@@ -86,3 +109,4 @@ impl Device for CPU {
         }
     }
 }
+

@@ -1,7 +1,5 @@
 pub mod cuda;
-pub mod cpu;
-pub mod opencl;
+pub mod x86;
 
 // pub use cuda::*;
-pub use cpu::*;
-pub use opencl::*;
+pub use x86::*;

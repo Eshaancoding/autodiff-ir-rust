@@ -29,6 +29,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
             match cmd {
                 IRCmds::Sum { a, dim, res } => {
                     // ===== EXPR GEN NEED TO CONSIDER DIM IN SUM ====
+                    // MAKE CONTIGIOUS BEFORE REDUCE
                     instr.push(ComputeInstr::Reduce { 
                         a: mat_tracker.get_input(a), 
                         res: mat_tracker.get_mat(res),
@@ -36,6 +37,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                     });
                 },
                 IRCmds::DotProduct { a, b, res } => {
+                    // MAKE CONTIGIOUS BEFORE DOT PROD
                     instr.push(ComputeInstr::DotProd { 
                         a: mat_tracker.get_input(a), 
                         b: mat_tracker.get_input(b), 
@@ -54,14 +56,14 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
         }
         cmd_computeinstr.insert(block_name.clone(), instr);
     }
+
     // ...debug...
     mat_tracker.print_alloc_tracker();
     let var_name = "bn";
     mat_tracker.print_raw(&var_name.to_string());
     println!("{}:\n\t{}", var_name, mat_tracker.get_mat(&var_name.to_string()));
-
+    // println!("{:#?}", cmd_computeinstr);
 
     // ========= Kernel Fusion =========
-
-    // ========= Testing different kernel configs =========
+    
 }

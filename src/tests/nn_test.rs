@@ -8,7 +8,7 @@ mod tests {
     #[test]
     // #[ignore]
     fn nn_time_test () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(autodiff::devices::CPUNew::new());
         autodiff::eager_dep_opt();
 
         let mut neural_net = nn::Sequential();

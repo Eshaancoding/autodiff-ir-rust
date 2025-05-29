@@ -5,7 +5,7 @@ pub enum Value {
 }
 
 // shorthand expressions
-// mostly used for index accessing
+// used for index accessing, unary, and binary expression
 #[derive(Clone, Debug)]
 pub enum Expression {
     Val {v: Value},
@@ -16,7 +16,16 @@ pub enum Expression {
     Remainder {a: Box<Expression>, b: Box<Expression>},
     ShiftRight {a: Box<Expression>, b: Box<Expression>},
     ShiftLeft {a: Box<Expression>, b: Box<Expression>},
-    BitwiseAnd {a: Box<Expression>, b: Box<Expression>}
+    BitwiseAnd {a: Box<Expression>, b: Box<Expression>},
+
+    Exp2 {a: Box<Expression>},
+    Log2 {a: Box<Expression>},
+    Sin  {a: Box<Expression>},
+    Recip {a: Box<Expression>},
+    Sqrt {a: Box<Expression>},
+    EqualZero {a: Box<Expression>},
+    MoreZero {a: Box<Expression>},
+    LessZero {a: Box<Expression>}
 }
 
 #[derive(Clone, Debug)]
@@ -52,20 +61,12 @@ pub enum ReduceOp {
 }
 
 #[derive(Clone, Debug)]
-pub enum UnaryOp {
-    Exp2,
-    Log2,
-    Sin,
-    Neg,
-    Recip,
-    Sqrt,
-    EqualZero,
-    MoreZero,
-    LessZero
-}
-
-#[derive(Clone, Debug)]
 pub enum ComputeInstr {
+    // General over binary/unary functions. Result is an "Expression".
+    Expr {
+        result: Expression
+    },
+
     // binary kernels, such as a + b or a * b
     Binary {  
         a: Input,
@@ -90,20 +91,23 @@ pub enum ComputeInstr {
         res: Matrix
     }, 
 
-    // unary (single function) kernels. Such as exp2, negative, recip, etc.
-    Unary { 
-        a: Input,
-        res: Matrix,
-        op: UnaryOp
-    },  
-
-    // kernels that specifies movement / permutations / concatenation of tensors
-    // note that this movement kernel is not initially created; it's generated during optimizations. Otherwise, we use fancy index calculations.
-    // we test whether it's optimal to use movement tensor or use the allocated memory locations weirdly. 
+    // kernels that turns movement / permutations / concatenation of tensors into single contigious tensor.  
+    // note that this movement kernel is not initially created; it's generated lazily or during optimizations. 
+    // Note that for dot prod and reduce kernels, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
     Movement { 
         a: Input,
         res: Matrix
     },
+
+    // Alloc {
+    //     id: String,
+    //     dim: Vec<usize>        
+    // },
+    
+    // Dealloc {
+    //     id: String,
+    //     dim: Vec<usize>
+    // },
 
     // Control functions
     BR {block_id: String},

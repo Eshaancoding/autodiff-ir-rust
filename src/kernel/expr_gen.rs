@@ -92,7 +92,7 @@ impl<'a> MatrixTracker<'a> {
             // then, we can return the expression
             Matrix {
                 id: var_dep.alloc_id.clone(),
-                access: Expression::simplify(
+                access: Expression::simplify( // simplify expression if needed
                     MatrixTracker::ndim_to_global(ndim, source_shape)
                 )
             }

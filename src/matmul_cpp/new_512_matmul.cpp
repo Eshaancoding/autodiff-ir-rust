@@ -11,9 +11,7 @@
 #include <sys/stat.h>
 #include <random>
 
-// confirmed by lscpu
-
-// check for num threads
+// check for num threads; confirmed by lscpu
 #define PRAGMA_OMP_PARALLEL_FOR _Pragma("omp parallel for schedule(dynamic) num_threads(8)")
 
 // check accuracy flag
@@ -82,16 +80,16 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
 
         // iterate over input cache, using the FMA instruction for the res matrix
         for (int i_c = 0; i_c < I_CACHE; i_c++) {
-            float* A_tiny = &A[i_c*B_size + b_start];
-            float* W_tiny = &W[i_c*O_size + o_start];
+            // float* A_tiny = &A[i_c*B_size + b_start];
+            // float* W_tiny = &W[i_c*O_size + o_start];
             
             // in output cache, iterate and pack into 8/16 reg
             for (int o_reg = 0; o_reg < O_CACHE; o_reg += 16) {
-                __m512 m = _mm512_load_ps(&W_tiny[o_reg]);
+                __m512 m = _mm512_load_ps(&W[i_c*O_size + o_start + o_reg]);
 
                 #pragma GCC unroll 16
                 for (int b_reg = 0; b_reg < B_CACHE; b_reg += 1) {
-                    __m512 x = _mm512_set1_ps(A_tiny[b_reg]);
+                    __m512 x = _mm512_set1_ps(A[i_c*B_size + b_start + b_reg]);
                     __m512* res_p = &res[b_reg * (O_CACHE/16) + (o_reg/16)];
                     *res_p = _mm512_fmadd_ps(m, x, *res_p);
                 }
