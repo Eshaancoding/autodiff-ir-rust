@@ -29,6 +29,19 @@ pub enum Expression {
 }
 
 #[derive(Clone, Debug)]
+pub enum UnaryOp {
+    Exp2,
+    Log2,
+    Sin,
+    Neg,
+    Recip,
+    Sqrt,
+    EqualZero,
+    MoreZero,
+    LessZero
+}
+
+#[derive(Clone, Debug)]
 pub struct Matrix {
     pub id: String,        // id of the alloc (we replace this id with a pointer at device)
     pub access: Expression // note that access expressions can vary between the type of kernels. (sum vs. elw)
@@ -70,7 +83,13 @@ pub enum ComputeInstr {
         op: UnaryOp
     },
 
-    
+    // binary kernels, such as a + b or a * b
+    Binary {  
+        a: Input,
+        b: Input,
+        res: Matrix,
+        op: BinaryOp,
+    },
 
 
     /*Expr {
