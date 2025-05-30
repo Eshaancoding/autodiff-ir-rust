@@ -45,19 +45,19 @@ impl NodeTrait for ViewNode {
 impl Tensor {
     pub fn handle_minus_dim (source_dim: Vec<usize>, input_dim: Vec<i32>) -> Vec<usize> {
         // check if -1
-        if let Some(idx) = input_dim.iter().position(|x| x == -1) {
+        if let Some(idx) = input_dim.iter().position(|x| *x == -1) {
             let total_size: usize = source_dim.iter().product();
-            let inp_size: i32 = -input_dim.iter().product();
+            let inp_size: usize = -input_dim.iter().product() as usize;
             
             let mut ret = input_dim.clone(); 
             ret[idx] = total_size / inp_size;
             assert!(total_size % inp_size == 0, "Can't fill in -1");
 
-            ret.iter().map(|a| a as usize).collect::<Vec<usize>>()
+            return ret.iter().map(|a| *a as usize).collect::<Vec<usize>>();
         }
 
         // if no -1, then just let this happen
-        input_dim.iter().map(|a| a as usize).collect::<Vec<usize>>()
+        input_dim.iter().map(|a| *a as usize).collect::<Vec<usize>>()
     }
 
     // you have to refactor the target dim such that it is i32 instead of usize
