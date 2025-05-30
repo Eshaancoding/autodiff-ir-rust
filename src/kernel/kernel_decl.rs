@@ -84,14 +84,6 @@ pub enum ComputeInstr {
     },
 
     // binary kernels, such as a + b or a * b
-    Binary {  
-        a: Input,
-        b: Input,
-        res: Matrix,
-        op: BinaryOp,
-    },
-
-
     /*Expr {
         result: Expression
     },*/
