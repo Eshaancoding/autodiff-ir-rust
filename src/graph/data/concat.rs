@@ -56,7 +56,7 @@ impl NodeTrait for ConcatNode {
 // =================== Creating Node =================== 
 pub fn concat (nodes: Vec<Tensor>, dim: i32) -> Tensor { // light wrapper in autodiff.rs
     let n_dim = nodes.first().expect("Empty concat tensor").dim().len();
-    let dim = if dim < 0 { n_dim as i32 + dim } else { dim } as usize;
+    let dim = if dim < 0 { n_dim as i32 + dim } else { dim } as usize; // handles negative dim
     Tensor::new(ConcatNode {
         nodes,
         dim,
