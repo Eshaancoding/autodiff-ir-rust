@@ -47,7 +47,7 @@ impl Tensor {
         // check if -1
         if let Some(idx) = input_dim.iter().position(|x| *x == -1) {
             let total_size: usize = source_dim.iter().product();
-            let inp_size: usize = -input_dim.iter().product() as usize;
+            let inp_size: usize = -input_dim.iter().product::<i32>() as usize;
             
             let mut ret = input_dim.clone(); 
             ret[idx] = total_size / inp_size;
