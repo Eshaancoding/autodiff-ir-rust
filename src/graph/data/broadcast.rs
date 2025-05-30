@@ -1,4 +1,4 @@
-use crate::{ir_b_add, ir_b_id, Tensor, NodeTrait, Value};
+use crate::{ir_b_add, ir_b_id, NodeTrait, Tensor, Value};
 
 #[derive(Clone)]
 pub struct BroadcastNode {
@@ -110,7 +110,13 @@ fn make_broadcast_node (n: &Tensor, target_dim: &Vec<usize>) -> Tensor {
         n_dim.insert(0, 1);
     }
 
-    let mut ret_n = n.clone().view(n_dim.clone());
+    // everything is asserted
+    let mut ret_n = n.clone().view(
+        {
+            let dim: &Vec<usize> = &n_dim;
+            dim.iter().map(|&i| i as i32).collect::<Vec<i32>>()
+        }
+    );
 
     for i in 0..target_dim.len() {
         if target_dim[i] != n_dim[i] {

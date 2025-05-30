@@ -7,7 +7,6 @@ use super::exec::exec;
 use tensor_rs::tensor_impl::gen_tensor::GenTensor;
 
 pub struct CPUNew {
-     
 }
 
 impl CPUNew {
@@ -23,7 +22,7 @@ impl Device for CPUNew {
         let _ = to_kernel(&cmds);
     }
 
-    fn get_tensor (&self, id: &String) -> ValueData {
+    fn get_tensor (&self, _: &String) -> ValueData {
         // not implemented yet
         ValueData::none()  
     }

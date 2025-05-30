@@ -41,35 +41,36 @@ impl NodeTrait for ViewNode {
     }
 }
 
-// ================== Creating Node ================== 
-impl Tensor {
-    pub fn handle_minus_dim (source_dim: Vec<usize>, input_dim: Vec<i32>) -> Vec<usize> {
-        // check if -1
-        if let Some(idx) = input_dim.iter().position(|x| *x == -1) {
-            let total_size: usize = source_dim.iter().product();
-            let inp_size: usize = -input_dim.iter().product::<i32>() as usize;
-            
-            let mut ret = input_dim.clone(); 
-            ret[idx] = total_size / inp_size;
-            assert!(total_size % inp_size == 0, "Can't fill in -1");
+// ==================== Helper functions for -1 @ view node ==================== 
+pub fn handle_minus_dim (source_dim: &Vec<usize>, input_dim: &Vec<i32>) -> Vec<usize> {
+    // check if -1
+    if let Some(idx) = input_dim.iter().position(|x| *x == -1) {
+        let total_size: usize = source_dim.iter().product();
+        let inp_size: usize = -input_dim.iter().product::<i32>() as usize;
+        
+        let mut ret = input_dim.clone(); 
+        ret[idx] = (total_size / inp_size) as i32;
+        assert!(total_size % inp_size == 0, "Can't fill in -1");
 
-            return ret.iter().map(|a| *a as usize).collect::<Vec<usize>>();
-        }
-
-        // if no -1, then just let this happen
-        input_dim.iter().map(|a| *a as usize).collect::<Vec<usize>>()
+        return ret.iter().map(|a| *a as usize).collect::<Vec<usize>>();
     }
 
-    // you have to refactor the target dim such that it is i32 instead of usize
+    // if no -1, then just let this happen
+    input_dim.iter().map(|a| *a as usize).collect::<Vec<usize>>()
+}
 
+// ================== Creating Node ================== 
+impl Tensor {
+    // you have to refactor the target dim such that it is i32 instead of usize
     pub fn view (&self, target_dim: Vec<i32>) -> Tensor {
         let source_dim = self.dim();
+        let target_dim = handle_minus_dim(&source_dim, &target_dim);
         if target_dim != source_dim {
 
             // new view node
             Tensor::new(ViewNode {
                 parent: self.clone(),
-                target_dim: Self::handle_minus_dim(target_dim),
+                target_dim,
                 val: None
             })
         } else {
@@ -78,7 +79,7 @@ impl Tensor {
     }
 
     pub fn flatten (&self) -> Tensor {
-        let total_size = self.dim().iter().product();
+        let total_size = self.dim().iter().product::<usize>() as i32;
         Self::view(self, vec![total_size])
     }
 
@@ -86,7 +87,7 @@ impl Tensor {
         let p_dim = self.dim().len();
         let dim = if dim < 0 { p_dim as i32 + dim + 1 } else { dim } as usize;
 
-        let mut new_dim = self.dim().clone();
+        let mut new_dim = self.dim().iter().map(|&i| i as i32).collect::<Vec<i32>>();
         new_dim.insert(dim, 1);
         Self::view(self, new_dim)
     }
@@ -99,7 +100,10 @@ impl Tensor {
             let mut new_dim = self.dim().clone();
             assert_eq!(new_dim[dim], 1, "Squeeze dim must be one");
             new_dim.remove(dim);
-            Self::view(self, new_dim)
+            Self::view(
+                self, 
+                new_dim.iter().map(|&i| i as i32).collect::<Vec<i32>>()
+            )
         }
     }
 }

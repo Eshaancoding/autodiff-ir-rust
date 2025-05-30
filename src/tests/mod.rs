@@ -6,3 +6,4 @@ mod eq;
 mod ctrl;
 mod nn_test;
 mod norm;
+mod view;

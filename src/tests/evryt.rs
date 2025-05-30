@@ -65,7 +65,5 @@ mod tests {
         let v_grad = v.grad().get();
         assert_eq!(v_grad.dim, vec![3, 1], "Y grad dim incorrect");
         assert_eq!(v_grad.data, vec![6.0, 12.0, 0.0], "Y grad data incorrect");
-         
-         
     }
 }
