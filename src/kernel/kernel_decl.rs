@@ -63,9 +63,19 @@ pub enum ReduceOp {
 #[derive(Clone, Debug)]
 pub enum ComputeInstr {
     // General over binary/unary functions. Result is an "Expression".
-    Expr {
-        result: Expression
+    // temp structs over compute instructions
+    Unary {
+        a: Input,
+        res: Matrix,
+        op: UnaryOp
     },
+
+    
+
+
+    /*Expr {
+        result: Expression
+    },*/
 
     // binary kernels, such as a + b or a * b
     Binary {  

@@ -43,32 +43,33 @@ impl NodeTrait for ViewNode {
 
 // ================== Creating Node ================== 
 impl Tensor {
-    // pub fn handle_minus_dim (source_dim: Vec<usize>, target_dim: Vec<usize>) -> Vec<usize> {
-    //     // check if -1
-    //     let mut minus_one_dim: Option<usize> = None;
-    //     let mut new_dim = target_dim.clone();
-    //     let mut res_dim: i32 = 1;
-    //     let mut total_dim: i32 = 1;
+    pub fn handle_minus_dim (source_dim: Vec<usize>, input_dim: Vec<i32>) -> Vec<usize> {
+        // check if -1
+        if let Some(idx) = input_dim.iter().position(|x| x == -1) {
+            let total_size: usize = source_dim.iter().product();
+            let inp_size: i32 = -input_dim.iter().product();
+            
+            let mut ret = input_dim.clone(); 
+            ret[idx] = total_size / inp_size;
+            assert!(total_size % inp_size == 0, "Can't fill in -1");
 
-    //     // change
-    //     if let Some(idx) = minus_one_dim {
-    //         assert_eq(total_dim % res_dim == 0, "Can't fill -1 dim");
-    //         minus_one_dim[idx] = total_dim / res_dim;
-    //     }
+            ret.iter().map(|a| a as usize).collect::<Vec<usize>>()
+        }
 
-    //     new_dim
-    // }
+        // if no -1, then just let this happen
+        input_dim.iter().map(|a| a as usize).collect::<Vec<usize>>()
+    }
 
     // you have to refactor the target dim such that it is i32 instead of usize
 
-    pub fn view (&self, target_dim: Vec<usize>) -> Tensor {
+    pub fn view (&self, target_dim: Vec<i32>) -> Tensor {
         let source_dim = self.dim();
         if target_dim != source_dim {
 
             // new view node
             Tensor::new(ViewNode {
                 parent: self.clone(),
-                target_dim,
+                target_dim: handle_minus_dim(target_dim),
                 val: None
             })
         } else {
