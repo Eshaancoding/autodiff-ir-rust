@@ -69,7 +69,7 @@ impl Tensor {
             // new view node
             Tensor::new(ViewNode {
                 parent: self.clone(),
-                target_dim: handle_minus_dim(target_dim),
+                target_dim: Self::handle_minus_dim(target_dim),
                 val: None
             })
         } else {

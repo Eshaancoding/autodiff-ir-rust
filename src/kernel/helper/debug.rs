@@ -32,10 +32,11 @@ impl Display for Expression {
             },
             Expression::BitwiseAnd { a, b } => {
                 write!(f, "({} & {})", a, b)
-            }
+            },
             Expression::Val { v }  => {
                 write!(f, "{}", v)
             },
+            _ => todo!();
         }
     }
 }
