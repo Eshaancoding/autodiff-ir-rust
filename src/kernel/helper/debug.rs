@@ -36,7 +36,7 @@ impl Display for Expression {
             Expression::Val { v }  => {
                 write!(f, "{}", v)
             },
-            _ => todo!();
+            _ => todo!()
         }
     }
 }
