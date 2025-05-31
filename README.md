@@ -117,4 +117,4 @@ Put simply, I can write a lot less code with Rust rather than C++. I love the or
 
 Admittedly, it took a while for me to organize the overall organization of this repository (took over 3 rewrites). But after that, it was smooth sailing from there.
 
-However, some of Rust is a hindrance. I would love [that feature](https://github.com/rust-lang/rust/issues/111137). Second, most underlying backends - NVIDIA Toolkit, OpenCL, etc. - *anyways* use C++. Hell, I am generating kernels written in C++ syntax within rust. This is not necessarily a "hindrance", but it's kinda funny to me.
+Do keep in mind, however, that this library is a compiler for ML operations. The actual computation will be written in C++. Pretty much **every single** intrinsics and low-level drivers (NVIDIA Toolkit, OpenCL, etc.). The CPU code is written in C++ as well, as Rust doesn't have great support for AVX512 instructions.

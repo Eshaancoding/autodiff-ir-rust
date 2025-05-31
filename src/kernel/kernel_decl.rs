@@ -2,10 +2,12 @@
 pub enum Value {
     Constant { val: i32 },
     Global,  // global idx - unique to each thread
+    X,       // X - requires the x coordinate for accessing matrix (especially in dot product)
+    Y,       // Y - requires the y coordinate for accessing matrix (especially in dot product)
 }
 
 // shorthand expressions
-// used for index accessing, unary, and binary expression
+// used for index accessing
 #[derive(Clone, Debug)]
 pub enum Expression {
     Val {v: Value},
@@ -17,28 +19,6 @@ pub enum Expression {
     ShiftRight {a: Box<Expression>, b: Box<Expression>},
     ShiftLeft {a: Box<Expression>, b: Box<Expression>},
     BitwiseAnd {a: Box<Expression>, b: Box<Expression>},
-
-    Exp2 {a: Box<Expression>},
-    Log2 {a: Box<Expression>},
-    Sin  {a: Box<Expression>},
-    Recip {a: Box<Expression>},
-    Sqrt {a: Box<Expression>},
-    EqualZero {a: Box<Expression>},
-    MoreZero {a: Box<Expression>},
-    LessZero {a: Box<Expression>}
-}
-
-#[derive(Clone, Debug)]
-pub enum UnaryOp {
-    Exp2,
-    Log2,
-    Sin,
-    Neg,
-    Recip,
-    Sqrt,
-    EqualZero,
-    MoreZero,
-    LessZero
 }
 
 #[derive(Clone, Debug)]
@@ -62,6 +42,19 @@ pub enum Input {
 }
 
 #[derive(Clone, Debug)]
+pub enum UnaryOp {
+    Exp2,
+    Log2,
+    Sin,
+    Neg,
+    Recip,
+    Sqrt,
+    EqualZero,
+    MoreZero,
+    LessZero
+}
+
+#[derive(Clone, Debug)]
 pub enum BinaryOp {
     Add,
     Multiply
@@ -75,18 +68,12 @@ pub enum ReduceOp {
 
 #[derive(Clone, Debug)]
 pub enum ComputeInstr {
-    // General over binary/unary functions. Result is an "Expression".
-    // temp structs over compute instructions
+    // unary expressions, such as b = a.exp()
     Unary {
         a: Input,
         res: Matrix,
         op: UnaryOp
     },
-
-    // binary kernels, such as a + b or a * b
-    /*Expr {
-        result: Expression
-    },*/
 
     // binary kernels, such as a + b or a * b
     Binary {  

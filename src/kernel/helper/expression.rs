@@ -78,5 +78,11 @@ impl Expression {
         Expression::Val { v: Value::Global }
     }
 
-    
+    pub fn make_x () -> Expression {
+        Expression::Val { v: Value::X }
+    }
+
+    pub fn make_y () -> Expression {
+        Expression::Val { v: Value::Y }
+    }
 }

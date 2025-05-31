@@ -1,6 +1,14 @@
 use crate::kernel_decl::{Expression, Input, Matrix};
 use super::trackers::{DataCmds, MatrixTracker};
 
+// Different access types (depending on the kernel used) is needed
+#[derive(PartialEq, Eq)]
+pub enum AccessType {
+    Global,         // Elementwise; uses Global IDX
+    XY,             // Dot product; restricted to matrix 2-dim; uses X and Y. (SEE src/matmul_cpu/512_matmul.cpp for example of x + y)
+    Dim {d: usize}  // Reduce; Select one dim and iterate it over; uses Global Idx
+}
+
 impl<'a> MatrixTracker<'a> {
     pub fn calc_stride (shape: &Vec<usize>) -> Vec<Expression> {
         let n = shape.len();
@@ -50,17 +58,29 @@ impl<'a> MatrixTracker<'a> {
         global_expr
     }
 
-    pub fn get_mat (&self, id: &String) -> Matrix {
-        if self.vars.contains_key(id) {
-            let var_dep = self.vars.get(id).unwrap();
+    pub fn get_mat (&self, id: &String, access_type: AccessType) -> Matrix {
+        if let Some(var_dep) = self.vars.get(id) {
             let sink_shape = &var_dep.sink_dims;
             let source_shape = &var_dep.source_dims;
 
+
             // go from global index --> N-dim index
-            let mut ndim = MatrixTracker::global_to_ndim(
-                Expression::make_global(),
-                &sink_shape
-            );
+            let mut ndim = match access_type {
+                AccessType::Global => { 
+                    MatrixTracker::global_to_ndim(
+                        Expression::make_global(),
+                        &sink_shape
+                    )
+                },
+                AccessType::XY => {
+                    assert!(
+                        var_dep.sink_dims.len() == 2,
+                        "Access type is XY, but the matrix isn't 2-dim"
+                    );
+                    vec![Expression::make_x(), Expression::make_y()]
+                },
+                _ => todo!()
+            };
             
             // manipulate the ndim expression thru data cmds in reverse
             for cmd in var_dep.data_cmds.iter().rev() {
@@ -97,23 +117,46 @@ impl<'a> MatrixTracker<'a> {
                 )
             }
         } 
-        else if self.sources.contains_key(id) {
-            let source_res = self.sources.get(id).unwrap().clone();
+        else if let Some(source_res) = self.sources.get(id) {
+            match access_type {
+                AccessType::Global => {
+                    Matrix { 
+                        id: source_res.alloc_id.clone(),
+                        access: Expression::make_global()
+                    }
+                },
+                AccessType::XY => {
+                    let d = &source_res.dim;
+                    assert!(
+                        d.len() == 2, 
+                        "Access type is XY, but the matrix isn't 2-dim"
+                    );   
 
-            Matrix { 
-                id: source_res.alloc_id,
-                access: Expression::make_global()
-            }
+                    Matrix { 
+                        id: source_res.alloc_id.clone(),
+                        access: Expression::simplify(
+                            MatrixTracker::ndim_to_global(
+                                vec![Expression::make_x(), Expression::make_y()],
+                                d
+                            )
+                        )
+                        
+                    }
+                },
+                AccessType::Dim { d } => todo!()
+            }            
+
+            
         } else {
             panic!("Unable to get matrix information on var {}", id);
         }
     }
 
-    pub fn get_input (&self, id: &String) -> Input {
+    pub fn get_input (&self, id: &String, access_type: AccessType) -> Input {
         // check if constant
         // check if concat
 
-        Input::Mat { mat: self.get_mat(id) } 
+        Input::Mat { mat: self.get_mat(id, access_type) } 
     }
 
     // for debugging

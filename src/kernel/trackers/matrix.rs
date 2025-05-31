@@ -80,11 +80,10 @@ impl<'a> MatrixTracker<'a> {
             res_cmp = res.clone();
             data_cmd = Some(DataCmds::Index { index: index.clone(), dim: dim.clone() });
         }
-        // else if let IRCmds::Concat { a, b, dim, res } = cmd {
-            // a_cmp = a.clone();
-            // res_cmp = res.clone();
+        else if let IRCmds::Concat { a, b, dim, res } = cmd {
             // concat is weird, not doing this yet
-        // }
+            todo!()
+        }
         else if let IRCmds::Permute { a, p, res } = cmd {
             a_cmp = a.clone();
             res_cmp = res.clone();

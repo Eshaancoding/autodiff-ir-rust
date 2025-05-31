@@ -1,13 +1,12 @@
 #[cfg(test)]
 mod tests {
     use std::time::Instant;
-
     use crate::autodiff;
     use crate::nn::{self, SeqF, Module};
     
     #[test]
     // #[ignore]
-    fn nn_time_test () {
+    pub fn nn_time_test () {
         autodiff::set_device(autodiff::devices::CPUNew::new());
         autodiff::eager_dep_opt();
 

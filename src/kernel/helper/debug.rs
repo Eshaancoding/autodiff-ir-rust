@@ -3,7 +3,9 @@ Implements displays for everything in the kernel folder
 Extremely helpful for debugging everything (kernel fusion, expression, trackers, etc.)
 */
 
-use std::fmt::Display;
+use std::fmt::Debug;
+use std::io::{self, Write};
+use std::{collections::HashMap, fmt::Display};
 use super::{kernel_decl::{Expression, Input, Matrix, Value}, trackers::AllocTracker};
 
 impl Display for Expression {
@@ -36,7 +38,6 @@ impl Display for Expression {
             Expression::Val { v }  => {
                 write!(f, "{}", v)
             },
-            _ => todo!()
         }
     }
 }
@@ -53,6 +54,12 @@ impl Display for Value {
             },
             Value::Global => {
                 write!(f, "#global")
+            },
+            Value::X => {
+                write!(f, "#x")
+            },
+            Value::Y => {
+                write!(f, "#y")
             },
         }
     }
@@ -92,5 +99,48 @@ impl<'a> Display for AllocTracker<'a> {
         }
 
         write!(f, "")
+    }
+}
+
+// input interface for console
+pub fn console_hashmap<T: Debug> (hmap: &HashMap<String, T>) {
+    loop {
+        print!("> ");
+        io::stdout().flush().expect("Can't flush output");
+        let mut user_input = String::new();
+        io::stdin().read_line(&mut user_input).expect("Can't read input from user");
+
+        if user_input.trim() == "q" { break; }
+
+        if let Some(res) = hmap.get(user_input.trim()) {
+            println!("{:#?}", res);
+        } else {
+            println!("Not found in hashmap");
+        }
+    }
+}
+
+pub fn console_list<T: Debug> (list: &Vec<T>) {
+    loop {
+        print!("> ");
+        io::stdout().flush().expect("Can't flush output");
+        let mut user_input = String::new();
+        io::stdin().read_line(&mut user_input).expect("Can't read input from user");
+
+        if user_input.trim() == "q" { break; }
+
+        let parsed_index = match user_input.trim().parse::<usize>() {
+            Ok(v) => v,
+            _ => { 
+                println!("Can't parse into usize");
+                continue;
+            }
+        };
+
+        if let Some(res) = list.get(parsed_index) {
+            println!("{:#?}", res);
+        } else {
+            println!("Index out of bounds");
+        }
     }
 }

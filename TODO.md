@@ -68,11 +68,15 @@ Backend will refer to things that runs the internal operations and optimizations
         * tracing through BRs will be challenging, however...
         * change kernel_decl.rs and do efficiently
 
-    * <mark>1. Remove binary/unary funcs and just use general "Expression" </mark>
+    * ~~1. Remove binary/unary funcs and just use general "Expression"~~
 
     * <mark>2. Update Matrix Tracker tracker for dot prod kernels</mark>
 
     * <mark>3. Update matrix tracker for reduce kernel</mark>
+
+    * Finish Concat logic in matrix tracker
+
+    * Finish constant logic in matrix tracker
 
     * CPU --> GPU feeder 
         * aka dataset
@@ -81,6 +85,11 @@ Backend will refer to things that runs the internal operations and optimizations
         * This is a problem because dot produce/reduce kernels often have `load` instructions that load 4 bytes + orig
             * sometimes, it just needs to load ONE (think)
         * this needs some kernel variant of some sort, which is really weird. So for now, we have to assume contigious.
+        * technically, you only need the weight tensor to be in full contigious, as the value in the x value is just constant
+            * look at the implementation :D
+            * This is the only case for the CPU. NVIDIA / etc. implementations might be different.
+            * per device, you probably need to provide whether the support for certain fusion implementations is common.
+                * probably pass it as param to `to_kernel`
 
 * **X86**:
     * Allow dot prod implementation to support varied shapes rather than just power of 2

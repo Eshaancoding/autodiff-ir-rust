@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
 use indexmap::IndexMap;
-use crate::{kernel_decl::{ComputeInstr, ReduceOp}, to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, IRCmds};
-use super::trackers::{AllocTracker, MatrixTracker};
+use crate::{
+    access_expr::AccessType, helper::debug::console_list, kernel_decl::{ComputeInstr, ReduceOp}, to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, IRCmds
+};
+use super::{helper::debug::console_hashmap, trackers::{AllocTracker, MatrixTracker}};
 
 pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     let mut alloc_tracker = AllocTracker::new();
@@ -31,17 +33,17 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                     // ===== EXPR GEN NEED TO CONSIDER DIM IN SUM ====
                     // MAKE CONTIGIOUS BEFORE REDUCE
                     instr.push(ComputeInstr::Reduce { 
-                        a: mat_tracker.get_input(a), 
-                        res: mat_tracker.get_mat(res),
+                        a: mat_tracker.get_input(a, AccessType::Global), 
+                        res: mat_tracker.get_mat(res, AccessType::Global),
                         op: ReduceOp::Sum
                     });
                 },
                 IRCmds::DotProduct { a, b, res } => {
-                    // MAKE CONTIGIOUS BEFORE DOT PROD
+                    // MAKE RES AND B CONTIGIOUS BEFORE DOT PROD
                     instr.push(ComputeInstr::DotProd { 
-                        a: mat_tracker.get_input(a), 
-                        b: mat_tracker.get_input(b), 
-                        res: mat_tracker.get_mat(res) 
+                        a: mat_tracker.get_input(a, AccessType::XY), 
+                        b: mat_tracker.get_input(b, AccessType::XY), 
+                        res: mat_tracker.get_mat(res, AccessType::XY) 
                     });
                 },
                 
@@ -58,11 +60,8 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     }
 
     // ...debug...
-    // mat_tracker.print_alloc_tracker();
-    // let var_name = "a"; // bn is invalid now
-    // mat_tracker.print_raw(&var_name.to_string());
-    // println!("{}:\n\t{}", var_name, mat_tracker.get_mat(&var_name.to_string()));
-    // println!("{:#?}", cmd_computeinstr);
+    println!("{:#?}", cmd_computeinstr);
+    console_list(cmd_computeinstr.get("main").unwrap()); // only available in run()
 
     // ========= Kernel Fusion =========
     

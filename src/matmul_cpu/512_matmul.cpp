@@ -85,10 +85,19 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
             
             // in output cache, iterate and pack into 8/16 reg
             for (int o_reg = 0; o_reg < O_CACHE; o_reg += 16) {
+
+                /* for W matrix; XY accessing
+                i_c <-- x
+                o_start + o_reg <-- y
+                */
                 __m512 m = _mm512_load_ps(&W[i_c*O_size + o_start + o_reg]);
 
                 #pragma GCC unroll 16
                 for (int b_reg = 0; b_reg < B_CACHE; b_reg += 1) {
+                    /* for A matrix
+                    i_c <-- x
+                    b_start + b_reg <-- y
+                    */
                     __m512 x = _mm512_set1_ps(A[i_c*B_size + b_start + b_reg]);
                     __m512* res_p = &res[b_reg * (O_CACHE/16) + (o_reg/16)];
                     *res_p = _mm512_fmadd_ps(m, x, *res_p);
@@ -101,6 +110,11 @@ void dot_prod_core (float* A, float* W, float* Res, int B_size, int I_size, int 
         for (int b_res = 0; b_res < B_CACHE; b_res++) {
             #pragma GCC unroll 16
             for (int o_res = 0; o_res < (O_CACHE/16); o_res++) { 
+                /* 
+                for res matrix
+                i_c <-- x
+                b_start + b_reg <-- y
+                */
                 _mm512_store_ps(
                     &Res[(b_start + b_res) * O_size + (o_start + o_res*16)],
                     res[b_res*(O_CACHE/16)+o_res]
