@@ -28,7 +28,6 @@ pub fn ir_to_dep (cmd: IRCmds) -> Vec<String> {
         IRCmds::Exp2 { a, .. } => vec![a],
         IRCmds::Log2 { a, .. } => vec![a],
         IRCmds::Sin { a, .. } => vec![a],
-        IRCmds::Neg { a, .. } => vec![a],
         IRCmds::Recip { a, .. } => vec![a],
         IRCmds::Sqrt { a, .. } => vec![a],
 

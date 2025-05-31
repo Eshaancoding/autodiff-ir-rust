@@ -64,11 +64,6 @@ macro_rules! create_func {
     };
 }
     
-create_func!(neg, c_neg, NegNode, Neg, |_, grad: Value| -> Value {
-    // d/dx -x = -1
-    (grad.to_node().neg()).forward()
-}); 
-
 create_func!(exp2, c_exp, ExpTwoNode, Exp2, |v: Value, grad: Value| -> Value {
     // d/dx 2^x = ln(2) * 2^x
     let mult_const = 2.0f64.ln();

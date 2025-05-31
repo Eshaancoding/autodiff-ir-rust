@@ -26,7 +26,6 @@ pub fn replace_res_cmd (cmd: &mut IRCmds, replace_to: String) {
         IRCmds::Log2 { res, .. } => { *res = replace_to; },
         IRCmds::Sin { res, .. } => { *res = replace_to; },
 
-        IRCmds::Neg { res, .. } => { *res = replace_to; },
         IRCmds::Recip { res, .. } => { *res = replace_to; },
         IRCmds::Sqrt { res, .. } => { *res = replace_to; },
 

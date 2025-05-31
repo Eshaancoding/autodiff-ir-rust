@@ -59,7 +59,7 @@ Backend will refer to things that runs the internal operations and optimizations
 
 ## Backend
 
-* <mark>1. Remove Neg IR instruction</mark>
+* ~~1. Remove Neg IR instruction~~
 
 * **Memory**:
     * Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul
@@ -121,6 +121,9 @@ Backend will refer to things that runs the internal operations and optimizations
         * not sure if you can beat hand-tune optimizations
 
 * **HLIR Opts**
+    * if matrix is always used in it's transposed form, then set the contents such that it is in transposed and remove transpose operation
+        * Good for weight optimization :)
+
     * View removal
         * If multiple views in sequence, just turn it into the one single view (the last view operation)
         * if view is already in shape, then delete

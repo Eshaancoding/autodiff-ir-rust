@@ -107,17 +107,6 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
                 ).squeeze(Some(*index))
             );
         },
-        IRCmds::Neg { a, res } => {
-            let b_times = GenTensor::<f64>::new_raw(
-                &[-1.0],
-                &[1]
-            );
-
-            hms.insert(
-                res.clone(),
-                hms.get(a).unwrap().mul(&b_times)
-            );
-        },
         IRCmds::Recip { a, res } => {
             hms.insert(
                 res.clone(),

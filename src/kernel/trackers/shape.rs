@@ -97,7 +97,6 @@ impl ShapeTracker {
             IRCmds::Exp2 { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
             IRCmds::Log2 { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
             IRCmds::Sin { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
-            IRCmds::Neg { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
             IRCmds::Recip { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
             IRCmds::Sqrt { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
             _ => {}

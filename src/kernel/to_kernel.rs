@@ -58,10 +58,10 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     }
 
     // ...debug...
-    mat_tracker.print_alloc_tracker();
-    let var_name = "bn";
-    mat_tracker.print_raw(&var_name.to_string());
-    println!("{}:\n\t{}", var_name, mat_tracker.get_mat(&var_name.to_string()));
+    // mat_tracker.print_alloc_tracker();
+    // let var_name = "a"; // bn is invalid now
+    // mat_tracker.print_raw(&var_name.to_string());
+    // println!("{}:\n\t{}", var_name, mat_tracker.get_mat(&var_name.to_string()));
     // println!("{:#?}", cmd_computeinstr);
 
     // ========= Kernel Fusion =========

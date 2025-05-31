@@ -69,9 +69,6 @@ pub fn print_ir (cmd: &IRCmds, current_heading: &mut String, idx: usize) {
         IRCmds::Sin { a, res } => {
             println!("{} = {}.sin()", res, a);
         },
-        IRCmds::Neg { a, res } => {
-            println!("{} = -{}", res, a);
-        },
         IRCmds::Recip { a, res } => {
             println!("{} = 1/{}", res, a);
         },

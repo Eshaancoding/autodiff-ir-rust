@@ -30,7 +30,6 @@ pub fn ir_to_res (cmd: IRCmds) -> Option<String> {
         IRCmds::Log2 { res, ..} => { Some(res) },
         IRCmds::Sin { res, ..} => { Some(res) },
 
-        IRCmds::Neg { res, .. } => { Some(res) },
         IRCmds::Recip { res, .. } => { Some(res) },
         IRCmds::Sqrt { res, .. } => { Some(res) },
         _ => { None }

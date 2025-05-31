@@ -228,12 +228,20 @@ create_op!(
     |l: &Value, _: &Value, grad: &Value| -> Value { (l.to_node() * grad.to_node()).forward() }  // right
 );
 
+// ============= Negative ============= 
+impl std::ops::Neg for Tensor {
+    type Output = Tensor;
+    fn neg(self) -> Self::Output {
+        -1.0 * self 
+    }
+}
+
 // ============= Subtract ============= 
 impl std::ops::Sub<Tensor> for Tensor {
     type Output = Tensor;
 
     fn sub (self, other:Tensor) -> Tensor {
-        self + other.neg()
+        self + -1.0 * other
     }
 }
 
@@ -241,7 +249,7 @@ impl std::ops::Sub<Tensor> for f64 {
     type Output = Tensor;
 
     fn sub(self, other: Tensor) -> Self::Output {
-        self + other.neg()
+        self + -1.0 * other
     }
 }
 
@@ -255,7 +263,7 @@ impl std::ops::Sub<f64> for Tensor {
 
 impl std::ops::SubAssign<Tensor> for Tensor {
     fn sub_assign(&mut self, rhs: Tensor) {
-        *self += rhs.neg();
+        *self += -1.0 * rhs;
     }
 }
 
@@ -267,7 +275,7 @@ impl std::ops::SubAssign<f64> for Tensor {
 
 impl std::ops::SubAssign<Value> for Tensor {
     fn sub_assign(&mut self, rhs: Value) {
-        *self += rhs.to_node().neg();
+        *self += -1.0 * rhs.to_node();
     }
 }
 

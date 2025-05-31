@@ -11,7 +11,7 @@ impl Module for Sigmoid {
 
 impl SeqF for Sigmoid {
     fn f (&self, x: Tensor) -> Tensor {
-        1.0 / (1.0 + x.neg().exp())    
+        1.0 / (1.0 + (-x).exp())    
     }
 }
 
@@ -22,6 +22,6 @@ pub fn Sigmoid () -> Sigmoid {
 
 impl Tensor {
     pub fn sigmoid (&self) -> Tensor {
-        1.0 / (1.0 + self.neg().exp())
+        1.0 / (1.0 + (-self.clone()).exp())
     }
 }

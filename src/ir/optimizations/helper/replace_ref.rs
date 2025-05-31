@@ -65,9 +65,6 @@ fn replace_ref_cmd (cmd: &mut IRCmds, a_replace: &String, b_replace: String) {
         IRCmds::Sin { a, .. } => {
             if a == a_replace { *a = b_replace; }
         },
-        IRCmds::Neg { a, .. } => {
-            if a == a_replace { *a = b_replace; }
-        },
         IRCmds::Recip { a, .. } => {
             if a == a_replace { *a = b_replace; }
         },

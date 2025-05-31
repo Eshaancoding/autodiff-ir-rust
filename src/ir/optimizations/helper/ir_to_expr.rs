@@ -54,9 +54,6 @@ pub fn ir_to_expr (cmd: &IRCmds) -> Option<String> {
         IRCmds::Sin { a, .. } => {
             Some(format!("{}.sin()", a))
         },
-        IRCmds::Neg { a, ..} => {
-            Some(format!("-{a}"))
-        },
         IRCmds::Sqrt { a, ..} => {
             Some(format!("sqrt({a})"))
         }

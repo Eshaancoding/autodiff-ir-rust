@@ -52,7 +52,6 @@ pub enum IRCmds {
     Exp2  {a: String, res: String},   // fine: shift?
     Log2  {a: String, res: String},   // fine: counting?
     Sin   {a: String, res: String},   // not as fine: lookup table + quadratic interpolation (c0 + c1*x + c2*x*x); implement at conditioner
-    Neg   {a: String, res: String},   // fine: bit manipulation
     Recip {a: String, res: String},   // lookup-table-driven approximations combined with iterative refinement, optimized for parallel execution and hardware efficiency
     Sqrt  {a: String, res: String},   // calculates inverse square root and then reciprocal...
 

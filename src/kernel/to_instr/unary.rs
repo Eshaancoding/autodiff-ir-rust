@@ -23,13 +23,6 @@ pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracke
                 op: UnaryOp::Sin 
             }) 
         },
-        IRCmds::Neg { a, res } => { 
-            instr.push(ComputeInstr::Unary { 
-                a: mat_tracker.get_input(a), 
-                res: mat_tracker.get_mat(res),
-                op: UnaryOp::Neg
-            }) 
-        },
         IRCmds::Recip { a, res } => { 
             instr.push(ComputeInstr::Unary { 
                 a: mat_tracker.get_input(a), 
