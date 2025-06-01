@@ -70,7 +70,7 @@ Backend will refer to things that runs the internal operations and optimizations
 
     * ~~1. Remove binary/unary funcs and just use general "Expression"~~
 
-    * <mark>2. Update Matrix Tracker tracker for dot prod kernels</mark>
+    * ~~2. Update Matrix Tracker tracker for dot prod kernels~~
 
     * <mark>3. Update matrix tracker for reduce kernel</mark>
 
