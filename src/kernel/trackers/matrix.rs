@@ -38,6 +38,7 @@ pub struct VarSource {
 
 pub struct MatrixTracker<'a> {
     // given sink variable, get source variable and the steps to reach to sink var
+    // Note that these IDs aren't correspondent to the HLIR id, but to the alloc ID.
     pub vars: HashMap<String, VarDependency>,  
     pub sources: HashMap<String, VarSource>,             // tracks source variables (no var dependency)
     pub shape_tracker: ShapeTracker,                     // tracks the shape of variables
@@ -96,9 +97,7 @@ impl<'a> MatrixTracker<'a> {
         } else {
             if let Some(id) = ir_to_res(cmd.clone()) {
                 // if we are redefining a source, then remove from self.vars (which tracks broadcasting, view, etc.)
-                if self.vars.contains_key(&id) {
-                    self.vars.remove_entry(&id);
-                }
+                self.vars.remove_entry(&id);
 
                 let shape = self.shape_tracker.get_shape(&id).clone();
                 let alloc_id = self.alloc_tracker.get_alloc(&id).id.clone();
@@ -170,5 +169,8 @@ impl<'a> MatrixTracker<'a> {
         println!("{}", self.alloc_tracker);
     }
 
-   
+    // wrapper over shape tracker
+    pub fn get_shape (&self, id: &String) -> &Vec<usize> {
+        self.shape_tracker.get_shape(id)
+    }
 }

@@ -100,7 +100,7 @@ pub fn print_ir (cmd: &IRCmds, current_heading: &mut String, idx: usize) {
             println!("if {} == 0 --> BR {}", a, block_id.cyan());
         },
         IRCmds::EX => {
-            println!("EX");
+            println!("{}", "EXIT".red());
         }
     }
 } 

@@ -1,11 +1,6 @@
 // The actual baseline of this code was written in ChatGPT...
 // Thanks ChatGPT!
 
-/**
- * There is a simpler way of doing this; just optimizing at `make_minus` etc.
- * When doing dynamic shapes, you should probably use this optimization
- */
-
 use super::kernel_decl::{Expression, Value};
 
 impl Expression {
@@ -134,6 +129,8 @@ impl Expression {
             
         }
 
+        
+        // ======== if b >= a at x % a % b, it's equivalent to x % a +==========
         fn make_opt_remainder (a: Expression, b: Expression) -> Expression {
             if let Some(b_val) = b.get_const() {
                 let log_two_res = (b_val as f32).log2();
@@ -148,7 +145,6 @@ impl Expression {
         }
 
         if op_str == "remainder" {
-            // if b >= a at x % a % b, it's equivalent to x % a
             match (&a_simplified, &b_simplified) {
                 (
                     Expression::Remainder { a, b},

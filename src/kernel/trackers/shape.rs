@@ -103,6 +103,10 @@ impl ShapeTracker {
         }
     }
 
+    // the shape returned is not necessarily represented by the shape in the alloc tracker
+    // it tracks the general shape of the tensor, but the tensor may have a size of 1 nonetheless
+    // take, for example, a A(B,M) + B(1,M). We are broadcasting from (1,M) to (B,M)
+    // the shape of B will be broadcasted to (B,M) to fit A. However, the allocation will still be (1,M)
     pub fn get_shape (&self, id: &String) -> &Vec<usize> {
         self.shape.get(id).expect("Unable to get shape at shape tracker")
     }

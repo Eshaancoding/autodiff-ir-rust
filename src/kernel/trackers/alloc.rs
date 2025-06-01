@@ -12,39 +12,21 @@ pub struct AllocEntry<'a> {
     // note that even if this alloc is changed in the program, the initial content will stay the same
 }
 pub struct AllocTracker<'a> {
-    id_var: u32,
     shape_tracker: ShapeTracker,
-    pub vars: HashMap<String, AllocEntry<'a>>,  // ir id --> Var Entry
-    // note that var entry id IS NOT THE SAME as IR id
+
+    // hlir id is same as the alloc id
+    // However, not all hlir id will be in vars (ex: referencing others)
+    pub vars: HashMap<String, AllocEntry<'a>>,  
 }
 
 impl<'a> AllocTracker<'a> {
     pub fn new () -> AllocTracker<'a> {
         AllocTracker {  
-            id_var: 0,
             vars: HashMap::new(),
             shape_tracker: ShapeTracker::new()
         }
     }
     
-    // same implementation as ir base
-    pub fn unique_id (&mut self) -> String {
-        let alphabet = "abcdefghijklmnopqrstuvwxyz";
-        let base = alphabet.len() as u32;
-        let mut idx = self.id_var;
-        let mut result = String::new();
-
-        while idx >= base {
-            result.push(alphabet.chars().nth((idx % base) as usize).unwrap());
-            idx /= base;
-            idx -= 1; 
-        }
-        result.push(alphabet.chars().nth(idx as usize).unwrap());
-        self.id_var += 1;
-
-        result.chars().rev().collect() 
-    }
-
     pub fn update_vars (&mut self, ir_id: &String, dim: &Vec<usize>) {
         let total_dim = dim.iter().product::<usize>();
         if self.vars.contains_key(ir_id) {
@@ -52,8 +34,7 @@ impl<'a> AllocTracker<'a> {
                 f.size = f.size.max(total_dim)
             });
         } else {
-            let uid = self.unique_id();
-            self.vars.insert(ir_id.clone(), AllocEntry { id: uid, size: total_dim, initial_content: None });
+            self.vars.insert(ir_id.clone(), AllocEntry { id: ir_id.clone(), size: total_dim, initial_content: None });
         }
     }
     
@@ -67,11 +48,10 @@ impl<'a> AllocTracker<'a> {
             IRCmds::Permute { .. } => {}, 
             IRCmds::Broadcast { .. } => {}, 
             IRCmds::CreateMat { contents, dim, id } => {
-                let uid = self.unique_id();
                 self.vars.insert(
                     id.clone(),
                     AllocEntry { 
-                        id: uid, 
+                        id: id.clone(), 
                         size: dim.iter().product::<usize>(),
                         initial_content: Some(contents)
                     } 

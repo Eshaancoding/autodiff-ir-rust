@@ -95,6 +95,13 @@ Backend will refer to things that runs the internal operations and optimizations
     * Allow dot prod implementation to support varied shapes rather than just power of 2
     * <mark>3. Efficient Reduce kernel.</mark>
 
+* **Expression simplification**
+    * similar to opt remainder %.
+    * Optimze at make_minus or make etc. 
+    * There might be edge cases for simplify expr func. Still keep that (need experimentation)
+        * v & 63 & 63 --> v & 63
+    
+
 * **Kernel experimentation:**
     * Experiment with different parameters of dot prod + other kernels 
         * [this](https://mesozoic-egg.github.io/tinygrad-notes/20241203_beam.html) does a good job
@@ -132,6 +139,7 @@ Backend will refer to things that runs the internal operations and optimizations
 * **HLIR Opts**
     * if matrix is always used in it's transposed form, then set the contents such that it is in transposed and remove transpose operation
         * Good for weight optimization :)
+        * e --> e = e.t <-- just transform the matrix manually
 
     * View removal
         * If multiple views in sequence, just turn it into the one single view (the last view operation)
@@ -172,4 +180,11 @@ Backend will refer to things that runs the internal operations and optimizations
 
 # Rust Codebase
 
-* Remove excessive clones
+* Remove excessive clones (Ctrl+shift+F --> find)
+* Put `IndexMap<String, Vec<IRCmds>>` under a struct (represents HLIR cmds)
+* we iter over `(block_name, b_cmds) in cmds.iter()... for cmd in b_cmds` a lot...
+    * but can this be really done? we have to trace the BR graph as we do matrix tracker, etc.
+* Rebrand from IR to "HLIR"
+* Use macros for repetitive statements
+    * example, `kernel/to_instr` can be simplified to macros
+* better debug messages (especially in frontend)

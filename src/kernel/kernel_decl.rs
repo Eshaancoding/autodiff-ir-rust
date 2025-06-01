@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Clone, Debug)]
 pub enum Value {
     Constant { val: i32 },
@@ -72,7 +74,8 @@ pub enum ComputeInstr {
     Unary {
         a: Input,
         res: Matrix,
-        op: UnaryOp
+        op: UnaryOp,
+        size: usize   // size of the input
     },
 
     // binary kernels, such as a + b or a * b
@@ -81,13 +84,15 @@ pub enum ComputeInstr {
         b: Input,
         res: Matrix,
         op: BinaryOp,
+        size: usize  // size of both a and b (both are same size)
     },  
 
     // reduce kernels, specifically along a dim (ex: sum)
     Reduce { 
         a: Input,
         res: Matrix,
-        op: ReduceOp
+        op: ReduceOp,
+        size: usize // size of the kernel (still need to construct this kernel beforehand)
     },  
 
     // dot product kernels
@@ -96,7 +101,10 @@ pub enum ComputeInstr {
     DotProd { 
         a: Input,
         b: Input,
-        res: Matrix
+        res: Matrix,
+        batch_size: usize, // batch size (B in BxI dotprod I*O --> B*O)
+        input_size: usize, // input size (I in BxI dotprod I*O --> B*O)
+        output_size: usize, // output size (O in BxI dotprod I*O --> B*O)
     }, 
 
     // kernels that turns movement / permutations / concatenation of tensors into single contigious tensor.  
@@ -104,7 +112,8 @@ pub enum ComputeInstr {
     // Note that for dot prod and reduce kernels, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
     Movement { 
         a: Input,
-        res: Matrix
+        res: Matrix,
+        size: usize,   // size of the result kernel
     },
 
     // Alloc {
@@ -124,4 +133,11 @@ pub enum ComputeInstr {
     EX
 }
 
-
+// list the procedure of kernels to declare
+// A light wrapper for hashmap<string, Vec<ComputeInstr>>
+// Implementations defined in procedure.rs
+// String in HashMap<String, ...> represents the block name
+// Vec<ComputeInstr> is the order of kernels to be executed
+pub struct Procedure {
+    pub cmd_computeinstr: HashMap<String, Vec<ComputeInstr>>
+}

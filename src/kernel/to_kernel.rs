@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-
 use indexmap::IndexMap;
 use crate::{
-    access_expr::AccessType, helper::debug::console_list, kernel_decl::{ComputeInstr, ReduceOp}, to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, IRCmds
+    access_expr::AccessType, kernel_decl::{ComputeInstr, Procedure, ReduceOp}, 
+    to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, 
+    IRCmds
 };
-use super::{helper::debug::console_hashmap, trackers::{AllocTracker, MatrixTracker}};
+use super::{trackers::{AllocTracker, MatrixTracker}};
 
 pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     let mut alloc_tracker = AllocTracker::new();
@@ -16,9 +16,13 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     }
 
     let mut mat_tracker = MatrixTracker::new(&alloc_tracker);
-    let mut cmd_computeinstr: HashMap<String, Vec<ComputeInstr>> = HashMap::new();
+    let mut proc = Procedure::new();
     for (block_name, b_cmds) in cmds.iter() { 
         let mut instr: Vec<ComputeInstr> = vec![]; // instructions
+
+        // TODO: order matters no? can't just do matrix tracker on random iteration
+        // unless matrix tracker is dependent on per block basis, which is not.
+        // this shouldn't work...
         for cmd in b_cmds {
             mat_tracker.step(cmd); 
 
@@ -35,15 +39,24 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                     instr.push(ComputeInstr::Reduce { 
                         a: mat_tracker.get_input(a, AccessType::Global), 
                         res: mat_tracker.get_mat(res, AccessType::Global),
-                        op: ReduceOp::Sum
+                        op: ReduceOp::Sum,
+                        size: 0
                     });
                 },
                 IRCmds::DotProduct { a, b, res } => {
+                    let a_shape = mat_tracker.get_shape(a);
+                    let b_shape = mat_tracker.get_shape(b);
+                    
+                    assert!(a_shape.len() == 2 && b_shape.len() == 2, "dot prod at kernel lowering has wrong dimensions");
+
                     // MAKE RES AND B CONTIGIOUS BEFORE DOT PROD
                     instr.push(ComputeInstr::DotProd { 
                         a: mat_tracker.get_input(a, AccessType::XY), 
                         b: mat_tracker.get_input(b, AccessType::XY), 
-                        res: mat_tracker.get_mat(res, AccessType::XY) 
+                        res: mat_tracker.get_mat(res, AccessType::XY),
+                        batch_size: *a_shape.first().unwrap(),
+                        input_size: *a_shape.last().unwrap(),
+                        output_size: *b_shape.last().unwrap()                         
                     });
                 },
                 
@@ -56,12 +69,11 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                 _ => {} 
             }
         }
-        cmd_computeinstr.insert(block_name.clone(), instr);
+        proc.add_block(block_name, instr);
     }
 
     // ...debug...
-    println!("{:#?}", cmd_computeinstr);
-    console_list(cmd_computeinstr.get("main").unwrap()); // only available in run()
+    println!("{}", proc);
 
     // ========= Kernel Fusion =========
     
