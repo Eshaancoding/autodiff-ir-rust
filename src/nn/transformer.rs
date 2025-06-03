@@ -2,7 +2,7 @@
 use crate::{autodiff, Module, Tensor};
 use crate::nn::Linear;
 
-use super::{LayerNorm, SeqF};
+use super::{LayerNorm, SeqF, Sequential};
 
 // ======================= Attention ======================= 
 
@@ -11,7 +11,7 @@ pub fn Attention (Q:Tensor, K:Tensor, V:Tensor, d_model:usize) -> Tensor {
     autodiff::dot(
         (
             autodiff::dot(Q, K.t()) / 
-            (d_model as f64).sqrt() 
+            (d_model as f64).sqrt()
         ).softmax(-1),
         V
     )
@@ -32,9 +32,9 @@ pub fn AttentionMasked (Q:Tensor, K:Tensor, V:Tensor, d_model:usize, mask:Tensor
 // ======================= MultiHead Attention ======================= 
 
 pub struct MultiHeadAttention {
-    pub wq: Linear,
-    pub wk: Linear,
-    pub wv: Linear,
+    pub wq: Vec<Linear>,
+    pub wk: Vec<Linear>,
+    pub wv: Vec<Linear>,
     pub wo: Linear,
     pub num_heads: usize, 
     pub d_model: usize,
@@ -43,30 +43,35 @@ pub struct MultiHeadAttention {
 
 impl Module for MultiHeadAttention {
     fn params (&self) -> Vec<Tensor> { 
-        vec![self.wq.params(), self.wk.params(), self.wv.params(), self.wo.params() ].concat()
+        vec![
+            self.wq.iter().map(|i| i.params()).collect::<Vec<Vec<Tensor>>>().concat(), 
+            self.wk.iter().map(|i| i.params()).collect::<Vec<Vec<Tensor>>>().concat(), 
+            self.wv.iter().map(|i| i.params()).collect::<Vec<Vec<Tensor>>>().concat(), 
+            self.wo.params()
+        ].concat()
     }
 }
 
 impl MultiHeadAttention {
-    fn f (&self, query: Tensor, key: Tensor, value: Tensor) -> Tensor {
+    pub fn f (&self, query: Tensor, key: Tensor, value: Tensor) -> Tensor {
         let head_out: Vec<Tensor> = if let Some(m) = &self.mask { 
             // masked attention
-            (0..self.num_heads).map(|_| 
+            (0..self.num_heads).map(|i| 
                 AttentionMasked(
-                    self.wq.f(query.clone()), 
-                    self.wk.f(key.clone()),
-                    self.wv.f(value.clone()), 
+                    self.wq[i].f(query.clone()), 
+                    self.wk[i].f(key.clone()),
+                    self.wv[i].f(value.clone()), 
                     self.d_model,
                     m.clone()
                 )
             ).collect()
         } else {
             // no masked attention 
-            (0..self.num_heads).map(|_| 
+            (0..self.num_heads).map(|i| 
                 Attention(
-                    self.wq.f(query.clone()), 
-                    self.wk.f(key.clone()),
-                    self.wv.f(value.clone()), 
+                    self.wq[i].f(query.clone()), 
+                    self.wk[i].f(key.clone()),
+                    self.wv[i].f(value.clone()), 
                     self.d_model
                 )
             ).collect()
@@ -82,9 +87,9 @@ pub fn MultiHeadAttention (d_model: usize, num_heads: usize) -> MultiHeadAttenti
     let d_v = d_model / num_heads;
 
     MultiHeadAttention { 
-        wq: Linear(d_model, d_v, false), 
-        wk: Linear(d_model, d_v, false), 
-        wv: Linear(d_model, d_v, false), 
+        wq: (0..num_heads).map(|_| Linear(d_model, d_v, false)).collect(),
+        wk: (0..num_heads).map(|_| Linear(d_model, d_v, false)).collect(), 
+        wv: (0..num_heads).map(|_| Linear(d_model, d_v, false)).collect(), 
         wo: Linear(d_model, d_model, false),
         num_heads,
         d_model,
@@ -98,9 +103,9 @@ pub fn MaskedMultiHeadAttention (d_model: usize, num_heads: usize, mask: Tensor)
     let d_v = d_model / num_heads;
 
     MultiHeadAttention { 
-        wq: Linear(d_model, d_v, false), 
-        wk: Linear(d_model, d_v, false), 
-        wv: Linear(d_model, d_v, false), 
+        wq: (0..num_heads).map(|_| Linear(d_model, d_v, false)).collect(),
+        wk: (0..num_heads).map(|_| Linear(d_model, d_v, false)).collect(), 
+        wv: (0..num_heads).map(|_| Linear(d_model, d_v, false)).collect(), 
         wo: Linear(d_model, d_model, false),
         num_heads,
         d_model,
@@ -136,8 +141,8 @@ impl SeqF for AttentionFeedforward {
 // ======================= Transformer Encoder Layer ======================= 
 pub struct TransformerEncoderLayer { 
     attention: MultiHeadAttention,
-    layer_norm_one: LayerNorm, // TODO: better naming!
-    layer_norm_two: LayerNorm,
+    layer_norm_att: LayerNorm, // TODO: better naming!
+    layer_norm_ffwd: LayerNorm,
     ffwd: AttentionFeedforward 
 }
 
@@ -145,15 +150,15 @@ pub struct TransformerEncoderLayer {
 pub fn TransformerEncoderLayer (d_model: usize, num_heads: usize, ff_dim: usize) -> TransformerEncoderLayer {
     TransformerEncoderLayer {
         attention: MultiHeadAttention(d_model, num_heads),
-        layer_norm_one: LayerNorm(d_model),
-        layer_norm_two: LayerNorm(d_model),
+        layer_norm_att: LayerNorm(d_model),
+        layer_norm_ffwd: LayerNorm(d_model),
         ffwd: AttentionFeedforward(d_model, ff_dim)
     }
 }
 
 impl Module for TransformerEncoderLayer {
     fn params (&self) -> Vec<Tensor> {
-        vec![self.attention.params(), self.ffwd.params()].concat()
+        vec![self.attention.params(), self.ffwd.params(), self.layer_norm_att.params(), self.layer_norm_ffwd.params()].concat()
     }
 }
 
@@ -161,12 +166,40 @@ impl SeqF for TransformerEncoderLayer {
     fn f (&self, x: Tensor) -> Tensor {
         let to_add = x.clone();
         let y = self.attention.f(x.clone(), x.clone(), x.clone());
-        let y = self.layer_norm_one.f(to_add + y);
+        let y = self.layer_norm_att.f(to_add + y);
 
         let to_add = y.clone();
         let y = self.ffwd.f(y);
-        let y = self.layer_norm_two.f(to_add + y);
+        let y = self.layer_norm_ffwd.f(to_add + y);
 
         y
+    }
+}
+
+// ======================= Transformer Encoder ======================= 
+pub struct TransformerEncoder {
+    layers: Sequential
+}
+
+#[allow(non_snake_case)]
+pub fn TransformerEncoder (num_layers: usize, d_model: usize, num_heads: usize, ff_dim: usize) -> TransformerEncoder {
+    let mut seq = Sequential();
+
+    for _ in 0..num_layers {
+        seq.insert(TransformerEncoderLayer(d_model, num_heads, ff_dim));
+    }
+
+    TransformerEncoder { layers: seq }     
+}
+
+impl Module for TransformerEncoder {
+    fn params (&self) -> Vec<Tensor> {
+        self.layers.params()
+    }
+}
+
+impl SeqF for TransformerEncoder {
+    fn f (&self, x: Tensor) -> Tensor {
+        self.layers.f(x)
     }
 }

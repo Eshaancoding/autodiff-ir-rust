@@ -100,7 +100,6 @@ Backend will refer to things that runs the internal operations and optimizations
     * Optimze at make_minus or make etc. 
     * There might be edge cases for simplify expr func. Still keep that (need experimentation)
         * v & 63 & 63 --> v & 63
-    
 
 * **Kernel experimentation:**
     * Experiment with different parameters of dot prod + other kernels 
@@ -137,6 +136,17 @@ Backend will refer to things that runs the internal operations and optimizations
         * not sure if you can beat hand-tune optimizations
 
 * **HLIR Opts**
+    * *MAKE IT FAST*
+        * again, there are some operations that might make it faster by assuming it as a graph, then traversal, then pattern match  
+            * I believe this is majority of what tinygrad does 
+            * IR optimization is somehow the most slowest part of this entire process...
+
+    * Concat + view operations can be streamlined
+        * this is mostly due to **concat**. If I am being honest, there's probably a better way for implementing backward pass for concat? I believe
+            * maybe not 
+        * Should be replaced in graphical format
+        * main problem with transformer implementation right now (and well, any other implementations)
+
     * if matrix is always used in it's transposed form, then set the contents such that it is in transposed and remove transpose operation
         * Good for weight optimization :)
         * e --> e = e.t <-- just transform the matrix manually
@@ -166,8 +176,6 @@ Backend will refer to things that runs the internal operations and optimizations
         * `to_graph` func should be created and used across IRs that benefit from it.
             * good for debugging as well
 
-
-
 * **General Ideas**: 
     * Dynamic Shape
 
@@ -175,8 +183,6 @@ Backend will refer to things that runs the internal operations and optimizations
         * have to use BR compiler hints in order to determine while or if statement
         * you may also need to send extra compiler hints 
         * skdjfksjdfkjsdkfjskdfjksdjf that's also going to be pretty weird.
-
-
 
 # Rust Codebase
 

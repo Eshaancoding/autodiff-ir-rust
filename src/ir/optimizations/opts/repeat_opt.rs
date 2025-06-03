@@ -25,6 +25,11 @@ y = a * d
 */
 
 pub fn repeat_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
+    /* 
+    Massively inefficient 
+    Using a loop like this sholud be avoided at all costs
+    */
+
     loop {
         // have variables for a & b when found
         let mut a_result: Option<String> = None;
