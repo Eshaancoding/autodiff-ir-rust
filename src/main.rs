@@ -5,6 +5,7 @@ use autodiffv2::nn::{self, SeqF, Module};
 // for testing; 
 // same as nn_test
 
+/*
 pub fn main () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
@@ -31,6 +32,29 @@ pub fn main () {
         res = y;
     });
 
+    res.val().keep(); // ensure we can get in dependecy list
+
+    let start = Instant::now();
+    autodiff::print_and_exec();    
+    let _ = res.val().get().round(4);
+
+    println!("elapsed: {} s", start.elapsed().as_secs_f64());
+}
+*/
+
+pub fn main () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+
+    let transformer = nn::MultiHeadAttention(64, 4);
+    let mut opt = nn::opt::SGD(transformer.params(), 0.01);
+
+    let x = autodiff::randn(vec![32, 64]);
+    let res = transformer.f(x.clone(), x.clone(), x.clone());
+    res.forward();
+    res.backward();
+    opt.step();
+    
+    // x.grad().keep();
     res.val().keep(); // ensure we can get in dependecy list
 
     let start = Instant::now();
