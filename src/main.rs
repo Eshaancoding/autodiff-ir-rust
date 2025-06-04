@@ -63,12 +63,23 @@ pub fn test_transformer () {
 }
 
 pub fn main () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
+    autodiff::set_device(autodiff::devices::CPU::new());
 
-    let x = autodiff::randn(vec![4, 8, 16, 32]);
-    let res = x.sum(-2);
+    let x = autodiff::tensor(vec![
+        0.03, 0.02, 0.01, 
+        0.04, 0.05, 0.063, 
+        0.01, 0.10, 0.07, 
+        0.02, 0.01, 0.08, 
+        0.05, 0.03, 0.06
+    ], vec![5, 3]);
+
+    let res = x.sum(0);
     res.forward();
     res.val().keep();
 
     autodiff::print_and_exec();
+
+    let v = res.val().get();
+    println!("Value dim: {:#?}", v.dim);
+    println!("Value data: {:#?}", v.data);
 }

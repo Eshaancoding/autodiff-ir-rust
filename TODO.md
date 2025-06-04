@@ -64,28 +64,24 @@ Backend will refer to things that runs the internal operations and optimizations
 * **Memory**:
     * Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul
     
-    * <mark>HLIR level, reduce sum to be heavily simplified and rely more on movement kernels</mark>
-        * **Two requirements**
-            * has to be 2-dimensional tensor
-            * has to sum over 1st dim
-        * But... how are we suppose to abstract this to any dim and any sum?
-            * Example: `a` with dim `[8, 16, 32, 256]`
-            * To handle any dim of reduction: `torch.all(torch.permute(torch.permute(a, [0,3,2,1]).sum(dim=-1), [0,2,1]) == a.sum(dim=1))` where `a` is a 4d tensor on reduction (sum) at `dim=1`
-                * note that permute can be optimized by write of permute kernel --> movement kernel (OR use directly).
-            * To handle any view (with previous handling of any dim)
-                * `torch.all(torch.abs(torch.permute(torch.permute(a, [0,3,2,1]).reshape(-1, 16).sum(dim=-1).reshape(8, 256, 32), [0,2,1]) - a.sum(dim=1)) <= 1e-5)`
-            * In summary, this is the procedure: 
-                1. Permute dim to reduce to the last dimension
-                2. Reshape to (X,Y) --> (-1, # of elements in dim to reduced)
-                3. reduce across last dimension
-                4. Reshape to orig dim (but remove reduced dim, since we already did that)
-                5. permute back to original.
+    * any operations that need to make contigious (dot prod?)
+
+    * operations AT THE END OF PROGRAM that is needed to make contigious
+        * check dep list
+    
+    * ~~HLIR level, reduce sum to be heavily simplified and rely more on movement kernels~~
 
     * ~~1. Remove binary/unary funcs and just use general "Expression"~~
 
     * ~~2. Update Matrix Tracker tracker for dot prod kernels~~
 
+    * <mark>fix res situation (make contigious or not, etc.)</mark>
+
     * <mark>3. Update matrix tracker for reduce kernel</mark>
+
+    * Finish Concat logic in matrix tracker
+
+    * Finish constant logic in matrix tracker
 
     * automatic allocation and deallocation within graph
         * tracing through BRs will be challenging, however...
@@ -105,12 +101,6 @@ Backend will refer to things that runs the internal operations and optimizations
             3. ~~dealloc A with size of 256~~ fills data region A with data of B
             4. computation that uses B will instead use memory address of A. 
 
-
-
-    * Finish Concat logic in matrix tracker
-
-    * Finish constant logic in matrix tracker
-        
     * Memory experiments needed (do this movement/no movement experiment after kernel fusion)
         * **You should test whether a weird write is slower than a fast write + movement**
             * There's specialize transpose kernels as well...
@@ -124,7 +114,6 @@ Backend will refer to things that runs the internal operations and optimizations
                 * dot product (contigious write) --> movement --> sum --> movement --> dot product (contigious read)
 
                 * etc. etc. etc. 
-                 
 
 * **X86**:
     * Allow dot prod implementation to support varied shapes rather than just power of 2
@@ -245,7 +234,7 @@ Backend will refer to things that runs the internal operations and optimizations
         * This is the only case for the CPU. NVIDIA / etc. implementations might be different.
         * per device, you probably need to provide whether the support for certain fusion implementations is common.
             * probably pass it as param to `to_kernel`
-    * <mark>**Why ignored? This is rarely the case**</mark>
+    * **Why ignored? This is rarely the case**
         * Sum and dot prod are ALMOST never after broadcasting 
         * To be specific, the weight matrix is almost never broadcasted. 
             * X is **not required** to be contigious, which can very well be broadcasted.
