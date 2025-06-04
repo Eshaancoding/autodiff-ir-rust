@@ -1,5 +1,5 @@
-use crate::kernel_decl::{Expression, Input, Matrix};
-use super::trackers::{DataCmds, MatrixTracker};
+use crate::kernel_decl::{Matrix, Expression};
+use crate::trackers::{AccessType, MatrixTracker};
 
 /*
 Difference between get_mat/get_input and get_res is that the id of the result might not be fully declared from the matrix tracker
@@ -17,7 +17,6 @@ This also handles other edge cases
 impl<'a> MatrixTracker<'a> {
     
     pub fn get_res_xy (&self, id: &String, access_type: AccessType) -> Matrix {
-        
-
+        Matrix { id: "()".to_string(), access: Expression::make_x() }
     }
 }

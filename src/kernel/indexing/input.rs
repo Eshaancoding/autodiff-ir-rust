@@ -2,7 +2,7 @@ use crate::{
     helper::shape::{global_to_ndim, ndim_to_global}, 
     kernel_decl::{Expression, Input, Matrix}
 };
-use super::trackers::{
+use crate::trackers::{
     DataCmds, 
     MatrixTracker,
     AccessType

@@ -5,6 +5,7 @@ use crate::{
     IRCmds
 };
 use super::trackers::{AllocTracker, MatrixTracker, AccessType};
+use super::indexing::*;
 
 pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     let mut alloc_tracker = AllocTracker::new();

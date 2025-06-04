@@ -15,7 +15,7 @@ pub struct AllocTracker<'a> {
     shape_tracker: ShapeTracker,
 
     // hlir id is same as the alloc id
-    // However, not all hlir id will be in vars (ex: referencing others)
+    // However, not all hlir id will be in vars (ex: referencing source vars)
     pub vars: HashMap<String, AllocEntry<'a>>,  
 }
 
@@ -34,7 +34,10 @@ impl<'a> AllocTracker<'a> {
                 f.size = f.size.max(total_dim)
             });
         } else {
-            self.vars.insert(ir_id.clone(), AllocEntry { id: ir_id.clone(), size: total_dim, initial_content: None });
+            self.vars.insert(
+                ir_id.clone(), 
+                AllocEntry { id: ir_id.clone(), size: total_dim, initial_content: None }
+            );
         }
     }
     
