@@ -20,7 +20,7 @@ Backend will refer to things that runs the internal operations and optimizations
     * apparently there's a general impl of optimizers that impls Adam and others...
         * check that!
 * batch matrix multiplication
-    * view with -1
+    * ~~view with -1~~
 * NN operations:
     * Convolutions
     * ConvTranspose
@@ -63,6 +63,28 @@ Backend will refer to things that runs the internal operations and optimizations
 
 * **Memory**:
     * Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul
+        * YOU NEED THIS FOR the reduce kernel as well
+        * depends on what dimension you are reducing the kernel from
+            * any dim makes the reduce kernel so challenging...
+
+           * this hurts my brain
+    
+    * HLIR level, reduce sum to be heavily simplified and rely more on movement kernels
+        * **Two requirements**
+            * has to be 2-dimensional tensor
+            * has to sum over 1st dim
+        * But... how are we suppose to abstract this to any dim and any sum?
+            * Example: `a` with dim `[8, 16, 32, 256]`
+            * To handle any dim of reduction: `torch.all(torch.permute(torch.permute(a, [0,3,2,1]).sum(dim=-1), [0,2,1]) == a.sum(dim=1))` where `a` is a 4d tensor on reduction (sum) at `dim=1`
+                * note that permute can be optimized by write of permute kernel --> movement kernel (OR use directly).
+            * To handle any view (with previous handling of any dim)
+                * `torch.all(torch.abs(torch.permute(torch.permute(a, [0,3,2,1]).reshape(-1, 16).sum(dim=-1).reshape(8, 256, 32), [0,2,1]) - a.sum(dim=1)) <= 1e-5)`
+            * In summary, this is the procedure: 
+                1. Permute dim to reduce to the last dimension
+                2. Reshape to (X,Y) --> (-1, # of elements in dim to reduced)
+                3. reduce across last dimension
+                4. Reshape to orig dim (but remove reduced dim, since we already did that)
+                5. permute back to original.
 
     * automatic allocation and deallocation within graph
         * tracing through BRs will be challenging, however...
@@ -77,23 +99,25 @@ Backend will refer to things that runs the internal operations and optimizations
     * Finish Concat logic in matrix tracker
 
     * Finish constant logic in matrix tracker
+        
+    * Memory experiments needed (do this movement/no movement experiment after kernel fusion)
+        * **You should test whether a weird write is slower than a fast write + movement**
+            * There's specialize transpose kernels as well...
+            * you could try experimenting with that.
+            * is there cases where fast write + movement is better?
 
-    * CPU --> GPU feeder 
-        * aka dataset
+        * **ALSO TEST**
+            * which of the following procedures is best
+                * dot product (uncontigious write) --> sum --> dot product (uncontigious read)
+                * dot product (uncontigious write) --> sum --> movement --> dot product (contigious read)
+                * dot product (contigious write) --> movement --> sum --> movement --> dot product (contigious read)
 
-    * **ADVANCED**: Allow dot product and sum and other advance kernels to be accessed WITHOUT CONTIGIOUS
-        * This is a problem because dot produce/reduce kernels often have `load` instructions that load 4 bytes + orig
-            * sometimes, it just needs to load ONE (think)
-        * this needs some kernel variant of some sort, which is really weird. So for now, we have to assume contigious.
-        * technically, you only need the weight tensor to be in full contigious, as the value in the x value is just constant
-            * look at the implementation :D
-            * This is the only case for the CPU. NVIDIA / etc. implementations might be different.
-            * per device, you probably need to provide whether the support for certain fusion implementations is common.
-                * probably pass it as param to `to_kernel`
+                * etc. etc. etc. 
+                 
 
 * **X86**:
     * Allow dot prod implementation to support varied shapes rather than just power of 2
-    * <mark>3. Efficient Reduce kernel.</mark>
+    * 3. Efficient Reduce kernel
 
 * **Expression simplification**
     * similar to opt remainder %.
@@ -135,6 +159,8 @@ Backend will refer to things that runs the internal operations and optimizations
         * life is not all that simple now is it hehe
     * you need more knowledge of all of this before you go into this optimizations
         * not sure if you can beat hand-tune optimizations
+    * There's recent work on kernel fusion of **everything** somehow
+        * however, you'd have to handle your own GPU synchronization. **THIS CAN BE A BENEFIT**.
 
 * **HLIR Opts**
     * if matrix is always used in it's transposed form, then set the contents such that it is in transposed and remove transpose operation
@@ -178,7 +204,7 @@ Backend will refer to things that runs the internal operations and optimizations
 
 
 
-# Rust Codebase
+## Rust Codebase
 
 * Remove excessive clones (Ctrl+shift+F --> find)
 * Put `IndexMap<String, Vec<IRCmds>>` under a struct (represents HLIR cmds)
@@ -188,3 +214,24 @@ Backend will refer to things that runs the internal operations and optimizations
 * Use macros for repetitive statements
     * example, `kernel/to_instr` can be simplified to macros
 * better debug messages (especially in frontend)
+
+## Ignored
+
+* **ADVANCED**: Allow dot product and sum to be accessed WITHOUT CONTIGIOUS
+    * This is a problem because dot produce/reduce kernels often have `load` instructions that load 4 bytes + orig
+        * sometimes, it just needs to load ONE (think)
+    * this needs some kernel variant of some sort, which is really weird. So for now, we have to assume contigious.
+    * technically, you only need the weight tensor to be in full contigious, as the value in the x value is just constant
+        * look at the implementation :D
+        * This is the only case for the CPU. NVIDIA / etc. implementations might be different.
+        * per device, you probably need to provide whether the support for certain fusion implementations is common.
+            * probably pass it as param to `to_kernel`
+    * <mark>**Why ignored? This is rarely the case**</mark>
+        * Sum and dot prod are ALMOST never after broadcasting 
+        * To be specific, the weight matrix is almost never broadcasted. 
+            * X is **not required** to be contigious, which can very well be broadcasted.
+        * A broadcast and a sum along the same direction is **the exact same** as ELW mult
+            * this optimization can be done at HLIR level, but seriously that's just a dumb thing to do...
+        * broadcast and sum along the different direction can just be reversed I believe?
+            * sum --> broadcast
+            * only tested in 2d case, not sure if extends anywhere else.

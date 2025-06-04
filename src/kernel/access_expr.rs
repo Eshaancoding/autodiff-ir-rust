@@ -63,7 +63,6 @@ impl<'a> MatrixTracker<'a> {
             let sink_shape = &var_dep.sink_dims;
             let source_shape = &var_dep.source_dims;
 
-
             // go from global index --> N-dim index
             let mut ndim = match access_type {
                 AccessType::Global => { 

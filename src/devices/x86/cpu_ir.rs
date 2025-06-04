@@ -40,9 +40,6 @@ impl CPU  {
             hmap: IndexMap::new(),
         }
     }
-
-    pub fn better_execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
-    }
 }
 
 impl Device for CPU {

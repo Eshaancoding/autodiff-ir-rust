@@ -3,14 +3,12 @@ Implements displays for everything in the kernel folder
 Extremely helpful for debugging everything (kernel fusion, expression, trackers, etc.)
 */
 
-use std::fmt::Debug;
-use std::io::{self, Write};
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 use super::{
     kernel_decl::{Expression, Input, Matrix, Value, Procedure, ComputeInstr}, 
     trackers::AllocTracker
 };
-use colored::{Color, Colorize};
+use colored::Colorize;
 
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -127,7 +125,7 @@ impl Display for ComputeInstr {
             // _ => todo!()
         }
         write!(f, "\n")
-    }    
+    }
 }
 
 impl Display for Procedure {

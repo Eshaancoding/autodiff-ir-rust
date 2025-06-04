@@ -35,10 +35,10 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
             match cmd {
                 IRCmds::Sum { a, dim, res } => {
                     // ===== EXPR GEN NEED TO CONSIDER DIM IN SUM ====
-                    // MAKE CONTIGIOUS BEFORE REDUCE
+                    // so... yep!
                     instr.push(ComputeInstr::Reduce { 
-                        a: mat_tracker.get_input(a, AccessType::Global), 
-                        res: mat_tracker.get_mat(res, AccessType::Global),
+                        a: mat_tracker.get_input(a, AccessType::XY), 
+                        res: mat_tracker.get_mat(res, AccessType::XY),
                         op: ReduceOp::Sum,
                         size: 0
                     });
