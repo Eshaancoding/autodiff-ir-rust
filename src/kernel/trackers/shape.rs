@@ -29,9 +29,9 @@ impl ShapeTracker {
             IRCmds::MoreZero { a, res, .. } => { self.shape.insert( res.clone(), self.shape.get(a).unwrap().clone() ); },
             IRCmds::LessZero { a, res, .. } => { self.shape.insert( res.clone(), self.shape.get(a).unwrap().clone() ); },
 
-            IRCmds::Sum { a, dim, res} => {
+            IRCmds::Sum { a, res} => {
                 let mut copy_shape = self.shape.get(a).unwrap().clone();
-                copy_shape.remove(*dim);
+                copy_shape.remove(copy_shape.len()-1);
 
                 self.shape.insert( 
                     res.clone(),

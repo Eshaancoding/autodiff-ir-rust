@@ -50,6 +50,9 @@ impl NodeTrait for PermuteNode {
 impl Tensor {
     pub fn permute (&self, p: &Vec<usize>) -> Tensor { 
         // if p follows a sequential pattern 0, 1, 2, etc. then just return the clone
+        if p.iter().enumerate().all(|(i, &val)| i == val) {
+            return self.clone();
+        }
                 
         Tensor::new(PermuteNode {
             parent: self.clone(),

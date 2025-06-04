@@ -63,13 +63,8 @@ Backend will refer to things that runs the internal operations and optimizations
 
 * **Memory**:
     * Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul
-        * YOU NEED THIS FOR the reduce kernel as well
-        * depends on what dimension you are reducing the kernel from
-            * any dim makes the reduce kernel so challenging...
-
-           * this hurts my brain
     
-    * HLIR level, reduce sum to be heavily simplified and rely more on movement kernels
+    * <mark>HLIR level, reduce sum to be heavily simplified and rely more on movement kernels</mark>
         * **Two requirements**
             * has to be 2-dimensional tensor
             * has to sum over 1st dim
@@ -86,15 +81,31 @@ Backend will refer to things that runs the internal operations and optimizations
                 4. Reshape to orig dim (but remove reduced dim, since we already did that)
                 5. permute back to original.
 
-    * automatic allocation and deallocation within graph
-        * tracing through BRs will be challenging, however...
-        * change kernel_decl.rs and do efficiently
-
     * ~~1. Remove binary/unary funcs and just use general "Expression"~~
 
     * ~~2. Update Matrix Tracker tracker for dot prod kernels~~
 
     * <mark>3. Update matrix tracker for reduce kernel</mark>
+
+    * automatic allocation and deallocation within graph
+        * tracing through BRs will be challenging, however...
+        * change kernel_decl.rs and do efficiently
+
+    * once you do automatic alloc and dealloc, then perform a meory opt where you reuse allocated regions of memory even if it's dealloc
+        * example:
+            1. alloc A with size of 256
+            2. computation...
+            3. dealloc A with size of 256
+            4. some computation...
+            5. alloc B with size of 256
+            6. more computation
+        * you can instead do:    
+            1. alloc A with size of 256
+            2. computation...
+            3. ~~dealloc A with size of 256~~ fills data region A with data of B
+            4. computation that uses B will instead use memory address of A. 
+
+
 
     * Finish Concat logic in matrix tracker
 

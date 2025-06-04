@@ -45,6 +45,13 @@ pub struct MatrixTracker<'a> {
     pub alloc_tracker: &'a AllocTracker<'a>
 }
 
+// Different access types (depending on the kernel used) is needed
+#[derive(PartialEq, Eq)]
+pub enum AccessType {
+    Global,         // Elementwise; uses Global IDX
+    XY,             // Dot product/Reduce; restricted to matrix 2-dim; uses X and Y. (SEE src/matmul_cpu/512_matmul.cpp for example of x + y)
+}
+
 impl<'a> MatrixTracker<'a> {
     pub fn new (alloc_tracker: &'a AllocTracker) -> MatrixTracker<'a> {
         MatrixTracker { 
@@ -163,10 +170,6 @@ impl<'a> MatrixTracker<'a> {
                 );
             }
         }
-    }
-
-    pub fn print_alloc_tracker (&self) {
-        println!("{}", self.alloc_tracker);
     }
 
     // wrapper over shape tracker

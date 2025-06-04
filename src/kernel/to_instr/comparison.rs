@@ -1,8 +1,7 @@
 use crate::{
-    kernel_decl::{UnaryOp, ComputeInstr}, 
-    trackers::MatrixTracker, 
+    kernel_decl::{ComputeInstr, UnaryOp}, 
+    trackers::{AccessType, MatrixTracker}, 
     IRCmds,
-    access_expr::AccessType
 };
 
 pub fn handle_comparison<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker: &MatrixTracker<'a>) {

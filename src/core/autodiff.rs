@@ -4,7 +4,7 @@ use rand::rng;
 use rand_distr::{Normal, Distribution};
 
 pub use crate::graph::data::concat::concat;
-pub use crate::graph::linear_alg::dot_product::dot;
+pub use crate::graph::ops::dot_product::dot;
 pub use crate::devices;
 use crate::{core::add_to_dep, ir::optimizations::optimize::*};
 

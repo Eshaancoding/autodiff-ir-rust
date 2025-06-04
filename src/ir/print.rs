@@ -75,8 +75,8 @@ pub fn print_ir (cmd: &IRCmds, current_heading: &mut String, idx: usize) {
         IRCmds::Sqrt { a, res } => {
             println!("{} = sqrt({})", res, a);
         },
-        IRCmds::Sum { a, dim, res } => {
-            println!("{} = sum({}, dim={})", res, a, dim);
+        IRCmds::Sum { a, res } => {
+            println!("{} = sum({}, dim=-1)", res, a);
         },
         IRCmds::Broadcast { a, dim, r, res } => {
             println!("{} = {}.broadcast(dim={}, r={})", res, a, dim, r);

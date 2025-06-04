@@ -60,8 +60,8 @@ pub fn ir_to_expr (cmd: &IRCmds) -> Option<String> {
         IRCmds::Recip { a, .. } => {
             Some(format!("1/{}", a))
         }
-        IRCmds::Sum { a, dim, .. } => {
-            Some(format!("sum({}, dim={})", a, dim))
+        IRCmds::Sum { a, .. } => {
+            Some(format!("sum({}, dim=-1)", a))
         },
         IRCmds::Broadcast { a, dim, r, .. } => {
             Some(format!("{}.broadcast(dim={}, r={})", a, dim, r))

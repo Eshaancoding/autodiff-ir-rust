@@ -1,8 +1,7 @@
 use crate::{
     kernel_decl::{ComputeInstr, BinaryOp},
-    trackers::MatrixTracker, 
+    trackers::{MatrixTracker, AccessType}, 
     IRCmds,
-    access_expr::AccessType
 };
 
 pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker: &MatrixTracker<'a>) {

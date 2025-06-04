@@ -66,8 +66,6 @@ impl Tensor {
         let source_dim = self.dim();
         let target_dim = handle_minus_dim(&source_dim, &target_dim);
         if target_dim != source_dim {
-
-            // new view node
             Tensor::new(ViewNode {
                 parent: self.clone(),
                 target_dim,

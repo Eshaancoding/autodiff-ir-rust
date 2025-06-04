@@ -19,7 +19,7 @@ impl CPUNew {
 
 impl Device for CPUNew {
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
-        //let _ = to_kernel(&cmds);
+        let _ = to_kernel(&cmds);
     }
 
     fn get_tensor (&self, _: &String) -> ValueData {

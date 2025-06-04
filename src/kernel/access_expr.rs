@@ -1,84 +1,31 @@
-use crate::kernel_decl::{Expression, Input, Matrix};
-use super::trackers::{DataCmds, MatrixTracker};
-
-// Different access types (depending on the kernel used) is needed
-#[derive(PartialEq, Eq)]
-pub enum AccessType {
-    Global,         // Elementwise; uses Global IDX
-    XY,             // Dot product; restricted to matrix 2-dim; uses X and Y. (SEE src/matmul_cpu/512_matmul.cpp for example of x + y)
-    Dim {d: usize}  // Reduce; Select one dim and iterate it over; uses Global Idx
-}
+use crate::{
+    helper::shape::{global_to_ndim, ndim_to_global}, 
+    kernel_decl::{Expression, Input, Matrix}
+};
+use super::trackers::{
+    DataCmds, 
+    MatrixTracker,
+    AccessType
+};
 
 impl<'a> MatrixTracker<'a> {
-    pub fn calc_stride (shape: &Vec<usize>) -> Vec<Expression> {
-        let n = shape.len();
-        let mut strides: Vec<Expression> = vec![Expression::make_const(1); n];
-        for i in (0..(n - 1)).rev() {
-            strides[i] = Expression::make_const(strides[i+1].get_const().unwrap() * shape[i+1] as i32);
-        }
-
-        strides
-    }
-
-    pub fn global_to_ndim (index:Expression, shape: &Vec<usize>) -> Vec<Expression> {
-        let strides = MatrixTracker::calc_stride(shape);
-
-        let nd_index: Vec<Expression> = (0..shape.len())
-            .map(|i| 
-                Expression::make_remainder(
-                    Expression::make_div(
-                        index.clone(),
-                        strides[i].clone()
-                    ), 
-                    Expression::make_const(shape[i] as i32)
-                )
-            )
-            .collect();
-
-        nd_index
-    }
-
-    pub fn ndim_to_global (dim: Vec<Expression>, shape: &Vec<usize>) -> Expression {
-        let strides = MatrixTracker::calc_stride(shape);
-        let mut global_expr = Expression::make_mult(
-            dim[0].clone(),
-            strides[0].clone()
-        );
-
-        for i in 1..shape.len() {
-            global_expr = Expression::make_add(
-                global_expr,
-                Expression::make_mult(
-                    dim[i].clone(), 
-                    strides[i].clone() 
-                )
-            );
-        }
-
-        global_expr
-    }
-
     pub fn get_mat (&self, id: &String, access_type: AccessType) -> Matrix {
         if let Some(var_dep) = self.vars.get(id) {
             let sink_shape = &var_dep.sink_dims;
             let source_shape = &var_dep.source_dims;
 
+
             // go from global index --> N-dim index
             let mut ndim = match access_type {
                 AccessType::Global => { 
-                    MatrixTracker::global_to_ndim(
+                    global_to_ndim(
                         Expression::make_global(),
                         &sink_shape
                     )
                 },
                 AccessType::XY => {
-                    assert!(
-                        var_dep.sink_dims.len() == 2,
-                        "Access type is XY, but the matrix isn't 2-dim"
-                    );
                     vec![Expression::make_x(), Expression::make_y()]
                 },
-                _ => todo!()
             };
             
             // manipulate the ndim expression thru data cmds in reverse
@@ -98,8 +45,8 @@ impl<'a> MatrixTracker<'a> {
                         ndim = new_dim;
                     },
                     DataCmds::View { sink_dim, source_dim } => {
-                        let global = MatrixTracker::ndim_to_global(ndim, sink_dim);
-                        ndim = MatrixTracker::global_to_ndim(
+                        let global = ndim_to_global(ndim, sink_dim);
+                        ndim = global_to_ndim(
                             global,
                             source_dim
                         );
@@ -112,7 +59,7 @@ impl<'a> MatrixTracker<'a> {
             Matrix {
                 id: var_dep.alloc_id.clone(),
                 access: Expression::simplify( // simplify expression if needed
-                    MatrixTracker::ndim_to_global(ndim, source_shape)
+                    ndim_to_global(ndim, source_shape)
                 )
             }
         } 
@@ -134,7 +81,7 @@ impl<'a> MatrixTracker<'a> {
                     Matrix { 
                         id: source_res.alloc_id.clone(),
                         access: Expression::simplify(
-                            MatrixTracker::ndim_to_global(
+                            ndim_to_global(
                                 vec![Expression::make_x(), Expression::make_y()],
                                 d
                             )
@@ -142,7 +89,6 @@ impl<'a> MatrixTracker<'a> {
                         
                     }
                 },
-                AccessType::Dim { d } => todo!()
             }            
 
             
@@ -156,18 +102,5 @@ impl<'a> MatrixTracker<'a> {
         // check if concat
 
         Input::Mat { mat: self.get_mat(id, access_type) } 
-    }
-
-    // for debugging
-    pub fn print_raw (&self, id: &String) {
-        if self.sources.contains_key(id) {
-            println!("{:#?}", self.sources.get(id).unwrap())
-        } 
-        else if self.vars.contains_key(id) {
-            println!("{:#?}", self.vars.get(id).unwrap())
-        }
-        else {
-            println!("id not found");
-        }
     }
 }

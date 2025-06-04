@@ -136,7 +136,7 @@ fn make_broadcast_node (n: &Tensor, target_dim: &Vec<usize>) -> Tensor {
 }
 
 // tries to broadcast both values. 
-// If communicative, then it will prioritize right-broadcasting in favor for left-broadcasting (this is for tensor_rs)
+// If communicative, then it will prioritize right-broadcasting in favor for left-broadcasting
 pub fn try_broadcast (a: &Tensor, b: &Tensor) -> (Tensor, Tensor) {
     // if empty dim on a or b, fill to [1] 
     let a = if a.dim().len() == 0 && b.dim().len() > 0 {
@@ -177,4 +177,20 @@ pub fn try_broadcast (a: &Tensor, b: &Tensor) -> (Tensor, Tensor) {
         } 
     } 
     panic!("Cannot broadcast {:?} to {:?}", a.dim(), b.dim());
+}
+
+impl Tensor {
+    // nodes can be explicitly broadcast if needed
+    pub fn broadcast (&self, dim: i32, r: usize) -> Tensor {
+        let mut target_dim = self.dim().clone();
+        let dim = if dim < 0 {
+            ((target_dim.len() as i32) + dim) as usize
+        } else {
+            dim as usize     
+        };
+                
+        target_dim[dim] = r;
+
+        make_broadcast_node(&self, &target_dim) 
+    }
 }

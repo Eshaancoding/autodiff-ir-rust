@@ -119,10 +119,12 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
                 hms.get(a).unwrap().sqrt()
             );
         },
-        IRCmds::Sum { a, dim, res } => {
+        IRCmds::Sum { a, res } => {
+            let a = hms.get(a).unwrap();
+            let a_dim = a.size();
             hms.insert(
                 res.clone(),
-                hms.get(a).unwrap().sum(Some(&[*dim]), false)
+                a.sum(Some(&[a_dim.len()-1]), false)
             );
         },
         IRCmds::Concat { a, b, dim, res } => {

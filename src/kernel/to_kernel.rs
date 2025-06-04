@@ -1,10 +1,10 @@
 use indexmap::IndexMap;
 use crate::{
-    access_expr::AccessType, kernel_decl::{ComputeInstr, Procedure, ReduceOp}, 
+    kernel_decl::{ComputeInstr, Procedure, ReduceOp}, 
     to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, 
     IRCmds
 };
-use super::{trackers::{AllocTracker, MatrixTracker}};
+use super::trackers::{AllocTracker, MatrixTracker, AccessType};
 
 pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     let mut alloc_tracker = AllocTracker::new();
@@ -24,7 +24,6 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
         // unless matrix tracker is dependent on per block basis, which is not.
         // this shouldn't work...
         for cmd in b_cmds {
-            mat_tracker.step(cmd); 
 
             // instr --> kernels 
             handle_elw(cmd, &mut instr, &mat_tracker);
@@ -33,9 +32,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
 
             // other instr --> kernels
             match cmd {
-                IRCmds::Sum { a, dim, res } => {
-                    // ===== EXPR GEN NEED TO CONSIDER DIM IN SUM ====
-                    // so... yep!
+                IRCmds::Sum { a, res } => {
                     instr.push(ComputeInstr::Reduce { 
                         a: mat_tracker.get_input(a, AccessType::XY), 
                         res: mat_tracker.get_mat(res, AccessType::XY),
@@ -68,9 +65,17 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                 // data manipulation are handled by mat_tracker
                 _ => {} 
             }
+
+            println!("{:#?}", mat_tracker.sources);
+            println!("{:#?}", mat_tracker.vars);
+            println!("=========================");
+
+            mat_tracker.step(cmd); 
         }
         proc.add_block(block_name, instr);
     }
+
+    // after every command is done, make sure all the dependencies are contigious so the weights or outputs can be read
 
     // ...debug...
     println!("{}", proc);

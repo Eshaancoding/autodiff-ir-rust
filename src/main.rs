@@ -2,11 +2,8 @@ use std::time::Instant;
 use autodiffv2::autodiff;
 use autodiffv2::nn::{self, SeqF, Module};
 
-// for testing; 
-// same as nn_test
-
-/*
-pub fn main () {
+// nn_test
+pub fn tt () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     autodiff::eager_dep_opt();
@@ -40,9 +37,10 @@ pub fn main () {
 
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
 }
-*/
 
-pub fn main () {
+
+// Transformer Test
+pub fn test_transformer () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     let transformer = nn::MultiHeadAttention(64, 4);
@@ -62,4 +60,15 @@ pub fn main () {
     let _ = res.val().get().round(4);
 
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
+}
+
+pub fn main () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+
+    let x = autodiff::randn(vec![4, 8, 16, 32]);
+    let res = x.sum(-2);
+    res.forward();
+    res.val().keep();
+
+    autodiff::print_and_exec();
 }

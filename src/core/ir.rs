@@ -27,8 +27,27 @@ pub enum IRCmds {
     MoreZero  {a: String, res: String}, // a > 0 --> res
     LessZero  {a: String, res: String}, // a < 0 --> res
 
-    // Reduce operations
-    Sum {a: String, dim: usize, res: String}, // different than ElwSum (two matrixes); this all from one matrix
+    /*
+    Reduce Operations
+    All tensors to be reduced MUST be 2-dimensional and must reduce over the last (2nd) dimension
+
+    To handle any dimension of reduction, we just permute:
+        torch.all(torch.permute(torch.permute(a, [0,3,2,1]).sum(dim=-1), [0,2,1]) == a.sum(dim=1))
+
+    To handle any # of dimensions, we just reshape (view)
+        torch.all(torch.abs(torch.permute(torch.permute(a, [0,3,2,1]).reshape(-1, 16).sum(dim=-1).reshape(8, 256, 32), [0,2,1]) - a.sum(dim=1)) <= 1e-5)
+
+    In summary, the procedure is:
+        1. Permute dim to reduce to the last dimension
+        2. Reshape to (X,Y) --> (-1, # of elements in dim to reduced)
+        3. reduce across last dimension
+        4. Reshape to orig dim (but remove reduced dim, since we already did that)
+        5. permute back to original.
+
+    We do this because it simplifies the reduce kernel for each device. We take advantage of the fact that data manipulation is 0-cost unless actually needed.
+    */
+    Sum {a: String, res: String}, 
+
     // add max, min (min can be in terms of max), etc.
     // add max within the elew kernel
 
@@ -41,7 +60,7 @@ pub enum IRCmds {
     DotProduct {a: String, b: String, res: String},         // (a,b) x (b,c) --> (a,c). Both tensors are 2-dim.
 
     // Data Manipulation --> every operation is 0-cost (unless optimization decides otherwise)
-    // At kernel level, we just use indexing maths
+    // At kernel level, we just use fancy indexing. Check out matrix tracker (kernel/trackers/matrix.rs) and access expression generation (kernel/access_expr.rs)
     View      {a: String, target_dim: Vec<usize>, res: String},
     Index     {a: String, index: usize, dim: usize, res: String}, 
     Concat    {a: String, b: String, dim: usize, res: String},
