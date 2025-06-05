@@ -9,13 +9,12 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         IRCmds::ElwMultiply { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
             let b_shape = mat_tracker.get_shape(b);
-            let res_shape = mat_tracker.get_shape(res);
-            assert!(a_shape == res_shape && b_shape == a_shape, "IR shape are not equal");
+            assert!(a_shape == b_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 b: mat_tracker.get_input(b, AccessType::Global),
-                res: mat_tracker.get_mat(res, AccessType::Global),
+                res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: BinaryOp::Multiply,
                 size: a_shape.iter().product()
             });
@@ -23,13 +22,12 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         IRCmds::ElwAdd { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
             let b_shape = mat_tracker.get_shape(b);
-            let res_shape = mat_tracker.get_shape(res);
-            assert!(a_shape == res_shape && b_shape == a_shape, "IR shape are not equal");
+            assert!(a_shape == b_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 b: mat_tracker.get_input(b, AccessType::Global),
-                res: mat_tracker.get_mat(res, AccessType::Global),
+                res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: BinaryOp::Add,
                 size: a_shape.iter().product()
             });
@@ -42,7 +40,7 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 
                 b: mat_tracker.get_input(o, AccessType::Global),
-                res: mat_tracker.get_mat(s, AccessType::Global),
+                res: mat_tracker.get_res(s, AccessType::Global, s_shape),
                 op: BinaryOp::Add,
                 size: s_shape.iter().product()
             });
@@ -55,7 +53,7 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 
                 b: mat_tracker.get_input(o, AccessType::Global),
-                res: mat_tracker.get_mat(s, AccessType::Global),
+                res: mat_tracker.get_res(s, AccessType::Global, s_shape),
                 op: BinaryOp::Multiply,
                 size: s_shape.iter().product()
             });

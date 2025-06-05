@@ -61,7 +61,6 @@ impl Tensor {
         // ========== View last dim ========== 
         let mut new_dim = node.dim();
         let node = node.view(vec![-1, *new_dim.last().unwrap() as i32]);
-        println!("Node: {:?}", node.dim());
         
         // ========== Sum node ========== 
         let node = Tensor::new(SumNode {

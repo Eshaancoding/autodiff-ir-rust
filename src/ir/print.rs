@@ -8,8 +8,6 @@ pub fn print_ir (cmd: &IRCmds, current_heading: &mut String, idx: usize) {
             if *dim == vec![1] {
                 println!("{} = {}", id, contents[0]);
             } else {
-                
-
                 if dim.iter().product::<usize>() < 16 {
                     let formatted: Vec<String> = contents.iter() 
                         .map(|n| format!("{:.3}", n))

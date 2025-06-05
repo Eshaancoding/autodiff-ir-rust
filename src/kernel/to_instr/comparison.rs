@@ -8,36 +8,30 @@ pub fn handle_comparison<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_t
     match cmd {
         IRCmds::EqualZero { a, res } => {
             let a_shape = mat_tracker.get_shape(a);
-            let res_shape = mat_tracker.get_shape(res);
-            assert!(a_shape == res_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
-                res: mat_tracker.get_mat(res, AccessType::Global), 
+                res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
                 op: UnaryOp::EqualZero,
                 size: a_shape.iter().product()
             });
         },
         IRCmds::MoreZero { a, res } => {
             let a_shape = mat_tracker.get_shape(a);
-            let res_shape = mat_tracker.get_shape(res);
-            assert!(a_shape == res_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
-                res: mat_tracker.get_mat(res, AccessType::Global), 
+                res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
                 op: UnaryOp::MoreZero,
                 size: a_shape.iter().product()
             });
         },
         IRCmds::LessZero { a, res } => {
             let a_shape = mat_tracker.get_shape(a);
-            let res_shape = mat_tracker.get_shape(res);
-            assert!(a_shape == res_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
-                res: mat_tracker.get_mat(res, AccessType::Global), 
+                res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
                 op: UnaryOp::LessZero,
                 size: a_shape.iter().product()
             });
@@ -45,3 +39,5 @@ pub fn handle_comparison<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_t
         _ => {}
     }
 }
+
+// I should really use a macro for this

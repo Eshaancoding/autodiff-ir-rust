@@ -3,7 +3,7 @@ use autodiffv2::autodiff;
 use autodiffv2::nn::{self, SeqF, Module};
 
 // nn_test
-pub fn tt () {
+pub fn main () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     autodiff::eager_dep_opt();
@@ -40,7 +40,7 @@ pub fn tt () {
 
 
 // Transformer Test
-pub fn test_transformer () {
+pub fn sdjfksjdkf () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     let transformer = nn::MultiHeadAttention(64, 4);
@@ -62,8 +62,9 @@ pub fn test_transformer () {
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
 }
 
-pub fn main () {
-    autodiff::set_device(autodiff::devices::CPU::new());
+pub fn tt () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+
 
     let x = autodiff::tensor(vec![
         0.03, 0.02, 0.01, 
@@ -73,7 +74,7 @@ pub fn main () {
         0.05, 0.03, 0.06
     ], vec![5, 3]);
 
-    let res = x.sum(0);
+    let res = x.sum(-1);
     res.forward();
     res.val().keep();
 

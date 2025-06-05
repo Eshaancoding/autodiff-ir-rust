@@ -92,7 +92,8 @@ pub enum ComputeInstr {
         a: Input,
         res: Matrix,
         op: ReduceOp,
-        size: usize // size of the kernel (still need to construct this kernel beforehand)
+        vec_size: usize,    // num of vecs to be reduced (represents x)
+        reduce_size: usize, // how much you have to reduce over (this represents y)
     },  
 
     // dot product kernels

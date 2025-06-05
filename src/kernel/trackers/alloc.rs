@@ -9,7 +9,7 @@ pub struct AllocEntry<'a> {
     pub initial_content: Option<&'a Vec<f64>> 
     // if there's data needed to be allocation before running program, then specify what content this is
     // If this value is none, then some sort of computation needs to be done before this appears.
-    // note that even if this alloc is changed in the program, the initial content will stay the same
+    // also note that the size of the initial content is not the same as the size of the alloc itself!
 }
 pub struct AllocTracker<'a> {
     shape_tracker: ShapeTracker,

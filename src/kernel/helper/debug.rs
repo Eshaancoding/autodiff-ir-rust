@@ -110,8 +110,8 @@ impl Display for ComputeInstr {
             ComputeInstr::Binary { a, b, res, op, size } => {
                 let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" {:#?} ({}) ", op, size.to_string().yellow()).bold(), b);
             },
-            ComputeInstr::Reduce { a, res, op, size} => {
-                let _ = write!(f, "{} {} {} ({})", res, " = ".on_blue(), format!(" {:#?} ({}) ", op, size.to_string().yellow()).bold(), a);
+            ComputeInstr::Reduce { a, res, op, vec_size, reduce_size} => {
+                let _ = write!(f, "{} {} {} ({})", res, " = ".on_blue(), format!(" {:#?} (Vec/X: {}, Reduce/Y: {}) ", op, vec_size.to_string().yellow(), reduce_size.to_string().yellow()).bold(), a);
             },
             ComputeInstr::DotProd { a, b, res, batch_size, input_size, output_size } => {
                 let b_yel = batch_size.to_string().yellow();
@@ -151,6 +151,9 @@ impl<'a> Display for AllocTracker<'a> {
             let _ = write!(f, "\t-> Alloc ID: {}\n", alloc_entry.id);
             let _ = write!(f, "\t-> Size: {}\n", alloc_entry.size);
             let _ = write!(f, "\t-> Has initial content: {}\n", alloc_entry.initial_content.is_some());
+            if let Some(v) = alloc_entry.initial_content {
+                let _ = write!(f, "\t-> Initial content size: {}\n", v.len());
+            }
         }
 
         write!(f, "")

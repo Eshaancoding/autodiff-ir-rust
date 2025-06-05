@@ -16,6 +16,9 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
         }     
     }
 
+    println!("=======Alloc tracker:========\n");
+    println!("{}", alloc_tracker);
+
     let mut mat_tracker = MatrixTracker::new(&alloc_tracker);
     let mut proc = Procedure::new();
     for (block_name, b_cmds) in cmds.iter() { 
@@ -25,6 +28,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
         // unless matrix tracker is dependent on per block basis, which is not.
         // this shouldn't work...
         for cmd in b_cmds {
+            // println!("{:?}", cmd);
 
             // instr --> kernels 
             handle_elw(cmd, &mut instr, &mat_tracker);
@@ -34,11 +38,17 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
             // other instr --> kernels
             match cmd {
                 IRCmds::Sum { a, res } => {
+                    let mut exp_dim = mat_tracker.get_shape(a).clone();
+                    let vec_size = exp_dim.first().unwrap().clone();
+                    let reduce_size = exp_dim.last().unwrap().clone();
+                    exp_dim.remove(exp_dim.len()-1); // remove last dim
+
                     instr.push(ComputeInstr::Reduce { 
-                        a: mat_tracker.get_input(a, AccessType::XY), 
-                        res: mat_tracker.get_mat(res, AccessType::XY),
+                        a: mat_tracker.get_input(a, AccessType::XY),
+                        res: mat_tracker.get_res(res, AccessType::XY, &exp_dim),
                         op: ReduceOp::Sum,
-                        size: 0
+                        vec_size,
+                        reduce_size
                     });
                 },
                 IRCmds::DotProduct { a, b, res } => {
@@ -51,7 +61,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                     instr.push(ComputeInstr::DotProd { 
                         a: mat_tracker.get_input(a, AccessType::XY), 
                         b: mat_tracker.get_input(b, AccessType::XY), 
-                        res: mat_tracker.get_mat(res, AccessType::XY),
+                        res: mat_tracker.get_res(res, AccessType::XY, &vec![*a_shape.first().unwrap(), *b_shape.last().unwrap()]),
                         batch_size: *a_shape.first().unwrap(),
                         input_size: *a_shape.last().unwrap(),
                         output_size: *b_shape.last().unwrap()                         
@@ -67,9 +77,9 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                 _ => {} 
             }
 
-            println!("{:#?}", mat_tracker.sources);
-            println!("{:#?}", mat_tracker.vars);
-            println!("=========================");
+            // println!("{:#?}", mat_tracker.sources);
+            // println!("{:#?}", mat_tracker.vars);
+            // println!("=========================");
 
             mat_tracker.step(cmd); 
         }

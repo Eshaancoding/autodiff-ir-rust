@@ -62,26 +62,19 @@ Backend will refer to things that runs the internal operations and optimizations
 * ~~1. Remove Neg IR instruction~~
 
 * **Memory**:
-    * Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul
+    * <mark>Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul</mark>
     
-    * any operations that need to make contigious (dot prod?)
+    * <mark>any operations that need to make contigious (dot prod I believe)</mark>
 
-    * operations AT THE END OF PROGRAM that is needed to make contigious
+    * <mark>operations AT THE END OF PROGRAM that is needed to make contigious</mark>
         * check dep list
     
-    * ~~HLIR level, reduce sum to be heavily simplified and rely more on movement kernels~~
+    * <mark>Finish Concat logic in matrix tracker</mark>
 
-    * ~~1. Remove binary/unary funcs and just use general "Expression"~~
+    * <mark>Finish constant logic in matrix tracker</mark>
 
-    * ~~2. Update Matrix Tracker tracker for dot prod kernels~~
-
-    * <mark>fix res situation (make contigious or not, etc.)</mark>
-
-    * <mark>3. Update matrix tracker for reduce kernel</mark>
-
-    * Finish Concat logic in matrix tracker
-
-    * Finish constant logic in matrix tracker
+    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) anddd the access expressions are DIFFERENT</mark>
+        * need a temp allocation for this then.
 
     * automatic allocation and deallocation within graph
         * tracing through BRs will be challenging, however...
@@ -114,6 +107,19 @@ Backend will refer to things that runs the internal operations and optimizations
                 * dot product (contigious write) --> movement --> sum --> movement --> dot product (contigious read)
 
                 * etc. etc. etc. 
+
+    * Swapping accessing expressions between input and output of two adjacent kernels?
+        * can I do that? is that a thing?
+
+    * ~~HLIR level, reduce sum to be heavily simplified and rely more on movement kernels~~
+
+    * ~~1. Remove binary/unary funcs and just use general "Expression"~~
+
+    * ~~2. Update Matrix Tracker tracker for dot prod kernels~~
+
+    * ~~fix res situation (make contigious or not, etc.)~~
+
+    * ~~3. Update matrix tracker for reduce kernel~~
 
 * **X86**:
     * Allow dot prod implementation to support varied shapes rather than just power of 2
