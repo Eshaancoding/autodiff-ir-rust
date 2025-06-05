@@ -67,6 +67,7 @@ Backend will refer to things that runs the internal operations and optimizations
         * operations AT THE END OF PROGRAM that is needed to make contigious
             * do this at IR
             * check dep list
+            * you can do an IR opt for this asw.
     
     * <mark>Finish Concat logic in matrix tracker</mark>
 
