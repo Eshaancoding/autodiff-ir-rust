@@ -72,5 +72,4 @@ impl<'a> AllocTracker<'a> {
     pub fn get_alloc (&self, id: &String) -> &AllocEntry {
         self.vars.get(id).unwrap()
     }
-    
 }

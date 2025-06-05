@@ -73,8 +73,8 @@ Backend will refer to things that runs the internal operations and optimizations
 
     * <mark>Finish constant logic in matrix tracker</mark>
 
-    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) anddd the access expressions are DIFFERENT</mark>
-        * need a temp allocation for this then.
+    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
+        * Then, you need a temp allocation for this.
 
     * automatic allocation and deallocation within graph
         * tracing through BRs will be challenging, however...

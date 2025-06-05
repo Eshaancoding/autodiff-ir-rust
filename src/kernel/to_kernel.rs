@@ -5,7 +5,6 @@ use crate::{
     IRCmds
 };
 use super::trackers::{AllocTracker, MatrixTracker, AccessType};
-use super::indexing::*;
 
 pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     let mut alloc_tracker = AllocTracker::new();
@@ -28,7 +27,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
         // unless matrix tracker is dependent on per block basis, which is not.
         // this shouldn't work...
         for cmd in b_cmds {
-            // println!("{:?}", cmd);
+            println!("{:?}", cmd);
 
             // instr --> kernels 
             handle_elw(cmd, &mut instr, &mat_tracker);
@@ -52,20 +51,22 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                     });
                 },
                 IRCmds::DotProduct { a, b, res } => {
-                    let a_shape = mat_tracker.get_shape(a);
-                    let b_shape = mat_tracker.get_shape(b);
+                    let a_shape = mat_tracker.get_shape(a);  
+                    let b_shape = mat_tracker.get_shape(b); 
+                    let res_shape = vec![*a_shape.first().unwrap(), *b_shape.last().unwrap()];
                     
                     assert!(a_shape.len() == 2 && b_shape.len() == 2, "dot prod at kernel lowering has wrong dimensions");
 
-                    // MAKE RES AND B CONTIGIOUS BEFORE DOT PROD
+                    // Dot product instruction
                     instr.push(ComputeInstr::DotProd { 
                         a: mat_tracker.get_input(a, AccessType::XY), 
                         b: mat_tracker.get_input(b, AccessType::XY), 
-                        res: mat_tracker.get_res(res, AccessType::XY, &vec![*a_shape.first().unwrap(), *b_shape.last().unwrap()]),
+                        res: mat_tracker.get_res(res, AccessType::XY, &res_shape),
                         batch_size: *a_shape.first().unwrap(),
                         input_size: *a_shape.last().unwrap(),
                         output_size: *b_shape.last().unwrap()                         
                     });
+
                 },
                 
                 IRCmds::BR { block_id } => { instr.push(ComputeInstr::BR { block_id: block_id.clone() }); }
@@ -87,6 +88,9 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     }
 
     // after every command is done, make sure all the dependencies are contigious so the weights or outputs can be read
+
+    // Remove movement kernel if not needed 
+    // We already know it's contigious when 1. both matrixes 2. same id 3. same access expression.
 
     // ...debug...
     println!("{}", proc);

@@ -99,7 +99,7 @@ impl Expression {
 
         if op_str == "bitwiseand" {
             match (&a_simplified, &b_simplified) {
-                (expr, Expression::Val { v: Value::Constant { val: 0 } }) => { return Expression::make_const(0) },
+                (_, Expression::Val { v: Value::Constant { val: 0 } }) => { return Expression::make_const(0) },
                 _ => {}
             }
         }

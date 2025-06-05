@@ -2,8 +2,23 @@ use std::time::Instant;
 use autodiffv2::autodiff;
 use autodiffv2::nn::{self, SeqF, Module};
 
-// nn_test
 pub fn main () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+    let x = autodiff::randn(vec![5, 1]);
+    let weight_matrix = x.broadcast(-1, 3); 
+
+    let input = autodiff::randn(vec![2, 5]);
+    let result = autodiff::dot(input, weight_matrix);
+    result.forward();
+    result.val().keep();
+    
+    autodiff::print_and_exec();
+
+    
+}
+
+// nn_test
+pub fn t () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     autodiff::eager_dep_opt();

@@ -120,7 +120,7 @@ impl Display for ComputeInstr {
                 let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" ({}x{} DP {}x{})", b_yel, i_yel, i_yel, o_yel).bold(), b);
             },
             ComputeInstr::Movement { a, res , size} => {
-                let _ = write!(f, "{} <-(move {})- {}", res, size.to_string().yellow(), a);
+                let _ = write!(f, "{} {} {}", res, format!(" <-(Move {})- ", size.to_string().yellow()).bold(), a);
             }
             // _ => todo!()
         }
