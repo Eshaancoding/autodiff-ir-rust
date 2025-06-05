@@ -110,7 +110,7 @@ pub enum ComputeInstr {
 
     // kernels that turns movement / permutations / concatenation of tensors into single contigious tensor.  
     // note that this movement kernel is not initially created; it's generated lazily or during optimizations. 
-    // Note that for dot prod and reduce kernels, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
+    // Note that for dot prod, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
     Movement { 
         a: Input,
         res: Matrix,

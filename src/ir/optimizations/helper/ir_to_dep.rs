@@ -24,6 +24,7 @@ pub fn ir_to_dep (cmd: IRCmds) -> Vec<String> {
         IRCmds::Concat { a, b, .. } => vec![a, b],
         IRCmds::Permute { a, .. } => vec![a],
         IRCmds::Broadcast { a, .. } => vec![a],
+        IRCmds::Contigious { a, .. } => vec![a],
 
         IRCmds::Exp2 { a, .. } => vec![a],
         IRCmds::Log2 { a, .. } => vec![a],

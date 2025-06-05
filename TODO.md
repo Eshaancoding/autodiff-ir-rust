@@ -63,11 +63,10 @@ Backend will refer to things that runs the internal operations and optimizations
 
 * **Memory**:
     * <mark>Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul</mark>
-    
-    * <mark>any operations that need to make contigious (dot prod I believe)</mark>
-
-    * <mark>operations AT THE END OF PROGRAM that is needed to make contigious</mark>
-        * check dep list
+        * any operations that need to make contigious (dot prod I believe)
+        * operations AT THE END OF PROGRAM that is needed to make contigious
+            * do this at IR
+            * check dep list
     
     * <mark>Finish Concat logic in matrix tracker</mark>
 

@@ -27,8 +27,6 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
         // unless matrix tracker is dependent on per block basis, which is not.
         // this shouldn't work...
         for cmd in b_cmds {
-            println!("{:?}", cmd);
-
             // instr --> kernels 
             handle_elw(cmd, &mut instr, &mat_tracker);
             handle_comparison(cmd, &mut instr, &mat_tracker);
@@ -66,7 +64,15 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                         input_size: *a_shape.last().unwrap(),
                         output_size: *b_shape.last().unwrap()                         
                     });
+                },
+                IRCmds::Contigious { a, res } => {
+                    let a_shape = mat_tracker.get_shape(a);
 
+                    instr.push(ComputeInstr::Movement { 
+                        a: mat_tracker.get_input(a, AccessType::Global), 
+                        res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
+                        size: a_shape.iter().product()
+                    });
                 },
                 
                 IRCmds::BR { block_id } => { instr.push(ComputeInstr::BR { block_id: block_id.clone() }); }
@@ -88,6 +94,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
     }
 
     // after every command is done, make sure all the dependencies are contigious so the weights or outputs can be read
+    // ^^^^ do this at the IR Level
 
     // Remove movement kernel if not needed 
     // We already know it's contigious when 1. both matrixes 2. same id 3. same access expression.

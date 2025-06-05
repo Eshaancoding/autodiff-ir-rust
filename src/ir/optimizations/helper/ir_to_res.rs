@@ -25,6 +25,7 @@ pub fn ir_to_res (cmd: IRCmds) -> Option<String> {
         IRCmds::Concat { res, ..} => { Some(res) },
         IRCmds::Permute { res, ..} => { Some(res) },
         IRCmds::Broadcast { res, ..} => { Some(res) },
+        IRCmds::Contigious { res, .. } => { Some(res) },
 
         IRCmds::Exp2 { res, ..} => { Some(res) },
         IRCmds::Log2 { res, ..} => { Some(res) },

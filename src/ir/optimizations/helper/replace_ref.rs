@@ -56,6 +56,9 @@ fn replace_ref_cmd (cmd: &mut IRCmds, a_replace: &String, b_replace: String) {
         IRCmds::Broadcast { a, .. } => {
             if a == a_replace { *a = b_replace; }
         },
+        IRCmds::Contigious { a, .. } => {
+            if a == a_replace { *a = b_replace; }
+        },
         IRCmds::Exp2 { a, .. } => {
             if a == a_replace { *a = b_replace; }
         },

@@ -99,6 +99,7 @@ impl ShapeTracker {
             IRCmds::Sin { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
             IRCmds::Recip { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
             IRCmds::Sqrt { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); }
+            IRCmds::Contigious { a, res } => { self.shape.insert(res.clone(), self.shape.get(a).unwrap().clone() ); },
             _ => {}
         }
     }

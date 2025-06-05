@@ -5,7 +5,7 @@ use autodiffv2::nn::{self, SeqF, Module};
 pub fn main () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
     let x = autodiff::randn(vec![5, 1]);
-    let weight_matrix = x.broadcast(-1, 3); 
+    let weight_matrix = x.broadcast(-1, 3).contigious(); 
 
     let input = autodiff::randn(vec![2, 5]);
     let result = autodiff::dot(input, weight_matrix);
@@ -18,7 +18,7 @@ pub fn main () {
 }
 
 // nn_test
-pub fn t () {
+pub fn tsdjfksjdf () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     autodiff::eager_dep_opt();

@@ -21,6 +21,7 @@ pub fn replace_res_cmd (cmd: &mut IRCmds, replace_to: String) {
         IRCmds::Concat { res, .. } => { *res = replace_to; },
         IRCmds::Permute { res, .. } => { *res = replace_to; },
         IRCmds::Broadcast { res, .. } => { *res = replace_to; },
+        IRCmds::Contigious { res, .. } => { *res = replace_to; },
 
         IRCmds::Exp2 { res, .. } => { *res = replace_to; },
         IRCmds::Log2 { res, .. } => { *res = replace_to; },

@@ -182,6 +182,9 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
                 a.repeat(&dim_repeat) 
             );
         },
+        IRCmds::Contigious { .. } => {
+            // don't do anything. Every operation is anyways expanded to be contigious anyways
+        }
         IRCmds::EX => {},        // handled by execute
         IRCmds::BR { .. } => {}, // handled by execute
         IRCmds::BRE { .. } => {},// handled by execute

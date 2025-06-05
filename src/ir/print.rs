@@ -58,6 +58,9 @@ pub fn print_ir (cmd: &IRCmds, current_heading: &mut String, idx: usize) {
                 println!("{} = permute({}, {:?})", res, a, p);
             }
         },
+        IRCmds::Contigious { a, res } => {
+            println!("{} = {}.contigious()", res, a);
+        }
         IRCmds::Exp2 { a, res } => {
             println!("{} = {}.exp2()", res, a);
         },

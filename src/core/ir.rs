@@ -59,13 +59,14 @@ pub enum IRCmds {
     */
     DotProduct {a: String, b: String, res: String},         // (a,b) x (b,c) --> (a,c). Both tensors are 2-dim.
 
-    // Data Manipulation --> every operation is 0-cost (unless optimization decides otherwise)
+    // Data Manipulation --> every operation is 0-cost except Contigious
     // At kernel level, we just use fancy indexing. Check out matrix tracker (kernel/trackers/matrix.rs) and access expression generation (kernel/access_expr.rs)
     View      {a: String, target_dim: Vec<usize>, res: String},
     Index     {a: String, index: usize, dim: usize, res: String}, 
     Concat    {a: String, b: String, dim: usize, res: String},
     Permute   {a: String, p: Vec<usize>, res: String}, 
     Broadcast {a: String, dim: usize, r: usize, res: String}, 
+    Contigious {a: String, res: String},  // all the above operations use fancy indexing. However, this operation constructs the full matrix explicitly.
 
     // Single-input Functions
     Exp2  {a: String, res: String},   // fine: shift?

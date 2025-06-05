@@ -45,6 +45,9 @@ pub fn ir_to_expr (cmd: &IRCmds) -> Option<String> {
         IRCmds::Permute { a, p, .. } => {
             Some(format!("permute({}, {:?})", a, p))
         },
+        IRCmds::Contigious { a, .. } => {
+            Some(format!("{}.contigious()", a))
+        },
         IRCmds::Exp2 { a, .. } => {
             Some(format!("{}.exp()", a))
         },
