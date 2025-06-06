@@ -123,7 +123,6 @@ pub fn ir_b_add (cmd : IRCmds) {
     drop(guard);
 }
 
-// helper functions for generating IR
 pub fn ir_b_id () -> String {
     let mut guard = IRB.lock().unwrap();
     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
