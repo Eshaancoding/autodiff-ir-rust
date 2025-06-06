@@ -2,7 +2,7 @@
 // Only single threaded operations
 
 use indexmap::IndexMap;
-use crate::{to_kernel::to_kernel, Device, IRCmds, ValueData};
+use crate::{graph::ops::dot_product::DotProductNode, to_kernel::to_kernel, Device, IRBase, IRCmds, ValueData};
 use super::exec::exec;
 use tensor_rs::tensor_impl::gen_tensor::GenTensor;
 
@@ -25,6 +25,58 @@ impl Device for CPUNew {
     fn get_tensor (&self, _: &String) -> ValueData {
         // not implemented yet
         ValueData::none()  
+    }
+
+    fn ir_callback (&self, irb: &mut IRBase) {
+        // The efficient dot product in X86 implementations requires the weight matrix to be in column-major, not row-major. Furthermore, it requires the weight matrix to be contigious
+        // Therefore, before each dot product implementation, we will add a transpose and contigious operation to the B weight matrix. 
+        
+        irb.print();
+        
+        // find idx to change
+        let mut permute_idxs: Vec<(String, usize, String)> = vec![];
+        for (block_name, b_cmds) in irb.cmds.iter() {
+            for (i, cmd) in b_cmds.iter().enumerate() {
+                if let IRCmds::DotProduct { b, .. } = cmd {
+                    permute_idxs.push((block_name.clone(), i, b.clone()));
+                }
+            }
+        }
+
+        // change
+        let mut offset = 0;
+        for (block_name, idx, b_id) in permute_idxs {
+            let new_idx = offset + idx;            
+            let new_id = irb.unique_id();
+            let new_id_cont = irb.unique_id();
+
+            let block = irb.cmds.get_mut(&block_name).unwrap();
+            let dp_cmd = block.get_mut(new_idx).unwrap();
+
+            // change dp
+            if let IRCmds::DotProduct { b, .. } = dp_cmd {
+                *b = new_id_cont.clone(); 
+            } else {
+                panic!("Not a dp cmd!");
+            }
+
+            // insert permute and contigious operations
+            block.insert(new_idx, IRCmds::Permute { 
+                a: b_id, 
+                p: vec![0,1], 
+                res: new_id.clone()
+            });
+
+            block.insert(new_idx + 1, IRCmds::Contigious { 
+                a: new_id, 
+                res: new_id_cont 
+            });
+
+            offset += 2;
+        }
+
+        irb.print();
+
     }
 }
 
@@ -103,6 +155,10 @@ impl Device for CPU {
         } else {
             return ValueData::none()
         }
+    }
+
+    fn ir_callback (&self, _: &mut IRBase) {
+        // doesn't need to change anything in terms of IR callback
     }
 }
 

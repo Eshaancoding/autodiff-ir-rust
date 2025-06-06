@@ -6,7 +6,7 @@ use rand_distr::{Normal, Distribution};
 pub use crate::graph::data::concat::concat;
 pub use crate::graph::ops::dot_product::dot;
 pub use crate::devices;
-use crate::{core::add_to_dep, ir::optimizations::optimize::*};
+use crate::{core::add_to_dep, ir::optimizations::optimize::*, ir_b_device_callback};
 
 pub use crate::{
     Device, 
@@ -139,6 +139,7 @@ pub fn add_all_subheading (cmt: &str) {
 pub fn execute () {
     ir_b_main_block();
     ir_b_add(EX); // add exit
+    ir_b_device_callback();
     ir_optimize();
 
     ir_b_execute();    // execute
@@ -147,6 +148,7 @@ pub fn execute () {
 pub fn print_and_exec () {
     ir_b_main_block();
     ir_b_add(EX); // add exit
+    ir_b_device_callback();
     ir_optimize();
 
     ir_print();

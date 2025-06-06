@@ -5,16 +5,20 @@ use autodiffv2::nn::{self, SeqF, Module};
 pub fn main () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
     let x = autodiff::randn(vec![5, 1]);
-    let weight_matrix = x.broadcast(-1, 3).contigious(); 
+    let weight_matrix = x.broadcast(-1, 3);
+
+    let weight_matrix_two = autodiff::randn(vec![3, 5]);
 
     let input = autodiff::randn(vec![2, 5]);
     let result = autodiff::dot(input, weight_matrix);
+
+    let result = 5.0 * result.log2();
+    let result = autodiff::dot(result, weight_matrix_two);
+    
     result.forward();
     result.val().keep();
     
     autodiff::print_and_exec();
-
-    
 }
 
 // nn_test
