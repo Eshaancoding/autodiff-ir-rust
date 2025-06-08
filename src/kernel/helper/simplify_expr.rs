@@ -19,6 +19,8 @@ impl Expression {
             ShiftRight { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| x >> y, "shiftleft", Expression::make_shiftleft),
             ShiftLeft { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| x << y, "shiftright", Expression::make_shiftright),
             BitwiseAnd { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| x & y, "bitwiseand", Expression::make_bitwiseand),
+            MoreThan { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| (x > y) as i32, "morethan", Expression::make_more_than),
+            LessThan { a, b } => Expression::simplify_binary_op(*a, *b, |x, y| (x < y) as i32, "lessthan", Expression::make_less_than),
         }
     }
 

@@ -16,8 +16,7 @@ use super::{AllocTracker, ShapeTracker};
 #[derive(Clone, Debug)]
 pub enum DataCmds {
     View { source_dim: Vec<usize>, sink_dim: Vec<usize> },
-    Index { index: usize, dim: usize } ,
-    Concat,
+    Index { index: usize, dim: usize },
     Permute { p: Vec<usize> }, 
     Broadcast { dim: usize, r: usize }
 }
@@ -36,11 +35,21 @@ pub struct VarSource {
     pub dim: Vec<usize>
 }
 
+#[derive(Clone, Debug)]
+pub struct VarConcat {
+    pub a: String,
+    pub b: String,
+    pub dim: usize,
+    pub idx_end: usize,
+    pub sink_dim: Vec<usize>
+}
+
 pub struct MatrixTracker<'a> {
     // given sink variable, get source variable and the steps to reach to sink var
-    // Note that these IDs aren't correspondent to the HLIR id, but to the alloc ID.
-    pub vars: HashMap<String, VarDependency>,  
+    // Vars and sources hashmap keys must always come from alloc tracker's id 
+    pub vars: HashMap<String, VarDependency>,            // tracks the dependency of variables that are related to source (list of DataCmds)
     pub sources: HashMap<String, VarSource>,             // tracks source variables (no var dependency)
+    pub vars_concat: HashMap<String, VarConcat>,         // tracks concat variables 
     pub shape_tracker: ShapeTracker,                     // tracks the shape of variables
     pub alloc_tracker: &'a AllocTracker<'a>
 }
@@ -57,6 +66,7 @@ impl<'a> MatrixTracker<'a> {
         MatrixTracker { 
             vars: HashMap::new(), 
             sources: HashMap::new(),
+            vars_concat: HashMap::new(),
             shape_tracker: ShapeTracker::new(),
             alloc_tracker
         }
@@ -75,6 +85,7 @@ impl<'a> MatrixTracker<'a> {
         // track the sources and the variables
         let mut a_cmp: String = "".to_string();
         let mut res_cmp: String = "".to_string();        
+        let mut data_clone: Option<(String, VarConcat)> = None;
         let mut data_cmd: Option<DataCmds> = None;
         
         if let IRCmds::View { a, res, .. } = cmd {
@@ -89,8 +100,16 @@ impl<'a> MatrixTracker<'a> {
             data_cmd = Some(DataCmds::Index { index: index.clone(), dim: dim.clone() });
         }
         else if let IRCmds::Concat { a, b, dim, res } = cmd {
-            // concat is weird, not doing this yet
-            todo!()
+            assert!(res != a && res != b, "Res id can't be the same as a and b id at Concat");
+            let sink_dim = self.shape_tracker.get_shape(&res).clone();
+            let idx_end = self.shape_tracker.get_shape(a)[*dim].clone();
+            data_clone = Some((res.clone(), VarConcat {
+                a: a.clone(), 
+                b: b.clone(), 
+                dim: *dim,
+                sink_dim,
+                idx_end
+            }));
         }
         else if let IRCmds::Permute { a, p, res } = cmd {
             a_cmp = a.clone();
@@ -118,8 +137,10 @@ impl<'a> MatrixTracker<'a> {
             }
         }
 
-        // All examples are from test::nn_test::tests::nn_time_test
-        if let Some(cmd) = data_cmd {
+        if let Some(d) = data_clone {
+            self.vars_concat.insert(d.0, d.1);
+        }
+        else if let Some(cmd) = data_cmd {
             let sink_dims = self.shape_tracker.get_shape(&res_cmp).clone();
 
             /*

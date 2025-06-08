@@ -28,7 +28,7 @@ pub fn global_to_ndim (index:Expression, shape: &Vec<usize>) -> Vec<Expression> 
     nd_index
 }
 
-pub fn ndim_to_global (dim: Vec<Expression>, shape: &Vec<usize>) -> Expression {
+pub fn ndim_to_global (dim: &Vec<Expression>, shape: &Vec<usize>) -> Expression {
     let strides = calc_stride(shape);
     let mut global_expr = Expression::make_mult(
         dim[0].clone(),

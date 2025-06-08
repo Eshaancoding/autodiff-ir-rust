@@ -66,6 +66,13 @@ pub fn mem_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
                 // check whether result and dep and not the same (ex: l = e * l after first round of opimization)
                 if result == *dep || dep_list.contains(&result) { continue; }
 
+                /*
+                check whether cmd is not a Concat operation
+                [id] = concat([id], [id_one]) is not allowed. Concat is a zero-cost operation. 
+                Due to the way that matrix tracker works (it works recursively), it's easier if we can gaurantee seperate inputs id to the result id
+                */
+                if let IRCmds::Concat { .. } = cmd { break; }
+
                 // if so, set replace var
                 replace_var = Some( (result, dep.clone()) );
                 break;

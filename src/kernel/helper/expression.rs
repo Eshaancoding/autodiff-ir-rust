@@ -18,6 +18,7 @@ impl Expression {
         Expression::Val { v: Value::Constant { val: v } }
     }
 
+    // all of this can be easily simplified in a macro
     pub fn make_add (a: Expression, b: Expression) -> Expression {
         Expression::Add { 
             a: Box::new(a),
@@ -71,6 +72,20 @@ impl Expression {
         Expression::ShiftLeft { 
             a: Box::new(a), 
             b: Box::new(b) 
+        }
+    }
+
+    pub fn make_more_than (a: Expression, b: Expression) -> Expression {
+        Expression::MoreThan { 
+            a: Box::new(a), 
+            b: Box::new(b)
+        }
+    }
+
+    pub fn make_less_than (a: Expression, b: Expression) -> Expression {
+        Expression::LessThan { 
+            a: Box::new(a), 
+            b: Box::new(b)
         }
     }
 

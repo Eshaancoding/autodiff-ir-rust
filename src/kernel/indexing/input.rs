@@ -1,6 +1,6 @@
 use crate::{
     helper::shape::{global_to_ndim, ndim_to_global}, 
-    kernel_decl::{Expression, Input, Matrix}
+    kernel_decl::{Expression, Input, Matrix}, trackers::VarDependency
 };
 use crate::trackers::{
     DataCmds, 
@@ -9,7 +9,35 @@ use crate::trackers::{
 };
 
 impl<'a> MatrixTracker<'a> {
-    pub fn get_mat (&self, id: &String, access_type: AccessType) -> Matrix {
+    // shared among get_mat and get_concat_dep
+    pub fn ndim_change_datacmds (&self, ndim: &mut Vec<Expression>, var_dep: &VarDependency) {
+        for cmd in var_dep.data_cmds.iter().rev() {
+            match cmd { 
+                DataCmds::Broadcast { dim, .. } => {
+                    ndim[*dim] = Expression::make_const(0);
+                },
+                DataCmds::Index { index, dim } => {
+                    ndim[*dim] = Expression::make_const(*index as i32);
+                },
+                DataCmds::Permute { p } => {
+                    let mut new_dim = vec![Expression::make_const(0); ndim.len()];
+                    for i in 0..ndim.len() {
+                        new_dim[i] = ndim[p[i]].clone()
+                    }
+                    *ndim = new_dim;
+                },
+                DataCmds::View { sink_dim, source_dim } => {
+                    let global = ndim_to_global(ndim, sink_dim);
+                    *ndim = global_to_ndim(
+                        global,
+                        source_dim
+                    );
+                },
+            }
+        }
+    }
+
+    pub fn get_mat (&self, id: &String, access_type: &AccessType) -> Matrix {
         if let Some(var_dep) = self.vars.get(id) {
             let sink_shape = &var_dep.sink_dims;
             let source_shape = &var_dep.source_dims;
@@ -29,37 +57,13 @@ impl<'a> MatrixTracker<'a> {
             };
             
             // manipulate the ndim expression thru data cmds in reverse
-            for cmd in var_dep.data_cmds.iter().rev() {
-                match cmd { 
-                    DataCmds::Broadcast { dim, .. } => {
-                        ndim[*dim] = Expression::make_const(0);
-                    },
-                    DataCmds::Index { index, dim } => {
-                        ndim[*dim] = Expression::make_const(*index as i32);
-                    },
-                    DataCmds::Permute { p } => {
-                        let mut new_dim = vec![Expression::make_const(0); ndim.len()];
-                        for i in 0..ndim.len() {
-                            new_dim[i] = ndim[p[i]].clone()
-                        }
-                        ndim = new_dim;
-                    },
-                    DataCmds::View { sink_dim, source_dim } => {
-                        let global = ndim_to_global(ndim, sink_dim);
-                        ndim = global_to_ndim(
-                            global,
-                            source_dim
-                        );
-                    },
-                    DataCmds::Concat => {} // TODO!
-                }
-            }
+            self.ndim_change_datacmds(&mut ndim, var_dep); 
 
             // then, we can return the expression
             Matrix {
                 id: var_dep.alloc_id.clone(),
                 access: Expression::simplify( // simplify expression if needed
-                    ndim_to_global(ndim, source_shape)
+                    ndim_to_global(&ndim, source_shape)
                 )
             }
         } 
@@ -82,11 +86,10 @@ impl<'a> MatrixTracker<'a> {
                         id: source_res.alloc_id.clone(),
                         access: Expression::simplify(
                             ndim_to_global(
-                                vec![Expression::make_x(), Expression::make_y()],
+                                &vec![Expression::make_x(), Expression::make_y()],
                                 d
                             )
                         )
-                        
                     }
                 },
             }            
@@ -98,9 +101,16 @@ impl<'a> MatrixTracker<'a> {
     }
 
     pub fn get_input (&self, id: &String, access_type: AccessType) -> Input {
+        // you can probably cache this entire function...
+
         // check if constant
+        if let Some(result) = self.get_concat(id, &access_type) {
+            return result
+        }
+        
         // check if concat
 
-        Input::Mat { mat: self.get_mat(id, access_type) } 
+        // else, check if normal matrix 
+        Input::Mat { mat: self.get_mat(id, &access_type) } 
     }
 }

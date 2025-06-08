@@ -21,6 +21,8 @@ pub enum Expression {
     ShiftRight {a: Box<Expression>, b: Box<Expression>},
     ShiftLeft {a: Box<Expression>, b: Box<Expression>},
     BitwiseAnd {a: Box<Expression>, b: Box<Expression>},
+    MoreThan {a: Box<Expression>, b: Box<Expression>},
+    LessThan {a: Box<Expression>, b: Box<Expression>}
 }
 
 #[derive(Clone, Debug)]
@@ -39,7 +41,7 @@ pub enum Input {
     ConcatMatrix { 
         id_one: Box<Input>, 
         id_two: Box<Input>, 
-        access: Expression
+        conditional: Expression // conditional on whether to access expression id_one or id_two
     }, 
 }
 

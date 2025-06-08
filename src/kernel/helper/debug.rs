@@ -40,6 +40,12 @@ impl Display for Expression {
             Expression::Val { v }  => {
                 write!(f, "{}", v)
             },
+            Expression::MoreThan { a, b } => {
+                write!(f, "({} > {})", a, b)
+            },        
+            Expression::LessThan { a, b } => {
+                write!(f, "({} < {})", a, b)
+            },        
         }
     }
 }
@@ -81,9 +87,9 @@ impl Display for Input {
             },
             Input::Mat { mat } => {
                 write!(f, "{}", mat)
-            },
-            Input::ConcatMatrix { id_one, id_two, access } => {
-                write!(f, "Concat matrix\n\ta: {}\n\tb: {}\n with access expression: {}", id_one, id_two, access)
+            }
+            Input::ConcatMatrix { id_one, id_two, conditional } => {
+                write!(f, "C (a: {}, b: {}, cond: {})", id_one, id_two, conditional)
             }
         }
     }
@@ -122,7 +128,6 @@ impl Display for ComputeInstr {
             ComputeInstr::Movement { a, res , size} => {
                 let _ = write!(f, "{} {} {}", res, format!(" <-(Move {})- ", size.to_string().yellow()).bold(), a);
             }
-            // _ => todo!()
         }
         write!(f, "\n")
     }

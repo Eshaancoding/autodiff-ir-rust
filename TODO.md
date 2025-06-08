@@ -62,12 +62,7 @@ Backend will refer to things that runs the internal operations and optimizations
 * ~~1. Remove Neg IR instruction~~
 
 * **Memory**:
-    * <mark>Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul</mark>
-        * any operations that need to make contigious (dot prod I believe)
-        * operations AT THE END OF PROGRAM that is needed to make contigious
-            * do this at IR
-            * check dep list
-            * you can do an IR opt for this asw.
+    * ~~Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul~~
     
     * <mark>Finish Concat logic in matrix tracker</mark>
 

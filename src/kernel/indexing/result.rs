@@ -21,7 +21,7 @@ impl<'a> MatrixTracker<'a> {
                 Matrix { 
                     id: entry.id.clone(), 
                     access: Expression::simplify(ndim_to_global(
-                        vec![Expression::make_x(), Expression::make_y()], 
+                        &vec![Expression::make_x(), Expression::make_y()], 
                         &expected_shape
                     ))
                 }

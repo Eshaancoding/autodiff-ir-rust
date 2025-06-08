@@ -2,23 +2,33 @@ use std::time::Instant;
 use autodiffv2::autodiff;
 use autodiffv2::nn::{self, SeqF, Module};
 
-pub fn main () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
-    let x = autodiff::randn(vec![5, 1]);
-    let weight_matrix = x.broadcast(-1, 3).contigious(); 
+// in the future, probably migrate to tests()
 
+pub fn concat_test () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+    // -1 dim
     let input = autodiff::randn(vec![2, 5]);
-    let result = autodiff::dot(input, weight_matrix);
+    let w_one = autodiff::randn(vec![5, 1]);
+    let w_two = autodiff::randn(vec![5, 1]);
+    let t = autodiff::concat(vec![w_one, w_two], -1);
+    let result = autodiff::dot(input, t);
     result.forward();
     result.val().keep();
-    
-    autodiff::print_and_exec();
 
-    
+    // 0 dim
+    let input = autodiff::randn(vec![5, 2]);
+    let w_one = autodiff::randn(vec![1,2]);
+    let w_two = autodiff::randn(vec![1,2]);
+    let t = autodiff::concat(vec![w_one, w_two], 0);
+    let result = autodiff::dot(input, t);
+    result.forward();
+    result.val().keep();
+
+    autodiff::print_and_exec();
 }
 
 // nn_test
-pub fn tsdjfksjdf () {
+pub fn nn_test () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     autodiff::eager_dep_opt();
@@ -32,7 +42,7 @@ pub fn tsdjfksjdf () {
 
     let x = autodiff::randn(vec![2, 256]);
     let mut res = autodiff::empty();
-    
+
     // prev: 0..1000        
     autodiff::ir_for(0..100, |_| {
         let y = neural_net.f(x.clone());
@@ -55,7 +65,7 @@ pub fn tsdjfksjdf () {
 
 
 // Transformer Test
-pub fn sdjfksjdkf () {
+pub fn multihead_att () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     let transformer = nn::MultiHeadAttention(64, 4);
@@ -77,10 +87,8 @@ pub fn sdjfksjdkf () {
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
 }
 
-pub fn tt () {
+pub fn reduce () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
-
-
     let x = autodiff::tensor(vec![
         0.03, 0.02, 0.01, 
         0.04, 0.05, 0.063, 
@@ -98,4 +106,11 @@ pub fn tt () {
     let v = res.val().get();
     println!("Value dim: {:#?}", v.dim);
     println!("Value data: {:#?}", v.data);
+}
+
+pub fn main () {
+    // nn_test();
+    // multihead_att();
+    // reduce();
+    concat_test();
 }
