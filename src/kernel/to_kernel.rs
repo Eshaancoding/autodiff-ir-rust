@@ -73,7 +73,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                         res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
                         size: a_shape.iter().product()
                     });
-                },
+                }, 
                 
                 IRCmds::BR { block_id } => { instr.push(ComputeInstr::BR { block_id: block_id.clone() }); }
                 IRCmds::BRE { block_id, a } => { instr.push(ComputeInstr::BRE { block_id: block_id.clone(), a: a.clone() }); }

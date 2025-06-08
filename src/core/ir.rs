@@ -98,8 +98,15 @@ pub static DEVICE: Mutex<Option<Box<dyn Device + Send + Sync>>> = Mutex::new(Non
 pub static IRB: Mutex<Option<IRBase>> = Mutex::new(None);
 
 pub trait Device {
+    // Execute a list of instructions 
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>);
+    
+    // Execute
     fn get_tensor (&self, id: &String) -> ValueData;
+    
+    // If the device needs any specific requirements / changes to the IR before passing to IR optimization, you can declare it here.
+    // However, if not then you can leave this an empty function
+    fn ir_callback (&self, cmds: &mut IRBase);
 }
 
 // helper functions for generating IR
@@ -116,7 +123,6 @@ pub fn ir_b_add (cmd : IRCmds) {
     drop(guard);
 }
 
-// helper functions for generating IR
 pub fn ir_b_id () -> String {
     let mut guard = IRB.lock().unwrap();
     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
@@ -125,15 +131,29 @@ pub fn ir_b_id () -> String {
     return x
 }
 
+pub fn ir_b_device_callback () {
+    let mut guard_device = DEVICE.lock().unwrap();
+    let mut guard = IRB.lock().unwrap();
+
+    let device = guard_device.as_mut().expect("Can't unpack device");
+    let mut ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
+
+    device.ir_callback(&mut ir_b); 
+
+    drop(guard_device);
+    drop(guard);
+}
+
 pub fn ir_b_execute () {
+    // get cmds
     let mut guard = IRB.lock().unwrap();
     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
     let cmds = ir_b.cmds.clone();
     drop(guard);
 
     let mut guard = DEVICE.lock().unwrap();
-    let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
-    ir_b.execute(cmds);
+    let device = guard.as_mut().expect("Can't unpack IRBuilder");
+    device.execute(cmds);
     drop(guard);
 }
 

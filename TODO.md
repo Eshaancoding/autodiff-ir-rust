@@ -89,6 +89,9 @@ Backend will refer to things that runs the internal operations and optimizations
             3. ~~dealloc A with size of 256~~ fills data region A with data of B
             4. computation that uses B will instead use memory address of A. 
 
+    * Swapping accessing expressions between input and output of two adjacent kernels?
+        * can I do that? is that a thing?
+
     * Memory experiments needed (do this movement/no movement experiment after kernel fusion)
         * **You should test whether a weird write is slower than a fast write + movement**
             * There's specialize transpose kernels as well...
@@ -103,9 +106,6 @@ Backend will refer to things that runs the internal operations and optimizations
 
                 * etc. etc. etc. 
 
-    * Swapping accessing expressions between input and output of two adjacent kernels?
-        * can I do that? is that a thing?
-
     * ~~HLIR level, reduce sum to be heavily simplified and rely more on movement kernels~~
 
     * ~~1. Remove binary/unary funcs and just use general "Expression"~~
@@ -115,6 +115,9 @@ Backend will refer to things that runs the internal operations and optimizations
     * ~~fix res situation (make contigious or not, etc.)~~
 
     * ~~3. Update matrix tracker for reduce kernel~~
+
+    * ~~Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul~~
+        * ~~any operations that need to make contigious (dot prod I believe)~~
 
 * **X86**:
     * Allow dot prod implementation to support varied shapes rather than just power of 2
@@ -168,15 +171,23 @@ Backend will refer to things that runs the internal operations and optimizations
             * I believe this is majority of what tinygrad does 
             * IR optimization is somehow the most slowest part of this entire process...
 
+    * Set contigious operations of var deps at the end of the program
+        * Some contigious IR opts can be done
+        * If two contigious in series (or seperated but referencing same var)
+            * remove the first contigious operation
+        * Determine if it needs to be contigious in the first place.
+
     * Concat + view operations can be streamlined
         * this is mostly due to **concat**. If I am being honest, there's probably a better way for implementing backward pass for concat? I believe
             * maybe not 
         * Should be replaced in graphical format
+        * r instruction?
         * main problem with transformer implementation right now (and well, any other implementations)
 
     * if matrix is always used in it's transposed form, then set the contents such that it is in transposed and remove transpose operation
         * Good for weight optimization :)
         * e --> e = e.t <-- just transform the matrix manually
+        * At the end, transpose is it back
 
     * View removal
         * If multiple views in sequence, just turn it into the one single view (the last view operation)
@@ -199,7 +210,6 @@ Backend will refer to things that runs the internal operations and optimizations
 
     * Not sure if you can improve even further/less bugs if you turn it into a GRAPH rather than a list of optimizations
         * maybe some optimizations can benefit from this, not everything...
-
         * `to_graph` func should be created and used across IRs that benefit from it.
             * good for debugging as well
 
