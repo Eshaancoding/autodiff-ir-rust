@@ -1,9 +1,6 @@
 use indexmap::IndexMap;
 use crate::{
-    kernel_decl::{ComputeInstr, Procedure, ReduceOp}, 
-    to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, 
-    Device, 
-    IRCmds
+    kernel_decl::{ComputeInstr, Procedure, ReduceOp}, to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, trackers::ConstantTracker, Device, IRCmds
 };
 use super::trackers::{
     AllocTracker, 
@@ -13,14 +10,16 @@ use super::trackers::{
 
 pub fn to_kernel (device: &dyn Device, cmds: &IndexMap<String, Vec<IRCmds>>) {
     let mut alloc_tracker = AllocTracker::new(device);
+    let mut constant_tracker = ConstantTracker::new();
 
     for (_, b_cmds) in cmds.iter() { 
         for cmd in b_cmds {
             alloc_tracker.step(cmd);
+            constant_tracker.step(cmd); // maybe constant tracker depends on order?
         }     
     }
 
-    let mut mat_tracker = MatrixTracker::new(&alloc_tracker);
+    let mut mat_tracker = MatrixTracker::new(&alloc_tracker, &constant_tracker);
     let mut proc = Procedure::new();
     for (block_name, b_cmds) in cmds.iter() { 
         let mut instr: Vec<ComputeInstr> = vec![]; // instructions

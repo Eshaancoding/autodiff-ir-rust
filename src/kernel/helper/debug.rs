@@ -83,7 +83,7 @@ impl Display for Input {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Input::Constant { val } => {
-                write!(f, "Constant with val: {}", val)
+                write!(f, "CS (V: {})", val.to_string().green())
             },
             Input::Mat { mat } => {
                 write!(f, "{}", mat)

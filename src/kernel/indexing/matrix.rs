@@ -70,6 +70,12 @@ impl<'a> MatrixTracker<'a> {
                 }
             }
         }
+
+        // is constant
+        else if let Some(content) = self.constant_tracker.get_f64(id) {
+            Input::Constant { val: content }
+        }
+        
         else {
             panic!("Invalid matrix type!");
         }

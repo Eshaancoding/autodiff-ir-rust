@@ -66,9 +66,9 @@ Backend will refer to things that runs the internal operations and optimizations
     
     * ~~Finish Concat logic in matrix tracker~~
 
-    * <mark>Finish constant logic in matrix tracker</mark>
+    * ~~Finish constant logic in matrix tracker~~
 
-    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
+    * Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT
         * Then, you need a temp allocation for this.
 
     * automatic allocation and deallocation within graph
@@ -91,6 +91,9 @@ Backend will refer to things that runs the internal operations and optimizations
 
     * Swapping accessing expressions between input and output of two adjacent kernels?
         * can I do that? is that a thing?
+    
+    * fix divergent branching issue (each branch neesd to have its own version of matrix tracker so to speak)
+        * therefore, we can use block name, cmd, etc.
 
     * Memory experiments needed (do this movement/no movement experiment after kernel fusion)
         * **You should test whether a weird write is slower than a fast write + movement**
@@ -121,27 +124,14 @@ Backend will refer to things that runs the internal operations and optimizations
 
 * **X86**:
     * Allow dot prod implementation to support varied shapes rather than just power of 2
-    * 3. Efficient Reduce kernel
+    * 3. Efficient Reduce kernels
+    * basicallyyyyyyyy implement all of the backend for that
 
 * **Expression simplification**
     * similar to opt remainder %.
     * Optimze at make_minus or make etc. 
     * There might be edge cases for simplify expr func. Still keep that (need experimentation)
         * v & 63 & 63 --> v & 63
-
-* **Kernel experimentation:**
-    * Experiment with different parameters of dot prod + other kernels 
-        * [this](https://mesozoic-egg.github.io/tinygrad-notes/20241203_beam.html) does a good job
-        * there's other optimizations, I am sure. Don't focus on that right now, have the general base for everything first.
-
-    * Contigious memory vs. direct accessing for dot prod kernels
-        * efficient dot product kernels assume that it is contigious 
-        * Furthermore, we assume that that `A` in `Ax` in matrix multiplication is **column-wise** rather than **row-wise**
-            * need to manually assume that there's a transpose before the A in matrix multiplication.
-
-    * How/where to organize this? Each device will have different kernels which will have different params to opts...
-        * probably within each device?  
-        * **YOU NEED BOTH**
 
 * **Kernel Fusion**
     * do basic multiple binary/unary kernel fusion
@@ -164,6 +154,20 @@ Backend will refer to things that runs the internal operations and optimizations
         * not sure if you can beat hand-tune optimizations
     * There's recent work on kernel fusion of **everything** somehow
         * however, you'd have to handle your own GPU synchronization. **THIS CAN BE A BENEFIT**.
+
+* **Kernel experimentation:**
+    * Experiment with different parameters of dot prod + other kernels 
+        * [this](https://mesozoic-egg.github.io/tinygrad-notes/20241203_beam.html) does a good job
+        * there's other optimizations, I am sure. Don't focus on that right now, have the general base for everything first.
+
+    * Contigious memory vs. direct accessing for dot prod kernels
+        * efficient dot product kernels assume that it is contigious 
+        * Furthermore, we assume that that `A` in `Ax` in matrix multiplication is **column-wise** rather than **row-wise**
+            * need to manually assume that there's a transpose before the A in matrix multiplication.
+
+    * How/where to organize this? Each device will have different kernels which will have different params to opts...
+        * probably within each device?  
+        * **YOU NEED BOTH**
 
 * **HLIR Opts**
     * *MAKE IT FAST*

@@ -123,9 +123,17 @@ pub fn reduce () {
 }
 
 pub fn main () {
-    // nn_test();
+    nn_test();
     // multihead_att();
     // reduce();
-    concat_test();
+    // concat_test();
     // broadcasting_test();
+
+    // test constant tracker
+    // check whether it deletes vars if += or -= and if it deletes references vars too
+    // check if it keeps constants
+
+    // test concat tracker
+    // check whether you can do concat --> view --> permute --> concat --> permute --> concat
+    // nested structure like that 
 }

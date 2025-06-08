@@ -138,8 +138,6 @@ pub fn ir_b_id () -> String {
     return x
 }
 
-
-
 pub fn ir_b_device_callback () {
     let mut guard_device = DEVICE.lock().unwrap();
     let mut guard = IRB.lock().unwrap();

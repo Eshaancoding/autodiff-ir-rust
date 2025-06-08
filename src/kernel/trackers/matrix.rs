@@ -7,7 +7,7 @@ This is how memory is handled within all backend kernels.
 
 use std::collections::HashMap;
 use crate::{
-    ir::optimizations::helper::ir_to_res, Device, IRCmds
+    ir::optimizations::helper::ir_to_res, trackers::ConstantTracker, Device, IRCmds
 };
 use super::{AllocTracker, ShapeTracker};
 
@@ -56,7 +56,8 @@ pub struct MatrixTracker<'a> {
     pub vars_concat: HashMap<String, VarConcatDep>,         // tracks variables that references concat variables
 
     pub shape_tracker: ShapeTracker,                        // tracks the shape of variables
-    pub alloc_tracker: &'a AllocTracker<'a>                 // tracks allocation / size of variables
+    pub alloc_tracker: &'a AllocTracker<'a>,                // tracks allocation / size of variables
+    pub constant_tracker: &'a ConstantTracker,              // tracks constant tracker
 }
 
 // Different access types (depending on the kernel used) is needed
@@ -67,14 +68,15 @@ pub enum AccessType {
 }
 
 impl<'a> MatrixTracker<'a> {
-    pub fn new (alloc_tracker: &'a AllocTracker) -> MatrixTracker<'a> {
+    pub fn new (alloc_tracker: &'a AllocTracker, constant_tracker: &'a ConstantTracker) -> MatrixTracker<'a> {
         MatrixTracker { 
             sources: HashMap::new(),
             vars: HashMap::new(), 
             sources_concat: HashMap::new(),
             vars_concat: HashMap::new(),            
             shape_tracker: ShapeTracker::new(),
-            alloc_tracker
+            alloc_tracker,
+            constant_tracker
         }
     }
 
@@ -126,6 +128,11 @@ impl<'a> MatrixTracker<'a> {
             data_cmd = Some(DataCmds::Broadcast { dim: *dim, r: *r });
         } else {
             if let Some(id) = ir_to_res(cmd.clone()) {
+                // only cmd satisfying this is CreateMat. If it's a constant, then skip
+                if let Some(_) = self.constant_tracker.get_f64(&id) {
+                    return     
+                }
+
                 // if we are redefining a source, then remove from self.vars (which tracks broadcasting, view, etc.)
                 self.vars.remove_entry(&id);
 
@@ -141,6 +148,11 @@ impl<'a> MatrixTracker<'a> {
             }
         }
 
+        // if the cmd result is a constant, skip 
+        if let Some(_) = self.constant_tracker.get_f64(&res_cmp) {
+            return     
+        }
+        
         // Declaring a concat variable
         if let Some(d) = data_clone {
             self.sources_concat.insert(d.0, d.1);
