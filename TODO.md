@@ -64,7 +64,7 @@ Backend will refer to things that runs the internal operations and optimizations
 * **Memory**:
     * ~~Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul~~
     
-    * <mark>Finish Concat logic in matrix tracker</mark>
+    * ~~Finish Concat logic in matrix tracker~~
 
     * <mark>Finish constant logic in matrix tracker</mark>
 

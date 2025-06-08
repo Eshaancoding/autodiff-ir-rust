@@ -27,6 +27,18 @@ pub fn concat_test () {
     autodiff::print_and_exec();
 }
 
+pub fn broadcasting_test () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+    
+    let input = autodiff::randn(vec![5, 25]);
+    
+    let res = input.t().contigious();
+    res.forward();
+    res.val().keep();
+    
+    autodiff::print_and_exec();
+}
+
 // nn_test
 pub fn nn_test () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
@@ -37,6 +49,8 @@ pub fn nn_test () {
     neural_net.insert(nn::Linear(256, 128, true));
     neural_net.insert(nn::Sigmoid());
     neural_net.insert(nn::Linear(128, 64, true));
+    neural_net.insert(nn::Sigmoid());
+    neural_net.insert(nn::Linear(64, 32, true));
 
     let mut opt = nn::opt::SGD(neural_net.params(), 0.1);
 
@@ -113,4 +127,5 @@ pub fn main () {
     // multihead_att();
     // reduce();
     concat_test();
+    // broadcasting_test();
 }

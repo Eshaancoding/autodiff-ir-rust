@@ -35,7 +35,7 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         IRCmds::ElwAddEq { s, o } => {
             let s_shape = mat_tracker.get_shape(s);
             let o_shape = mat_tracker.get_shape(o);
-            assert!(s_shape == o_shape, "IR shape are not equal");
+            assert_eq!(s_shape, o_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 

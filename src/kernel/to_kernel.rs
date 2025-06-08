@@ -2,21 +2,23 @@ use indexmap::IndexMap;
 use crate::{
     kernel_decl::{ComputeInstr, Procedure, ReduceOp}, 
     to_instr::{comparison::handle_comparison, elw::handle_elw, unary::handle_unary}, 
+    Device, 
     IRCmds
 };
-use super::trackers::{AllocTracker, MatrixTracker, AccessType};
+use super::trackers::{
+    AllocTracker, 
+    MatrixTracker, 
+    AccessType
+};
 
-pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
-    let mut alloc_tracker = AllocTracker::new();
+pub fn to_kernel (device: &dyn Device, cmds: &IndexMap<String, Vec<IRCmds>>) {
+    let mut alloc_tracker = AllocTracker::new(device);
 
     for (_, b_cmds) in cmds.iter() { 
         for cmd in b_cmds {
             alloc_tracker.step(cmd);
         }     
     }
-
-    println!("=======Alloc tracker:========\n");
-    println!("{}", alloc_tracker);
 
     let mut mat_tracker = MatrixTracker::new(&alloc_tracker);
     let mut proc = Procedure::new();
@@ -51,7 +53,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
                 IRCmds::DotProduct { a, b, res } => {
                     let a_shape = mat_tracker.get_shape(a);  
                     let b_shape = mat_tracker.get_shape(b); 
-                    let res_shape = vec![*a_shape.first().unwrap(), *b_shape.last().unwrap()];
+                    let res_shape = device.dot_prod_shape(a_shape, b_shape);
                     
                     assert!(a_shape.len() == 2 && b_shape.len() == 2, "dot prod at kernel lowering has wrong dimensions");
 
@@ -88,7 +90,7 @@ pub fn to_kernel (cmds: &IndexMap<String, Vec<IRCmds>>) {
             // println!("{:#?}", mat_tracker.vars);
             // println!("=========================");
 
-            mat_tracker.step(cmd); 
+            mat_tracker.step(device, cmd); 
         }
         proc.add_block(block_name, instr);
     }

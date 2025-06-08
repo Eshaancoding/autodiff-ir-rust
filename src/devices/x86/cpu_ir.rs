@@ -2,7 +2,7 @@
 // Only single threaded operations
 
 use indexmap::IndexMap;
-use crate::{graph::ops::dot_product::DotProductNode, to_kernel::to_kernel, Device, IRBase, IRCmds, ValueData};
+use crate::{to_kernel::to_kernel, Device, IRBase, IRCmds, ValueData};
 use super::exec::exec;
 use tensor_rs::tensor_impl::gen_tensor::GenTensor;
 
@@ -19,7 +19,7 @@ impl CPUNew {
 
 impl Device for CPUNew {
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>) {
-        let _ = to_kernel(&cmds);
+        let _ = to_kernel(self, &cmds);
     }
 
     fn get_tensor (&self, _: &String) -> ValueData {
@@ -30,8 +30,6 @@ impl Device for CPUNew {
     fn ir_callback (&self, irb: &mut IRBase) {
         // The efficient dot product in X86 implementations requires the weight matrix to be in column-major, not row-major. Furthermore, it requires the weight matrix to be contigious
         // Therefore, before each dot product implementation, we will add a transpose and contigious operation to the B weight matrix. 
-        
-        irb.print();
         
         // find idx to change
         let mut permute_idxs: Vec<(String, usize, String)> = vec![];
@@ -63,7 +61,7 @@ impl Device for CPUNew {
             // insert permute and contigious operations
             block.insert(new_idx, IRCmds::Permute { 
                 a: b_id, 
-                p: vec![0,1], 
+                p: vec![1,0], 
                 res: new_id.clone()
             });
 
@@ -74,10 +72,13 @@ impl Device for CPUNew {
 
             offset += 2;
         }
-
-        irb.print();
-
     }
+
+    fn dot_prod_shape (&self, a: &Vec<usize>, b: &Vec<usize>) -> Vec<usize> {
+        // as we transpose B (weight matrix), we have to switch what dim we are swapping
+        vec![a.first().unwrap().clone(), b.first().unwrap().clone()] 
+    }
+
 }
 
 // ==================== tensor rs ==================== 

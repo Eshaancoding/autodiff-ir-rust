@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::IRCmds;
+use crate::{Device, IRCmds};
 
 #[derive(Clone, Debug)]
 pub struct ShapeTracker {
@@ -11,7 +11,7 @@ impl ShapeTracker {
         ShapeTracker { shape: HashMap::new() }
     }
 
-    pub fn step (&mut self, cmd: &IRCmds) {
+    pub fn step (&mut self, device: &dyn Device, cmd: &IRCmds) {
         match cmd {
             IRCmds::CreateMat { dim, id, .. } => {
                 self.shape.insert(
@@ -41,8 +41,8 @@ impl ShapeTracker {
             IRCmds::DotProduct { a, b, res } => {
                 let a_shape = self.shape.get(a).unwrap();
                 let b_shape = self.shape.get(b).unwrap();
+                let res_shape = device.dot_prod_shape(a_shape, b_shape);
 
-                let res_shape = vec![*a_shape.first().unwrap(), *b_shape.last().unwrap()];
                 self.shape.insert(
                     res.clone(),
                     res_shape

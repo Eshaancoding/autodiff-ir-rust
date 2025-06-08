@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::{ir::optimizations::helper::ir_to_res, IRCmds};
+use crate::{ir::optimizations::helper::ir_to_res, Device, IRCmds};
 use super::ShapeTracker;
 
 #[derive(Clone, Debug)]
@@ -13,15 +13,18 @@ pub struct AllocEntry<'a> {
 }
 pub struct AllocTracker<'a> {
     shape_tracker: ShapeTracker,
+    device: &'a dyn Device,
 
     // hlir id is same as the alloc id
     // However, not all hlir id will be in vars (ex: referencing source vars)
     pub vars: HashMap<String, AllocEntry<'a>>,  
+
 }
 
 impl<'a> AllocTracker<'a> {
-    pub fn new () -> AllocTracker<'a> {
+    pub fn new (device: &'a dyn Device) -> AllocTracker<'a> {
         AllocTracker {  
+            device,
             vars: HashMap::new(),
             shape_tracker: ShapeTracker::new()
         }
@@ -42,7 +45,7 @@ impl<'a> AllocTracker<'a> {
     }
     
     pub fn step (&mut self, cmd: &'a IRCmds) {
-        self.shape_tracker.step(cmd);
+        self.shape_tracker.step(self.device, cmd);
         match cmd {
             // ignore all data manipulation cmds
             IRCmds::View { .. } => {}, 

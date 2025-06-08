@@ -101,12 +101,19 @@ pub trait Device {
     // Execute a list of instructions 
     fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>);
     
-    // Execute
+    // Transfers matrix id to device.
     fn get_tensor (&self, id: &String) -> ValueData;
     
     // If the device needs any specific requirements / changes to the IR before passing to IR optimization, you can declare it here.
-    // However, if not then you can leave this an empty function
+    // If no optimizations needed, then just leave this function empty
     fn ir_callback (&self, cmds: &mut IRBase);
+
+    // If there needs to be any shape override for dot product, you can declare it here.
+    // There are many implementations of dot product a device can have (ex: b might need to be transposed for column-wise accessing).
+    // Therefore, this function exists to accomodate any DP implementations
+    fn dot_prod_shape (&self, a: &Vec<usize>, b: &Vec<usize>) -> Vec<usize> {
+        vec![a.first().unwrap().clone(), b.last().unwrap().clone()]
+    }
 }
 
 // helper functions for generating IR
@@ -130,6 +137,8 @@ pub fn ir_b_id () -> String {
     drop(guard);
     return x
 }
+
+
 
 pub fn ir_b_device_callback () {
     let mut guard_device = DEVICE.lock().unwrap();
