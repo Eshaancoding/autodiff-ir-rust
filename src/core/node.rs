@@ -25,7 +25,7 @@ pub trait NodeTrait {
         panic!("Calling .reset_grad() on a non-tensor node");
     }
 
-    // Determine if we are in constant
+    // Track whether constant node
     fn is_const (&self) -> bool { false }
 }
 
@@ -73,10 +73,6 @@ impl Tensor {
         self.n.borrow_mut().reset_grad();
     }
 
-    pub fn is_const (&self) -> bool {
-        self.n.borrow().is_const()
-    }
-
     pub fn detach (&self) -> Tensor {
         self.forward(); 
         self.val().to_node()
@@ -85,5 +81,9 @@ impl Tensor {
     pub fn detach_grad (&self) -> Tensor {
         self.forward(); 
         self.val().to_node_with_grad()
+    }
+
+    pub fn is_const (&self) -> bool {
+        self.n.borrow().is_const()
     }
 }

@@ -6,6 +6,7 @@ use crate::IRCmds;
 pub fn ir_to_res (cmd: IRCmds) -> Option<String> {
     match cmd {
         IRCmds::CreateMat {id, ..} => { Some(id) },
+        IRCmds::CreateConstant { id , ..} => { Some(id) },
 
         IRCmds::ElwMultiply {res, ..} => { Some(res) },
         IRCmds::ElwAdd {res, ..} => { Some(res)},

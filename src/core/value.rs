@@ -2,8 +2,8 @@
 // This the class actually representing the computation. 
 // Node, Tensor, Ops, etc. are classes used to just build the computation graph. 
 
-use crate::{IRCmds, ValueData};
-use super::{add_to_dep, ir_b_add, ir_b_id, ConstantNode, Tensor, TensorNode, DEVICE};
+use crate::{IRCmds, NodeTrait, ValueData};
+use super::{add_to_dep, ir_b_add, ir_b_id, Tensor, TensorNode, DEVICE};
 
 // Value just stores the dimension as we go through forward and backward propogation. However, the actual value is computed when we execute IR
 #[derive(Clone, Debug)]
@@ -46,11 +46,11 @@ impl Value {
 
     // TensorNode is just a wrapper around Value, technically.
     // Will be a constant
-    // For node, this is simlar to .detach(), but gradient will exist normally
+    // For node, this is similar to .detach(), but gradient will exist normally
     // This is helpful for:
     // Gradient Value --> Node --> perform operations -(compile to)-> IR
     pub fn to_node (&self) -> Tensor {
-        Tensor::new(ConstantNode {
+        Tensor::new(ValueNode {
             v: self.clone()
         })
     }
@@ -95,6 +95,31 @@ impl Value {
     */
     pub fn keep (&self) {
         add_to_dep(self.id.clone());
+    }
+}
+
+// Value node
+// This is important for turning the gradient into a node to be manipulated by other variables
+#[derive(Clone)]
+pub struct ValueNode {
+    pub v: Value
+}
+
+impl NodeTrait for ValueNode {
+    fn forward (&mut self) -> Value {
+        self.v.clone() 
+    } 
+
+    fn backward (&mut self, _:Value) {
+        // no backwards for constant 
+    }
+
+    fn dim (&self) -> Vec<usize> {
+        self.v.dim.clone()
+    }
+
+    fn val (&self) -> Value {
+        self.v.clone()
     }
 }
 

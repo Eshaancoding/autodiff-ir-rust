@@ -48,12 +48,8 @@ impl NodeTrait for TensorNode {
     fn reset_grad (&mut self) {
         self.gd = None;
     }
-
-    fn is_const (&self) -> bool {
-        false 
-    } // have a const tracker throughout nodes?
 }
 
 // whenever you update this; make sure you update
-// =================== ADD EQAUL ==============
+// =================== ADD EQUAL ==============
 // acts as tensor

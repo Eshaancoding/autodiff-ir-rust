@@ -18,7 +18,13 @@ impl ShapeTracker {
                     id.clone(),
                     dim.clone()
                 );
-            }
+            },
+            IRCmds::CreateConstant { id, .. } => {
+                self.shape.insert(
+                    id.clone(),
+                    vec![1]
+                );
+            },
             
             IRCmds::ElwMultiply { a, res, .. } => { self.shape.insert( res.clone(), self.shape.get(a).unwrap().clone() ); },
             IRCmds::ElwAdd { a, res, .. } => { self.shape.insert( res.clone(), self.shape.get(a).unwrap().clone() ); },

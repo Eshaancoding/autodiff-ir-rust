@@ -30,6 +30,7 @@ macro_rules! create_equality {
             }
             
             fn backward (&mut self, _:Value) {
+                
                 // Note: no grad on equality; use val * (equality statement) to create grad
                 // However, we still set backward & grad because the resultant of equalites are treated as constants
             }

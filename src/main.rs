@@ -49,8 +49,8 @@ pub fn nn_test () {
     neural_net.insert(nn::Linear(256, 128, true));
     neural_net.insert(nn::Sigmoid());
     neural_net.insert(nn::Linear(128, 64, true));
-    neural_net.insert(nn::Sigmoid());
-    neural_net.insert(nn::Linear(64, 32, true));
+    // neural_net.insert(nn::Sigmoid());
+    // neural_net.insert(nn::Linear(64, 32, true));
 
     let mut opt = nn::opt::SGD(neural_net.params(), 0.1);
 
@@ -122,7 +122,21 @@ pub fn reduce () {
     println!("Value data: {:#?}", v.data);
 }
 
+pub fn me_life () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+    let y = autodiff::randn(vec![5, 2, 3]);
+    let res = y.sigmoid();
+    println!("Res dim: {:?}", res.dim());
+
+    res.forward(); 
+    res.val().keep();
+    
+    autodiff::print_and_exec();
+    
+}
+
 pub fn main () {
+    // me_life();
     nn_test();
     // multihead_att();
     // reduce();

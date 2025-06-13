@@ -6,7 +6,7 @@ use rand_distr::{Normal, Distribution};
 pub use crate::graph::data::concat::concat;
 pub use crate::graph::ops::dot_product::dot;
 pub use crate::devices;
-use crate::{core::add_to_dep, ir::optimizations::optimize::*, ir_b_device_callback};
+use crate::{core::add_to_dep, ir::optimizations::optimize::*, ir_b_device_callback, ValueNode};
 
 pub use crate::{
     Device, 
@@ -51,14 +51,16 @@ pub fn constant (data: Vec<f64>, dim: Vec<usize>) -> Tensor {
     }
 
     let v = Value::new(data, dim);
-    Tensor::new(ConstantNode {
+    Tensor::new(ValueNode {
         v 
     })
 }
 
 pub fn const_val (val: f64) -> Tensor {
-    constant(vec![val], vec![1]) 
+    // constant(vec![val], vec![1]) 
+    Tensor::new(ConstantNode::new(val))
 }
+
 
 // helper func
 pub fn ones (dim: Vec<usize>) -> Tensor {

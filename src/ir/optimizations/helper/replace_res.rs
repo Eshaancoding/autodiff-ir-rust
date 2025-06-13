@@ -3,6 +3,8 @@ use crate::IRCmds;
 pub fn replace_res_cmd (cmd: &mut IRCmds, replace_to: String) {
     match cmd {
         IRCmds::CreateMat { id, .. } => { *id = replace_to; },
+        IRCmds::CreateConstant { id, .. } => { *id = replace_to; }
+
         IRCmds::ElwMultiply { res, .. } => { *res = replace_to; },
         IRCmds::ElwAdd { res, .. } => { *res = replace_to; },
 

@@ -154,9 +154,14 @@ pub fn try_broadcast (a: &Tensor, b: &Tensor) -> (Tensor, Tensor) {
     if a.dim() == b.dim() {
         return (a.clone(), b.clone())
     }     
-    // if either are constant, then you can just multiply
-    // in future releases, you don't really need "constants" due to broadcasting; just tensors with no_grad
 
+    // If one of the values are single value constants, don't broadcast
+    // During kernel conversion will automatically refill them as constants and inline them.
+    if a.is_const() || b.is_const() {
+        return (a.clone(), b.clone())
+    }
+
+    // if either are constant, then you can just multiply directly
     let is_b = is_broadcastable(&a.dim(), &b.dim());
 
     if is_b {

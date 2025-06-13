@@ -8,8 +8,6 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
     match cmd {
         IRCmds::ElwMultiply { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
-            let b_shape = mat_tracker.get_shape(b);
-            assert!(a_shape == b_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
@@ -21,8 +19,6 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         },
         IRCmds::ElwAdd { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
-            let b_shape = mat_tracker.get_shape(b);
-            assert!(a_shape == b_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
@@ -34,8 +30,6 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         },
         IRCmds::ElwAddEq { s, o } => {
             let s_shape = mat_tracker.get_shape(s);
-            let o_shape = mat_tracker.get_shape(o);
-            assert_eq!(s_shape, o_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 
@@ -47,8 +41,6 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         },
         IRCmds::ElwMultiplyEq { s, o } => {
             let s_shape = mat_tracker.get_shape(s);
-            let o_shape = mat_tracker.get_shape(o);
-            assert!(s_shape == o_shape, "IR shape are not equal");
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 
