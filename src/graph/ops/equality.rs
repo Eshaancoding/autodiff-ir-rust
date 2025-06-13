@@ -32,7 +32,7 @@ macro_rules! create_equality {
             fn backward (&mut self, _:Value) {
                 
                 // Note: no grad on equality; use val * (equality statement) to create grad
-                // However, we still set backward & grad because the resultant of equalites are treated as constants
+                // However, we still set backward & grad because the resultant of equalities are treated as constants
             }
 
             fn grad (&self) -> Value {
@@ -74,6 +74,7 @@ create_equality!(MoreZeroNode, c_more_zero, MoreZero, more_than);
 create_equality!(LessZeroNode, c_less_zero, LessZero, less_than);
 
 impl Tensor {
+    // TODO: TEST!!!  
     pub fn all (&self) -> Tensor {
         let mut x = self.clone();
         let total_val = self.dim().iter().product::<usize>();
@@ -81,6 +82,6 @@ impl Tensor {
             x = x.sum(0);
         }
 
-        x.equal(&autodiff::const_val(total_val as f64)) 
+        x.equal(&autodiff::const_val(total_val as f64, vec![1])) 
     }
 }

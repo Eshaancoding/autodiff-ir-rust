@@ -56,9 +56,9 @@ pub fn constant (data: Vec<f64>, dim: Vec<usize>) -> Tensor {
     })
 }
 
-pub fn const_val (val: f64) -> Tensor {
+pub fn const_val (val: f64, dim: Vec<usize>) -> Tensor {
     // constant(vec![val], vec![1]) 
-    Tensor::new(ConstantNode::new(val))
+    Tensor::new(ConstantNode::new(val, dim))
 }
 
 

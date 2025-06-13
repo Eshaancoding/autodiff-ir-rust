@@ -124,9 +124,13 @@ pub fn reduce () {
 
 pub fn me_life () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
-    let y = autodiff::randn(vec![5, 2, 3]);
-    let res = y.sigmoid();
+    let dp = nn::Linear(25, 10, false);
+    let dp_two = nn::Linear(10, 5, false);
+
+    let y = autodiff::randn(vec![3, 25]);
+    let res = dp.f(y).sigmoid();
     println!("Res dim: {:?}", res.dim());
+    let res = dp_two.f(res);
 
     res.forward(); 
     res.val().keep();

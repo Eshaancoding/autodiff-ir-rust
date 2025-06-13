@@ -19,10 +19,10 @@ impl ShapeTracker {
                     dim.clone()
                 );
             },
-            IRCmds::CreateConstant { id, .. } => {
+            IRCmds::CreateConstant { id, dim, .. } => {
                 self.shape.insert(
                     id.clone(),
-                    vec![1]
+                    dim.clone()
                 );
             },
             
