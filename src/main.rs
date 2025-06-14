@@ -47,10 +47,8 @@ pub fn nn_test () {
 
     let mut neural_net = nn::Sequential();
     neural_net.insert(nn::Linear(256, 128, true));
-    neural_net.insert(nn::Sigmoid());
-    neural_net.insert(nn::Linear(128, 64, true));
-    neural_net.insert(nn::Sigmoid());
-    neural_net.insert(nn::Linear(64, 32, true));
+    // neural_net.insert(nn::Sigmoid());
+    // neural_net.insert(nn::Linear(128, 64, true));
 
     let mut opt = nn::opt::SGD(neural_net.params(), 0.1);
 
@@ -62,6 +60,7 @@ pub fn nn_test () {
         let y = neural_net.f(x.clone());
         opt.zero_grad();
         y.forward();
+        println!("{:#?}", y.sum(-1).sum(-1).dim());
         y.backward();
         opt.step();
 
@@ -122,8 +121,21 @@ pub fn reduce () {
     println!("Value data: {:#?}", v.data);
 }
 
+pub fn broadcast_contig_test () {
+    autodiff::set_device(autodiff::devices::CPUNew::new());
+    let mut x = autodiff::randn(vec![2]);
+    let y = autodiff::randn(vec![5,2]);
+    x *= y;
+    
+    x.forward();
+    x.val().keep();
+
+    autodiff::print_and_exec();
+}
+
 pub fn main () {
     nn_test();
+    // broadcast_contig_test();
     // multihead_att();
     // reduce();
     // concat_test();

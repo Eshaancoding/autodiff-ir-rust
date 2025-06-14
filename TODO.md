@@ -59,17 +59,27 @@ Backend will refer to things that runs the internal operations and optimizations
 
 ## Backend
 
-* ~~1. Remove Neg IR instruction~~
-
 * **Memory**:
-    * ~~Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul~~
-    
-    * ~~Finish Concat logic in matrix tracker~~
+    * <mark>Put constants within the HLIR level (therefore, no broadcasting or whatever)...</mark>
+        * less IR --> more readability
+        * no += or *= on constants shi (weird asf man)
+        * andddddd yeah just less headache
+        * could reference, can't change.
+        * Should contain only one value
 
-    * ~~Finish constant logic in matrix tracker~~
+    * <mark>Remove the BR shi</mark>
+        * just do if + while
+        * man this means redoing the entire repo lowk.
+        * easier for NVIDIA backend asw
 
-    * Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT
+    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
         * Then, you need a temp allocation for this.
+
+    * fix divergent branching issue (each branch neesd to have its own version of matrix tracker so to speak)
+        * therefore, we can use block name, cmd, etc.
+        * Should be ideal to have shape tracker and alloc tracker be sync with matrix
+            * I have a somewhat uneasy feeling whenever they are out of sync 
+            * might be related to the divergent branching issue (next)
 
     * automatic allocation and deallocation within graph
         * tracing through BRs will be challenging, however...
@@ -92,8 +102,7 @@ Backend will refer to things that runs the internal operations and optimizations
     * Swapping accessing expressions between input and output of two adjacent kernels?
         * can I do that? is that a thing?
     
-    * fix divergent branching issue (each branch neesd to have its own version of matrix tracker so to speak)
-        * therefore, we can use block name, cmd, etc.
+    * Host --> Device feeder 
 
     * Memory experiments needed (do this movement/no movement experiment after kernel fusion)
         * **You should test whether a weird write is slower than a fast write + movement**
@@ -109,19 +118,6 @@ Backend will refer to things that runs the internal operations and optimizations
 
                 * etc. etc. etc. 
 
-    * ~~HLIR level, reduce sum to be heavily simplified and rely more on movement kernels~~
-
-    * ~~1. Remove binary/unary funcs and just use general "Expression"~~
-
-    * ~~2. Update Matrix Tracker tracker for dot prod kernels~~
-
-    * ~~fix res situation (make contigious or not, etc.)~~
-
-    * ~~3. Update matrix tracker for reduce kernel~~
-
-    * ~~Get the "special IR function" callback that is customized per device --> then for x86 dot product add transpose before dot production of `A` in `AB` matrix mul~~
-        * ~~any operations that need to make contigious (dot prod I believe)~~
-
 * **X86**:
     * Allow dot prod implementation to support varied shapes rather than just power of 2
     * 3. Efficient Reduce kernels
@@ -129,7 +125,7 @@ Backend will refer to things that runs the internal operations and optimizations
 
 * **Expression simplification**
     * similar to opt remainder %.
-    * Optimze at make_minus or make etc. 
+    * Optimize at make_minus or make etc. 
     * There might be edge cases for simplify expr func. Still keep that (need experimentation)
         * v & 63 & 63 --> v & 63
 
@@ -224,8 +220,6 @@ Backend will refer to things that runs the internal operations and optimizations
         * have to use BR compiler hints in order to determine while or if statement
         * you may also need to send extra compiler hints 
         * skdjfksjdfkjsdkfjskdfjksdjf that's also going to be pretty weird.
-
-
 
 ## Rust Codebase
 

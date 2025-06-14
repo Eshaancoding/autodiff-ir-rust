@@ -19,6 +19,8 @@ pub fn to_kernel (device: &dyn Device, cmds: &IndexMap<String, Vec<IRCmds>>) {
         }     
     }
 
+    println!("{}", alloc_tracker);
+
     let mut mat_tracker = MatrixTracker::new(&alloc_tracker, &constant_tracker);
     let mut proc = Procedure::new();
     for (block_name, b_cmds) in cmds.iter() { 
@@ -61,9 +63,9 @@ pub fn to_kernel (device: &dyn Device, cmds: &IndexMap<String, Vec<IRCmds>>) {
                         a: mat_tracker.get_input(a, AccessType::XY), 
                         b: mat_tracker.get_input(b, AccessType::XY), 
                         res: mat_tracker.get_res(res, AccessType::XY, &res_shape),
-                        batch_size: *a_shape.first().unwrap(),
+                        batch_size: *res_shape.first().unwrap(),
                         input_size: *a_shape.last().unwrap(),
-                        output_size: *b_shape.last().unwrap()                         
+                        output_size: *res_shape.last().unwrap()                         
                     });
                 },
                 IRCmds::Contigious { a, res } => {
