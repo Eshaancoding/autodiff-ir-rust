@@ -19,6 +19,12 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
                 GenTensor::<f64>::new_raw(contents, dim)
             );
         },
+        IRCmds::CreateConstant { contents, id, .. } => {
+            hms.insert(
+                id.clone(),
+                GenTensor::<f64>::new_raw(&vec![*contents], &vec![1])
+            );
+        }
         IRCmds::ElwMultiply { a, b, res } => {
             let a = hms.get(a).unwrap();
             let b = hms.get(b).unwrap();

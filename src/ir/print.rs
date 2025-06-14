@@ -18,6 +18,9 @@ pub fn print_ir (cmd: &IRCmds, current_heading: &mut String, idx: usize) {
                 }
             }
         },
+        IRCmds::CreateConstant { contents, id, dim } => {
+            println!("{} = {} (dim: {:?})", id, contents, dim);
+        },
         IRCmds::ElwMultiply {a, b, res} => {
             println!("{} = {} * {}", res, a, b);
         },

@@ -10,6 +10,7 @@ use std::sync::Mutex;
 pub enum IRCmds {
     // Create
     CreateMat {contents: Vec<f64>, dim: Vec<usize>, id: String},
+    CreateConstant {contents: f64, id: String, dim: Vec<usize>},
 
     // ELW Operations 
     // No subtraction as a - b = a + (-b)

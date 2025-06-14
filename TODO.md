@@ -230,6 +230,7 @@ Backend will refer to things that runs the internal operations and optimizations
 * Rebrand from IR to "HLIR"
 * Use macros for repetitive statements
     * example, `kernel/to_instr` can be simplified to macros
+* Remove dimension within the Value and just do all dimension checking at the Tensor
 * better debug messages (especially in frontend)
 
 ## Ignored

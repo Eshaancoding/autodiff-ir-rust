@@ -9,6 +9,9 @@ pub fn ir_to_expr (cmd: &IRCmds) -> Option<String> {
         IRCmds::CreateMat {dim, contents, ..} => {
             Some(format!("mat(dim: {:?}, contents: {:?})", dim, contents))
         },
+        IRCmds::CreateConstant { contents, dim, .. } => {
+            Some(format!("const(f: {:?}, dim: {:?})", contents, dim))
+        },
         IRCmds::ElwMultiply {a, b, .. } => {
             Some(format!("{} * {}", a, b))
         },

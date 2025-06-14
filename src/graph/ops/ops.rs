@@ -42,20 +42,17 @@ macro_rules! create_op {
             }
 
             fn dim (&self) -> Vec<usize> {
-                self.left.dim() // left or right dim will be same
+                if  self.left.is_const() { self.right.dim() } else { self.left.dim() }
                 // broadcasting handles diff dimensions --> wraps to node
+                // we just need to make sure it handles constant dimensioning
             }
 
             fn backward (&mut self, grad: Value) {
                 let l = self.left.val();
                 let r = self.right.val();
                 
-                if !self.left.is_const() {
-                    self.left.n.borrow_mut().backward($l_bckwd(&l, &r, &grad));
-                }
-                if !self.right.is_const() {
-                    self.right.n.borrow_mut().backward($r_bckwd(&l, &r, &grad));    
-                }
+                self.left.n.borrow_mut().backward($l_bckwd(&l, &r, &grad));
+                self.right.n.borrow_mut().backward($r_bckwd(&l, &r, &grad));    
             }
             
             fn val (&self) -> Value {
@@ -84,7 +81,9 @@ macro_rules! create_op {
         fn $core_name (a: &Value, b: &Value) -> Value {
             let id = ir_b_id();
             
-            assert_eq!(a.dim, b.dim, "Dimensional mismatch +, -, *, / operation");
+            // Assuming this gets called anyways from try_broadcasting
+            // Core functions shouldn't have any checks; should be done at creation of the node itself
+            // assert_eq!(a.dim, b.dim, "Dimensional mismatch +, -, *, / operation");
 
             ir_b_add(IRCmds::$ir_name {
                 a: a.id.clone(),
@@ -99,7 +98,10 @@ macro_rules! create_op {
         }
 
         fn $core_name_op_eql (a: &Value, b: &Value) -> Value {
-            assert_eq!(a.dim, b.dim, "Dimensional mismatch +, -, *, / operation");
+
+            // Assuming this gets called anyways from try_broadcasting
+            // Core functions shouldn't have any checks; should be done at creation of the node itself
+            // assert_eq!(a.dim, b.dim, "Dimensional mismatch +, -, *, / operation");
 
             ir_b_add(IRCmds::$ir_name_op_eql {
                 s: a.id.clone(),
@@ -134,7 +136,7 @@ macro_rules! create_op {
             type Output = Tensor;
 
             fn $op_func (self, other:f64) -> Tensor {
-                let (a, b) = try_broadcast(&self, &autodiff::const_val(other));
+                let (a, b) = try_broadcast(&self, &autodiff::const_val(other, self.dim()));
 
                 Tensor::new($node_name {
                     left: a,
@@ -150,7 +152,7 @@ macro_rules! create_op {
             type Output = Tensor;
 
             fn $op_func (self, other:Tensor) -> Tensor {
-                let (a, b) = try_broadcast(&autodiff::const_val(self), &other);
+                let (a, b) = try_broadcast(&autodiff::const_val(self, other.dim()), &other);
 
                 Tensor::new($node_name {
                     left: a,
@@ -176,7 +178,7 @@ macro_rules! create_op {
 
         impl std::ops::$op_eq<f64> for Tensor {
             fn $op_eq_func (&mut self, rhs: f64) {
-                let (a, b) = try_broadcast(&self, &autodiff::const_val(rhs));
+                let (a, b) = try_broadcast(&self, &autodiff::const_val(rhs, self.dim()));
                 *self = Tensor::new($node_name {
                     left: a,
                     right: b,

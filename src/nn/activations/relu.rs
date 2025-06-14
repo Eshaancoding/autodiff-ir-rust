@@ -11,7 +11,7 @@ impl Module for ReLU {
 
 impl SeqF for ReLU {
     fn f (&self, x: Tensor) -> Tensor {
-        x.clone() * x.more_than(&autodiff::const_val(0.0))
+        x.clone() * x.more_than(&autodiff::const_val(0.0, x.dim()))
     }
 }
 
@@ -22,6 +22,6 @@ pub fn ReLU () -> ReLU {
 
 impl Tensor {
     pub fn relu (&self) -> Tensor {
-        self.clone() * self.more_than(&autodiff::const_val(0.0))
+        self.clone() * self.more_than(&autodiff::const_val(0.0, self.dim()))
     }
 }

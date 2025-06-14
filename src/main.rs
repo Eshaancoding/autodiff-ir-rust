@@ -121,19 +121,8 @@ pub fn reduce () {
     println!("Value data: {:#?}", v.data);
 }
 
-pub fn broadcast_contig_test () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
-    let mut x = autodiff::randn(vec![2]);
-    let y = autodiff::randn(vec![5,2]);
-    x *= y;
-    
-    x.forward();
-    x.val().keep();
-
-    autodiff::print_and_exec();
-}
-
 pub fn main () {
+    // me_life();
     nn_test();
     // broadcast_contig_test();
     // multihead_att();
