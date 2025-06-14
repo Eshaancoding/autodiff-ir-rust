@@ -31,6 +31,11 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         IRCmds::ElwAddEq { s, o } => {
             let s_shape = mat_tracker.get_shape(s);
 
+            // if both are constant, then just skip (this is evaluated at the constant tracker)
+            if mat_tracker.get_constant(s).is_some() && mat_tracker.get_constant(o).is_some() {
+                return; 
+            }
+
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 
                 b: mat_tracker.get_input(o, AccessType::Global),
@@ -41,6 +46,11 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         },
         IRCmds::ElwMultiplyEq { s, o } => {
             let s_shape = mat_tracker.get_shape(s);
+
+            // if both are constant, then just skip (this is evaluated at the constant tracker)
+            if mat_tracker.get_constant(s).is_some() && mat_tracker.get_constant(o).is_some() {
+                return; 
+            }
 
             instr.push(ComputeInstr::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 

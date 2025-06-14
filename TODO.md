@@ -58,17 +58,15 @@ Backend will refer to things that runs the internal operations and optimizations
         * berournelli, etc.
 
 ## Backend
-
+    
 * **Memory**:
-    * <mark>Put constants within the HLIR level (therefore, no broadcasting or whatever)...</mark>
-        * less IR --> more readability
-        * no += or *= on constants shi (weird asf man)
-        * andddddd yeah just less headache
-        * could reference, can't change.
-        * Should contain only one value
+    * ~~Put constants within the HLIR level (therefore, no broadcasting or whatever)...~~
+        * ~~less IR --> more readability~~
+        * ~~andddddd yeah just less headache~~
+        * ~~Should contain only one value~~
 
     * <mark>Remove the BR shi</mark>
-        * just do if + while
+        * just do if + while 
         * man this means redoing the entire repo lowk.
         * easier for NVIDIA backend asw
 

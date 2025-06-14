@@ -57,7 +57,7 @@ pub struct MatrixTracker<'a> {
 
     pub shape_tracker: ShapeTracker,                        // tracks the shape of variables
     pub alloc_tracker: &'a AllocTracker<'a>,                // tracks allocation / size of variables
-    pub constant_tracker: &'a ConstantTracker,              // tracks constant tracker
+    pub constant_tracker: ConstantTracker,                  // tracks constant tracker
 }
 
 // Different access types (depending on the kernel used) is needed
@@ -68,15 +68,15 @@ pub enum AccessType {
 }
 
 impl<'a> MatrixTracker<'a> {
-    pub fn new (alloc_tracker: &'a AllocTracker, constant_tracker: &'a ConstantTracker) -> MatrixTracker<'a> {
+    pub fn new (alloc_tracker: &'a AllocTracker) -> MatrixTracker<'a> {
         MatrixTracker { 
             sources: HashMap::new(),
             vars: HashMap::new(), 
             sources_concat: HashMap::new(),
             vars_concat: HashMap::new(),            
             shape_tracker: ShapeTracker::new(),
+            constant_tracker: ConstantTracker::new(),
             alloc_tracker,
-            constant_tracker
         }
     }
 
@@ -89,6 +89,7 @@ impl<'a> MatrixTracker<'a> {
         // needs to be sync with the Matrix Tracker
         // we declare seperate shape tracker at alloc tracker
         self.shape_tracker.step(device, cmd);
+        self.constant_tracker.step(cmd);
 
         // track the sources and the variables
         let mut dep_cmp: String = "".to_string();
@@ -148,11 +149,6 @@ impl<'a> MatrixTracker<'a> {
             }
         }
 
-        // if the cmd result is a constant, skip 
-        if let Some(_) = self.constant_tracker.get_f64(&res_cmp) {
-            return     
-        }
-        
         // Declaring a concat variable
         if let Some(d) = data_clone {
             self.sources_concat.insert(d.0, d.1);
@@ -247,5 +243,10 @@ impl<'a> MatrixTracker<'a> {
     // wrapper over shape tracker
     pub fn get_shape (&self, id: &String) -> &Vec<usize> {
         self.shape_tracker.get_shape(id)
+    }
+
+    // wrapper over constant tracker
+    pub fn get_constant (&self, id: &String) -> Option<f64> {
+        self.constant_tracker.get_f64(id)
     }
 }

@@ -155,7 +155,7 @@ where
 {
     // internally, it's just a while loop
     let x = autodiff::scalar(r.start as f64);
-    let x_end = autodiff::scalar(r.end as f64);
+    let x_end = autodiff::const_val(r.end as f64, vec![1]);
 
     ir_while(|| x.less_than(&x_end), || {
         func(x.clone());
