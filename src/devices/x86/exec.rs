@@ -190,11 +190,10 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
         },
         IRCmds::Contigious { .. } => {
             // don't do anything. Every operation is anyways expanded to be contigious anyways
-        }
-        IRCmds::EX => {},        // handled by execute
-        IRCmds::BR { .. } => {}, // handled by execute
-        IRCmds::BRE { .. } => {},// handled by execute
-        IRCmds::BRZ { .. } => {},// handled by execute
+        },
+        IRCmds::While { .. } => {}, // while are handled by execute
+        IRCmds::If { .. } => {},    // If statements are handled by execute
+        IRCmds::EX { } => {},       // exit statements are handled by execute
         IRCmds::Heading { .. } => {},
         IRCmds::Subheading { .. } => {}
     }     

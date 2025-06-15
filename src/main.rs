@@ -47,8 +47,8 @@ pub fn nn_test () {
 
     let mut neural_net = nn::Sequential();
     neural_net.insert(nn::Linear(256, 128, true));
-    // neural_net.insert(nn::Sigmoid());
-    // neural_net.insert(nn::Linear(128, 64, true));
+    neural_net.insert(nn::Sigmoid());
+    neural_net.insert(nn::Linear(128, 64, true));
 
     let mut opt = nn::opt::SGD(neural_net.params(), 0.1);
 
@@ -67,7 +67,7 @@ pub fn nn_test () {
         res = y;
     });
 
-    res.val().keep(); // ensure we can get in dependecy list
+    res.val().keep(); // ensure we can get in dependency list
 
     let start = Instant::now();
     autodiff::print_and_exec();    
@@ -121,9 +121,23 @@ pub fn reduce () {
     println!("Value data: {:#?}", v.data);
 }
 
+pub fn forward () {
+    let x = autodiff::tensor(vec![3.0], vec![1]);
+    let result = x.less_than(&autodiff::constant(vec![3.0], vec![1]));
+
+    result.forward();
+    x += 1; 
+    result.forward();
+
+    autodiff::print_and_exec();
+
+    // do a while test after
+}
+
 pub fn main () {
+    forward();
     // me_life();
-    nn_test();
+    // nn_test();
     // broadcast_contig_test();
     // multihead_att();
     // reduce();

@@ -1,12 +1,10 @@
 use std::string::String;
-use indexmap::IndexMap;
-
 use crate::ValueData;
 use std::sync::Mutex;
 
 // All different IR needs to implement these functions
 // See Tensor_rs
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum IRCmds {
     // Create
     CreateMat {contents: Vec<f64>, dim: Vec<usize>, id: String},
@@ -77,9 +75,29 @@ pub enum IRCmds {
     Sqrt  {a: String, res: String},   // calculates inverse square root and then reciprocal...
 
     // Control Functions
-    BR {block_id: String},
-    BRE {block_id: String, a: String}, // if a == 1, then branch; if not go to the next cmd
-    BRZ {block_id: String, a: String}, // if a == 0, then branch; if not go to the next cmd
+    
+    /*
+    while (conditional_var != 0) {
+        [block] 
+    }
+    */
+    While {conditional_var: String, block: IRProcedure}, // covers for loops as well
+
+    /*
+    No short circuiting (evaluates "if else" condition even if "if condition" is true)
+
+    if ( [conditions[0][0] <-- String ] == true ) {
+        [ conditions[0][1] <-- block; IRProcedure ] 
+    }
+    else if ( [conditions[1][0] <-- String ] == true ) {
+        [ conditions[1][1] <-- block; IRProcedure ] 
+    } 
+    else {
+        [ else_proc ]
+    }
+    */
+    If {conditions: Vec<(String, IRProcedure)>, else_proc: Option<IRProcedure>},   
+
     EX,
 
     // Debug (does not get executed in the slightest)
@@ -87,12 +105,18 @@ pub enum IRCmds {
     Subheading {h: Option<String>, cmt: String}, // comment that will only appear if at heading (if None, then displays everywhere)
 }
 
-#[derive(Clone)]
+// wrapper over list of instructions to run
+#[derive(Clone, PartialEq, Debug)]
+pub struct IRProcedure {
+    pub main: Vec<IRCmds>
+}
+
 pub struct IRBase {
-    pub id: u32,
+    pub id: u32, 
     pub current_block: String,
     pub main_block: String,
-    pub cmds: IndexMap<String, Vec<IRCmds>>
+    pub proc: IRProcedure,
+    pub temp_proc: Option<IRProcedure> // used for appending 
 }
 
 pub static DEVICE: Mutex<Option<Box<dyn Device + Send + Sync>>> = Mutex::new(None);
@@ -100,7 +124,7 @@ pub static IRB: Mutex<Option<IRBase>> = Mutex::new(None);
 
 pub trait Device {
     // Execute a list of instructions 
-    fn execute (&mut self, cmds: IndexMap<String, Vec<IRCmds>>);
+    fn execute (&mut self, cmds: IRProcedure);
     
     // Transfers matrix id to device.
     fn get_tensor (&self, id: &String) -> ValueData;
@@ -156,7 +180,7 @@ pub fn ir_b_execute () {
     // get cmds
     let mut guard = IRB.lock().unwrap();
     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
-    let cmds = ir_b.cmds.clone();
+    let cmds = ir_b.proc.clone();
     drop(guard);
 
     let mut guard = DEVICE.lock().unwrap();
@@ -165,23 +189,38 @@ pub fn ir_b_execute () {
     drop(guard);
 }
 
-pub fn ir_b_create_block (id: String) {
+pub fn ir_b_create_temp_proc () {
     let mut guard = IRB.lock().unwrap();
     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
-    ir_b.create_block(id);
+    ir_b.create_temp_proc(); 
     drop(guard);
 }
 
-pub fn ir_b_set_main_block (id: String) {
+pub fn ir_b_return_temp_proc () -> IRProcedure {
     let mut guard = IRB.lock().unwrap();
     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
-    ir_b.set_main_block(id);
+    let ret = ir_b.return_temp_proc();
     drop(guard);
+    ret
 }
 
-pub fn ir_b_main_block () {
-    let mut guard = IRB.lock().unwrap();
-    let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
-    ir_b.main_block();
-    drop(guard);
-}
+// pub fn ir_b_create_block (id: String) {
+//     let mut guard = IRB.lock().unwrap();
+//     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
+//     ir_b.create_block(id);
+//     drop(guard);
+// }
+
+// pub fn ir_b_set_main_block (id: String) {
+//     let mut guard = IRB.lock().unwrap();
+//     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
+//     ir_b.set_main_block(id);
+//     drop(guard);
+// }
+
+// pub fn ir_b_main_block () {
+//     let mut guard = IRB.lock().unwrap();
+//     let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
+//     ir_b.main_block();
+//     drop(guard);
+// }

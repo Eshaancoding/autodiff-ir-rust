@@ -71,7 +71,7 @@ pub enum ReduceOp {
 }
 
 #[derive(Clone, Debug)]
-pub enum ComputeInstr {
+pub enum Kernels {
     // unary expressions, such as b = a.exp()
     Unary {
         a: Input,
@@ -129,7 +129,7 @@ pub enum ComputeInstr {
     //     dim: Vec<usize>
     // },
 
-    // Control functions
+    // Control functions;
     BR {block_id: String},
     BRE {block_id: String, a: String},
     BRZ {block_id: String, a: String},
@@ -141,6 +141,6 @@ pub enum ComputeInstr {
 // Implementations defined in procedure.rs
 // String in HashMap<String, ...> represents the block name
 // Vec<ComputeInstr> is the order of kernels to be executed
-pub struct Procedure {
-    pub cmd_computeinstr: HashMap<String, Vec<ComputeInstr>>
+pub struct KernelProcedure {
+    pub cmd_computeinstr: HashMap<String, Vec<Kernels>>
 }

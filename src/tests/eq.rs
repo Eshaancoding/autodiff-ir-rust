@@ -15,7 +15,7 @@ mod tests {
 
         let res: Tensor = 3.0 * 
             (
-                x.clone() * (x.equal(&autodiff::const_val(3.0, x.dim())))
+                x.clone() * (x.equal(&autodiff::constant(3.0, x.dim())))
             ).pow2();
             
         let y = res.sum(0);

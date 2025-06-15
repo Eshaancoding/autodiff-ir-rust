@@ -99,9 +99,9 @@ pub fn prox_rev_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) -> bool {
                 earliest_pos = None; 
             }
 
-            // don't swap BRZ, BRE statements. These commands are very location specific
-            if let IRCmds::BRE { .. } = cmd { earliest_pos = None; }
-            if let IRCmds::BRZ { .. } = cmd { earliest_pos = None; }
+            // don't swap Control statements. These commands are very location specific
+            if let IRCmds::While { .. } = cmd { earliest_pos = None; }
+            if let IRCmds::If { .. } = cmd { earliest_pos = None; }
 
             // success res location -> swap
             if let Some(loc) = earliest_pos {

@@ -13,7 +13,7 @@ mod tests {
 
         autodiff::add_heading("Declaring tensors");
         let mut a = autodiff::tensor(vec![3.0, 2.0, 1.0, 3.0], vec![2, 2]);
-        let b = autodiff::constant(vec![2.0, 5.0, 2.0, 1.0], vec![2, 2]);
+        let b = autodiff::tensor(vec![2.0, 5.0, 2.0, 1.0], vec![2, 2]);
 
         autodiff::add_heading("Forward");
         let l = f(&a, &b);

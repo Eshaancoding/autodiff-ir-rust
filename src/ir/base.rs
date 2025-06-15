@@ -1,23 +1,24 @@
-use indexmap::IndexMap;
 use colored::Colorize;
-use crate::IRBase;
+use crate::{IRBase, IRProcedure};
 use super::{print::print_ir, IRCmds};
 
+// IRBase to handle IR appending
 impl IRBase {
     pub fn new () -> IRBase {
         IRBase {
             id: 0,
             current_block: "main".to_string(),
             main_block: "main".to_string(),
-            cmds: IndexMap::new()
+            proc: IRProcedure::new(),
+            temp_proc: None
         }
     }
 
-    pub fn unique_id (&mut self) -> String {
+    pub fn unique_id_idx (idx: u32) -> String {
         let alphabet = "abcdefghijklmnopqrstuvwxyz";
         let base = alphabet.len() as u32;
-        let mut idx = self.id;
         let mut result = String::new();
+        let mut idx = idx;
 
         while idx >= base {
             result.push(alphabet.chars().nth((idx % base) as usize).unwrap());
@@ -25,19 +26,37 @@ impl IRBase {
             idx -= 1; 
         }
         result.push(alphabet.chars().nth(idx as usize).unwrap());
-        self.id += 1;
 
         result.chars().rev().collect() 
     }
 
+    pub fn unique_id (&mut self) -> String {
+        let res = IRBase::unique_id_idx(self.id);
+        self.id += 1;
+        res
+    }
+
+    pub fn create_temp_proc (&mut self) {
+        self.temp_proc = Some(IRProcedure::new());
+    }
+
+    pub fn return_temp_proc (&mut self) -> IRProcedure {
+        let c = self.temp_proc.clone().expect("Unwrapping procedure but none");
+        self.temp_proc = None;
+        c 
+    }
+
     pub fn add_cmd (&mut self, cmd: IRCmds) {
-        let v = self.cmds.entry(self.current_block.clone()).or_insert(vec![]);
-        v.push(cmd);
+        if let Some(proc) = &mut self.temp_proc { 
+            proc.push(cmd);
+        } else {
+            self.proc.push(cmd);
+        }
     }
 
     pub fn print (&self) {
         let mut current_heading = "".to_string();
-        for (key, arr) in self.cmds.iter() {        
+        for (key, arr) in self.proc.iter() {        
             println!("{}:", key.cyan());
             for (i, cmd) in arr.iter().enumerate() {
                 print_ir(cmd, &mut current_heading, i);

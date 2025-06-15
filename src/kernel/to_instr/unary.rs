@@ -1,15 +1,15 @@
 use crate::{
-    kernel_decl::{UnaryOp, ComputeInstr}, 
+    kernel_decl::{UnaryOp, Kernels}, 
     trackers::{MatrixTracker, AccessType}, 
     IRCmds,
 };
 
-pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker: &MatrixTracker<'a>) {
+pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker<'a>) {
     match cmd {
         IRCmds::Exp2 { a, res } => { 
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: UnaryOp::Exp2 ,
@@ -19,7 +19,7 @@ pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracke
         IRCmds::Log2 { a, res } => { 
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: UnaryOp::Log2,
@@ -29,7 +29,7 @@ pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracke
         IRCmds::Sin { a, res } => { 
             let a_shape = mat_tracker.get_shape(a);
             
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: UnaryOp::Sin ,
@@ -39,7 +39,7 @@ pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracke
         IRCmds::Recip { a, res } => { 
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: UnaryOp::Recip,
@@ -49,7 +49,7 @@ pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracke
         IRCmds::Sqrt { a, res } => { 
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: UnaryOp::Sqrt,

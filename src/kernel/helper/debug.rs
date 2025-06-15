@@ -5,7 +5,7 @@ Extremely helpful for debugging everything (kernel fusion, expression, trackers,
 
 use std::fmt::Display;
 use super::{
-    kernel_decl::{Expression, Input, Matrix, Value, Procedure, ComputeInstr}, 
+    kernel_decl::{Expression, Input, Matrix, Value, KernelProcedure, Kernels}, 
     trackers::AllocTracker
 };
 use colored::Colorize;
@@ -95,37 +95,37 @@ impl Display for Input {
     }
 }
 
-impl Display for ComputeInstr {
+impl Display for Kernels {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ComputeInstr::BR { block_id } => {
+            Kernels::BR { block_id } => {
                 let _ = write!(f, "BR {}\n", block_id.blue());
             },
-            ComputeInstr::BRE { block_id, a }  => {
+            Kernels::BRE { block_id, a }  => {
                 let _ = write!(f, "if {} == 1 --> BR {}\n", a, block_id.blue());
             },
-            ComputeInstr::BRZ { block_id, a } => {
+            Kernels::BRZ { block_id, a } => {
                 let _ = write!(f, "if {} == 0 --> BRZ {}\n", a, block_id.blue());
             },
-            ComputeInstr::EX => {
+            Kernels::EX => {
                 let _ = write!(f, "{}", "EXIT".red());
             },
-            ComputeInstr::Unary { a, res, op, size } => {
+            Kernels::Unary { a, res, op, size } => {
                 let _ = write!(f, "{} {} {} ({})", res, " = ".on_blue(), format!(" {:#?} ({}) ", op, size.to_string().yellow()).bold(), a);
             },
-            ComputeInstr::Binary { a, b, res, op, size } => {
+            Kernels::Binary { a, b, res, op, size } => {
                 let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" {:#?} ({}) ", op, size.to_string().yellow()).bold(), b);
             },
-            ComputeInstr::Reduce { a, res, op, vec_size, reduce_size} => {
+            Kernels::Reduce { a, res, op, vec_size, reduce_size} => {
                 let _ = write!(f, "{} {} {} ({})", res, " = ".on_blue(), format!(" {:#?} (Vec/X: {}, Reduce/Y: {}) ", op, vec_size.to_string().yellow(), reduce_size.to_string().yellow()).bold(), a);
             },
-            ComputeInstr::DotProd { a, b, res, batch_size, input_size, output_size } => {
+            Kernels::DotProd { a, b, res, batch_size, input_size, output_size } => {
                 let b_yel = batch_size.to_string().yellow();
                 let i_yel = input_size.to_string().yellow();
                 let o_yel = output_size.to_string().yellow(); 
                 let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" ({}x{} DP {}x{})", b_yel, i_yel, i_yel, o_yel).bold(), b);
             },
-            ComputeInstr::Movement { a, res , size} => {
+            Kernels::Movement { a, res , size} => {
                 let _ = write!(f, "{} {} {}", res, format!(" <-(Move {})- ", size.to_string().yellow()).bold(), a);
             }
         }
@@ -133,7 +133,7 @@ impl Display for ComputeInstr {
     }
 }
 
-impl Display for Procedure {
+impl Display for KernelProcedure {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (block_name, cmds) in self.cmd_computeinstr.iter() {
             let _ = write!(f, "\n{}:\n", block_name.blue());

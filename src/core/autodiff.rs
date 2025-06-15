@@ -20,9 +20,8 @@ pub use crate::{
 
 pub use super::control::*;
 
-use super::{ir_b_add, ir_b_execute, ir_b_main_block, is_harsh, set_harsh_dep_list, ConstantNode, IRBase, DEP_TRACKER, IRB};
+use super::{ir_b_add, ir_b_execute, is_harsh, set_harsh_dep_list, ConstantNode, IRBase, DEP_TRACKER, IRB};
 use crate::IRCmds::{Heading, Subheading, EX};
-
 // new tensor
 pub fn tensor (data: Vec<f64>, dim: Vec<usize>) -> Tensor {
     if data.len() != dim.iter().product::<usize>() {
@@ -45,19 +44,7 @@ pub fn scalar (val: f64) -> Tensor {
     tensor(vec![val], vec![1])
 }
 
-pub fn constant (data: Vec<f64>, dim: Vec<usize>) -> Tensor {
-    if data.len() != dim.iter().product::<usize>() {
-        panic!("# of values doesn't match dim size when calling from_vec");
-    }
-
-    let v = Value::new(data, dim);
-    Tensor::new(ValueNode {
-        v 
-    })
-}
-
-pub fn const_val (val: f64, dim: Vec<usize>) -> Tensor {
-    // constant(vec![val], vec![1]) 
+pub fn constant (val: f64, dim: Vec<usize>) -> Tensor {
     Tensor::new(ConstantNode::new(val, dim))
 }
 
@@ -139,7 +126,6 @@ pub fn add_all_subheading (cmt: &str) {
 }
 
 pub fn execute () {
-    ir_b_main_block();
     ir_b_add(EX); // add exit
     ir_b_device_callback();
     ir_optimize();
@@ -148,7 +134,6 @@ pub fn execute () {
 }
 
 pub fn print_and_exec () {
-    ir_b_main_block();
     ir_b_add(EX); // add exit
     ir_b_device_callback();
     ir_optimize();

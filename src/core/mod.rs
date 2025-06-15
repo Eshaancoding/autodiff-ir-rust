@@ -8,6 +8,7 @@ pub mod ir;
 pub mod control;
 pub mod dependency;
 pub mod env;
+pub mod procedure;
 
 pub use autodiff::*;
 pub use node::*;
@@ -18,3 +19,4 @@ pub use constant::*;
 pub use ir::*;
 pub use dependency::*;
 pub use env::*;
+pub use procedure::*;

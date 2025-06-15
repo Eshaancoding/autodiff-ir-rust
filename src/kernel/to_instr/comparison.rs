@@ -1,15 +1,15 @@
 use crate::{
-    kernel_decl::{ComputeInstr, UnaryOp}, 
+    kernel_decl::{Kernels, UnaryOp}, 
     trackers::{AccessType, MatrixTracker}, 
     IRCmds,
 };
 
-pub fn handle_comparison<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker: &MatrixTracker<'a>) {
+pub fn handle_comparison<'a> (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker<'a>) {
     match cmd {
         IRCmds::EqualZero { a, res } => {
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
                 op: UnaryOp::EqualZero,
@@ -19,7 +19,7 @@ pub fn handle_comparison<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_t
         IRCmds::MoreZero { a, res } => {
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
                 op: UnaryOp::MoreZero,
@@ -29,7 +29,7 @@ pub fn handle_comparison<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_t
         IRCmds::LessZero { a, res } => {
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Unary { 
+            instr.push(Kernels::Unary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
                 op: UnaryOp::LessZero,

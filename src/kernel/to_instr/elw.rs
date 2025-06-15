@@ -1,15 +1,15 @@
 use crate::{
-    kernel_decl::{ComputeInstr, BinaryOp},
+    kernel_decl::{Kernels, BinaryOp},
     trackers::{MatrixTracker, AccessType}, 
     IRCmds,
 };
 
-pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker: &MatrixTracker<'a>) {
+pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker<'a>) {
     match cmd {
         IRCmds::ElwMultiply { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Binary { 
+            instr.push(Kernels::Binary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 b: mat_tracker.get_input(b, AccessType::Global),
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
@@ -20,7 +20,7 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
         IRCmds::ElwAdd { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
 
-            instr.push(ComputeInstr::Binary { 
+            instr.push(Kernels::Binary { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 b: mat_tracker.get_input(b, AccessType::Global),
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
@@ -36,7 +36,7 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
                 return; 
             }
 
-            instr.push(ComputeInstr::Binary { 
+            instr.push(Kernels::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 
                 b: mat_tracker.get_input(o, AccessType::Global),
                 res: mat_tracker.get_res(s, AccessType::Global, s_shape),
@@ -52,7 +52,7 @@ pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<ComputeInstr>, mat_tracker:
                 return; 
             }
 
-            instr.push(ComputeInstr::Binary { 
+            instr.push(Kernels::Binary { 
                 a: mat_tracker.get_input(s, AccessType::Global), 
                 b: mat_tracker.get_input(o, AccessType::Global),
                 res: mat_tracker.get_res(s, AccessType::Global, s_shape),

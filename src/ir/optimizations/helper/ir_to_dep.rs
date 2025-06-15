@@ -32,9 +32,6 @@ pub fn ir_to_dep (cmd: IRCmds) -> Vec<String> {
         IRCmds::Recip { a, .. } => vec![a],
         IRCmds::Sqrt { a, .. } => vec![a],
 
-        IRCmds::BRE { a, .. } => { vec![a] },
-        IRCmds::BRZ { a, .. } => { vec![a] },
-
         _ => { vec![] }
     }
 }

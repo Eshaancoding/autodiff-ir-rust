@@ -136,7 +136,7 @@ macro_rules! create_op {
             type Output = Tensor;
 
             fn $op_func (self, other:f64) -> Tensor {
-                let (a, b) = try_broadcast(&self, &autodiff::const_val(other, self.dim()));
+                let (a, b) = try_broadcast(&self, &autodiff::constant(other, self.dim()));
 
                 Tensor::new($node_name {
                     left: a,
@@ -152,7 +152,7 @@ macro_rules! create_op {
             type Output = Tensor;
 
             fn $op_func (self, other:Tensor) -> Tensor {
-                let (a, b) = try_broadcast(&autodiff::const_val(self, other.dim()), &other);
+                let (a, b) = try_broadcast(&autodiff::constant(self, other.dim()), &other);
 
                 Tensor::new($node_name {
                     left: a,
@@ -178,7 +178,7 @@ macro_rules! create_op {
 
         impl std::ops::$op_eq<f64> for Tensor {
             fn $op_eq_func (&mut self, rhs: f64) {
-                let (a, b) = try_broadcast(&self, &autodiff::const_val(rhs, self.dim()));
+                let (a, b) = try_broadcast(&self, &autodiff::constant(rhs, self.dim()));
                 *self = Tensor::new($node_name {
                     left: a,
                     right: b,

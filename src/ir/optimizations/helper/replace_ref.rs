@@ -74,12 +74,6 @@ fn replace_ref_cmd (cmd: &mut IRCmds, a_replace: &String, b_replace: String) {
         IRCmds::Sqrt { a, .. } => {
             if a == a_replace { *a = b_replace; }
         },
-        IRCmds::BRE { a, .. } => {
-            if a == a_replace { *a = b_replace; }
-        },
-        IRCmds::BRZ { a, .. } => {
-            if a == a_replace { *a = b_replace; }
-        },
         _ => {  } // do nothing
     }
 }

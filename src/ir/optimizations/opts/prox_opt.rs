@@ -69,9 +69,9 @@ pub fn prox_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) -> bool {
             res_location = None; 
         }
 
-        // don't swap BRZ, BRE statements. These commands are very location specific
-        if let IRCmds::BRE { .. } = cmd { res_location = None; }
-        if let IRCmds::BRZ { .. } = cmd { res_location = None; }
+        // don't swap control statements. These commands are very location specific
+        if let IRCmds::While { .. } = cmd { res_location = None; }
+        if let IRCmds::If { .. } = cmd { res_location = None; }
 
         // =================== successful res location -> move ================
         if let Some(loc) = res_location {
