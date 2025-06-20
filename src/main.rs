@@ -13,7 +13,7 @@ pub fn concat_test () {
     let t = autodiff::concat(vec![w_one, w_two], -1);
     let result = autodiff::dot(input, t);
     result.forward();
-    result.val().keep();
+    result.val().unwrap().keep();
 
     // 0 dim
     let input = autodiff::randn(vec![5, 2]);
@@ -22,7 +22,7 @@ pub fn concat_test () {
     let t = autodiff::concat(vec![w_one, w_two], 0);
     let result = autodiff::dot(input, t);
     result.forward();
-    result.val().keep();
+    result.val().unwrap().keep();
 
     autodiff::print_and_exec();
 }
@@ -34,7 +34,7 @@ pub fn broadcasting_test () {
     
     let res = input.t().contigious();
     res.forward();
-    res.val().keep();
+    res.val().unwrap().keep();
     
     autodiff::print_and_exec();
 }
@@ -67,11 +67,11 @@ pub fn nn_test () {
         res = y;
     });
 
-    res.val().keep(); // ensure we can get in dependency list
+    res.val().unwrap().keep(); // ensure we can get in dependency list
 
     let start = Instant::now();
     autodiff::print_and_exec();    
-    let _ = res.val().get().round(4);
+    let _ = res.val().unwrap().get().round(4);
 
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
 }
@@ -91,11 +91,11 @@ pub fn multihead_att () {
     opt.step();
     
     // x.grad().keep();
-    res.val().keep(); // ensure we can get in dependecy list
+    res.val().unwrap().keep(); // ensure we can get in dependecy list
 
     let start = Instant::now();
     autodiff::print_and_exec();    
-    let _ = res.val().get().round(4);
+    let _ = res.val().unwrap().get().round(4);
 
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
 }
@@ -112,21 +112,26 @@ pub fn reduce () {
 
     let res = x.sum(-1);
     res.forward();
-    res.val().keep();
+    res.val().unwrap().keep();
 
     autodiff::print_and_exec();
 
-    let v = res.val().get();
+    let v = res.val().unwrap().get();
     println!("Value dim: {:#?}", v.dim);
     println!("Value data: {:#?}", v.data);
 }
 
 pub fn forward () {
-    let x = autodiff::tensor(vec![3.0], vec![1]);
-    let result = x.less_than(&autodiff::constant(vec![3.0], vec![1]));
+    autodiff::set_device(autodiff::devices::CPUNew::new());
 
-    result.forward();
-    x += 1; 
+    let mut x = autodiff::tensor(vec![3.0], vec![1]);
+    
+    autodiff::ir_for(2..6, |_| {
+        x += 1.0; 
+        x.forward();
+    });    
+
+    let result = x * 3.0;
     result.forward();
 
     autodiff::print_and_exec();
@@ -138,7 +143,7 @@ pub fn main () {
     forward();
     // me_life();
     // nn_test();
-    // broadcast_contig_test();
+    // broadcasting_test();
     // multihead_att();
     // reduce();
     // concat_test();

@@ -9,12 +9,12 @@ pub struct ContigiousNode {
 
 impl NodeTrait for ContigiousNode {
     fn forward (&mut self) -> Value {
-        if let Some(v) = self.val.clone() {
+        if let Some(v) = self.val() {
             return v;
         }
 
         let p_val = self.parent.forward();  
-        let res_val = c_contigious(&p_val);
+        let res_val = c_contigious(&p_val, self.val.as_ref().map(|v| v.id.clone()));
         self.val = Some(res_val.clone());
         res_val 
     }        
@@ -27,8 +27,16 @@ impl NodeTrait for ContigiousNode {
         self.parent.n.borrow_mut().backward(grad);
     }
 
-    fn val (&self) -> Value {
-        self.val.clone().unwrap() 
+    fn val (&self) -> Option<Value> {
+        if self.parent.val().is_none() { return None }
+        self.val.clone()
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(ContigiousNode {
+            parent: self.parent.deep_copy(),
+            val: self.val.clone()
+        })
     }
 }
 
@@ -41,8 +49,8 @@ impl Tensor {
     }
 }
 
-fn c_contigious (a: &Value) -> Value {
-    let id = ir_b_id();
+fn c_contigious (a: &Value, id: Option<String>) -> Value {
+    let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
     ir_b_add(IRCmds::Contigious { 
         a: a.id.clone(),
         res: id.clone()

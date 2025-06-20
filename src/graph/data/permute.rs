@@ -12,11 +12,11 @@ pub struct PermuteNode {
 // ================== Declaring Permute Node (constructing graph) ================== 
 impl NodeTrait for PermuteNode {
     fn forward (&mut self) -> Value {
-        if let Some(v) = self.val.clone() { 
+        if let Some(v) = self.val() { 
             return v;
         }
         let p_val = self.parent.forward();
-        let res_val = c_permute(&p_val, self.permute.clone());
+        let res_val = c_permute(&p_val, self.permute.clone(), self.val.as_ref().map(|v| v.id.clone()));
         self.val = Some(res_val.clone());
         res_val
     }
@@ -38,11 +38,20 @@ impl NodeTrait for PermuteNode {
         }
         
         // then just permute grad and send
-        self.parent.n.borrow_mut().backward(c_permute(&grad, inverse_permute));
+        self.parent.n.borrow_mut().backward(c_permute(&grad, inverse_permute, None));
     }
 
-    fn val (&self) -> Value {
-        self.val.clone().expect("Run forward before running val") 
+    fn val (&self) -> Option<Value> {
+        if self.parent.val().is_none() { return None }
+        self.val.clone()
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(PermuteNode {
+            parent: self.parent.deep_copy(),
+            permute: self.permute.clone(),
+            val: None
+        }) 
     }
 }
 
@@ -72,7 +81,7 @@ impl Tensor {
 }
 
 // ============= Permute Node Core Func ============
-fn c_permute (a: &Value, permute: Vec<usize>) -> Value {
+fn c_permute (a: &Value, permute: Vec<usize>, id: Option<String>) -> Value {
     // find if dim mismatch
     assert_eq!(permute.len(), a.dim.len(), "Permute dimension mismatch");
     for i in permute.iter() {
@@ -90,7 +99,7 @@ fn c_permute (a: &Value, permute: Vec<usize>) -> Value {
     });
     if is_sequential { return a.clone(); }
 
-    let id = ir_b_id();    
+    let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
     ir_b_add(IRCmds::Permute { 
         a: a.id.clone(), 
         p: permute.clone(), 

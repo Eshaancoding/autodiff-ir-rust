@@ -118,8 +118,12 @@ impl NodeTrait for ValueNode {
         self.v.dim.clone()
     }
 
-    fn val (&self) -> Value {
-        self.v.clone()
+    fn val (&self) -> Option<Value> {
+        Some(self.v.clone())
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(self.clone()) 
     }
 }
 

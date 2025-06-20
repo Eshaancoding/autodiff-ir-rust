@@ -195,6 +195,5 @@ pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
         IRCmds::If { .. } => {},    // If statements are handled by execute
         IRCmds::EX { } => {},       // exit statements are handled by execute
         IRCmds::Heading { .. } => {},
-        IRCmds::Subheading { .. } => {}
     }     
 }

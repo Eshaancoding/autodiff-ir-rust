@@ -30,13 +30,21 @@ macro_rules! create_op {
         // ================== Basic Functionality ================== 
         impl NodeTrait for $node_name {
             fn forward (&mut self) -> Value {
-                if let Some(v) = self.val.clone() { 
+                if let Some(v) = self.val() { 
                     return v;
                 } 
 
                 let left = self.left.forward();
                 let right = self.right.forward();
-                let res_val = if self.is_op_equal { $core_name_op_eql(&left, &right) } else { $core_name(&left, &right) };
+
+                let res_val = if self.is_op_equal { 
+                    $core_name_op_eql(&left, &right) 
+                } 
+                else { 
+                    let id = self.val.as_ref().map(|v| v.id.clone());
+                    $core_name(&left, &right, id) 
+                };
+
                 self.val = Some(res_val.clone());
                 res_val
             }
@@ -48,16 +56,17 @@ macro_rules! create_op {
             }
 
             fn backward (&mut self, grad: Value) {
-                let l = self.left.val();
-                let r = self.right.val();
+                let l = self.left.val().expect("l forward");
+                let r = self.right.val().expect("r forward");
                 
                 self.left.n.borrow_mut().backward($l_bckwd(&l, &r, &grad));
                 self.right.n.borrow_mut().backward($r_bckwd(&l, &r, &grad));    
             }
             
-            fn val (&self) -> Value {
-                self.val.clone().expect("Need to run forward pass before val")
-                // val will still carry the same id as the source node (the s's id in "s += o")
+            fn val (&self) -> Option<Value> {
+                if self.left.val().is_none() { return None }
+                if self.right.val().is_none() { return None }
+                self.val.clone()
             }
 
             fn grad (&self) -> Value {
@@ -75,11 +84,20 @@ macro_rules! create_op {
                     panic!("Calling .reset_grad() on a non-tensor node")
                 }
             }
+
+            fn deep_copy (&self) -> Box<dyn NodeTrait> {
+                Box::new($node_name {
+                    left: self.left.deep_copy(),
+                    right: self.right.deep_copy(),
+                    val: None,
+                    is_op_equal: self.is_op_equal
+                }) 
+            }
         }
 
         // ============= Core Func ============
-        fn $core_name (a: &Value, b: &Value) -> Value {
-            let id = ir_b_id();
+        fn $core_name (a: &Value, b: &Value, id: Option<String>) -> Value {
+            let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
             
             // Assuming this gets called anyways from try_broadcasting
             // Core functions shouldn't have any checks; should be done at creation of the node itself
@@ -98,7 +116,6 @@ macro_rules! create_op {
         }
 
         fn $core_name_op_eql (a: &Value, b: &Value) -> Value {
-
             // Assuming this gets called anyways from try_broadcasting
             // Core functions shouldn't have any checks; should be done at creation of the node itself
             // assert_eq!(a.dim, b.dim, "Dimensional mismatch +, -, *, / operation");
@@ -166,8 +183,9 @@ macro_rules! create_op {
         // ================== Creating Op Equal ================= 
         impl std::ops::$op_eq<Tensor> for Tensor {
             fn $op_eq_func (&mut self, rhs: Tensor) {
-                let (a, b) = try_broadcast(&self, &rhs);
-                *self = Tensor::new($node_name {
+                let s_clone = self.deep_copy(); // since we are replacing the Rc<RefCell<>>, we need a deep copy of self before we destroy it
+                let (a, b) = try_broadcast(&s_clone, &rhs);
+                self.replace($node_name {
                     left: a,
                     right: b,
                     val: None,
@@ -178,8 +196,10 @@ macro_rules! create_op {
 
         impl std::ops::$op_eq<f64> for Tensor {
             fn $op_eq_func (&mut self, rhs: f64) {
-                let (a, b) = try_broadcast(&self, &autodiff::constant(rhs, self.dim()));
-                *self = Tensor::new($node_name {
+                let s_clone = self.deep_copy(); // since we are replacing the Rc<RefCell<>>, we need a deep copy of self before we destroy it
+                let (a, b) = try_broadcast(&s_clone, &autodiff::constant(rhs, self.dim()));
+
+                self.replace($node_name {
                     left: a,
                     right: b,
                     val: None,
@@ -190,8 +210,9 @@ macro_rules! create_op {
 
         impl std::ops::$op_eq<Value> for Tensor {
             fn $op_eq_func (&mut self, rhs: Value) {
-                let (a, b) = try_broadcast(&self, &rhs.to_node());
-                *self = Tensor::new($node_name {
+                let s_clone = self.deep_copy(); // since we are replacing the Rc<RefCell<>>, we need a deep copy of self before we destroy it
+                let (a, b) = try_broadcast(&s_clone, &rhs.to_node());
+                self.replace($node_name {
                     left: a,
                     right: b,
                     val: None,

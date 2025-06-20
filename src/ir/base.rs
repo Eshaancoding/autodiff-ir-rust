@@ -1,6 +1,6 @@
 use colored::Colorize;
 use crate::{IRBase, IRProcedure};
-use super::{print::print_ir, IRCmds};
+use super::IRCmds;
 
 // IRBase to handle IR appending
 impl IRBase {
@@ -52,18 +52,6 @@ impl IRBase {
         } else {
             self.proc.push(cmd);
         }
-    }
-
-    pub fn print (&self) {
-        let mut current_heading = "".to_string();
-        for (key, arr) in self.proc.iter() {        
-            println!("{}:", key.cyan());
-            for (i, cmd) in arr.iter().enumerate() {
-                print_ir(cmd, &mut current_heading, i);
-            }
-            println!();
-        }
-        println!();     
     }
 
     pub fn create_block (&mut self, id: String) {

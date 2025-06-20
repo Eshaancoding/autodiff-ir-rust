@@ -68,7 +68,7 @@ where
  * Note that in the body, you are responsible for updating var
  * Follows: while (var != 0) { func() }
  */
-pub fn ir_while<I> (var: Tensor, func: I) 
+pub fn ir_while<I> (var: &Tensor, func: I) 
 where 
     I: FnOnce() 
 {
@@ -79,11 +79,11 @@ where
     // create func
     ir_b_create_temp_proc();
     func();
-    var.forward(); // re-evaluate var
+    let r = var.forward(); // re-evaluate var
     let main_func = ir_b_return_temp_proc();
 
     // add while loop
-    ir_b_add(IRCmds::While { conditional_var: v.id, block: main_func });
+    ir_b_add(IRCmds::While { conditional_var: r.id, block: main_func });
 }
 
 /**
@@ -91,17 +91,16 @@ where
  */
 pub fn ir_for<F> (r: Range<i32>, func: F) 
 where
-    F: FnOnce(Tensor)
+    F: FnOnce(&Tensor)
 {
     // internally, it's just a while loop
-    let x = autodiff::scalar(r.start as f64);
+    let mut x = autodiff::scalar(r.start as f64);
     let x_end = autodiff::constant(r.end as f64, vec![1]);
-    
-    ir_while(x.less_than(&x_end), || {
-        func(x.clone());
 
-        let mut v = x.clone(); 
-        v += 1.0;
-        v.forward(); // will still apply to x's variable at IR; we just need to satisfy the borrow checker
+    let result = x.less_than(&x_end);
+    
+    ir_while(&result, || {
+        func(&x);
+        x += 1.0; 
     });
 }

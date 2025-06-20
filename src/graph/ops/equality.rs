@@ -15,12 +15,12 @@ macro_rules! create_equality {
         
         impl NodeTrait for $node_name {
             fn forward (&mut self) -> Value {
-                if let Some(v) = self.val.clone() {
+                if let Some(v) = self.val() {
                     return v;
                 }
-                
+
                 let val = self.parent.forward(); 
-                let res_val = $core_name(&val);
+                let res_val = $core_name(&val, self.val.as_ref().map(|v| v.id.clone()));
                 self.val = Some(res_val.clone());
                 res_val 
             } 
@@ -30,22 +30,29 @@ macro_rules! create_equality {
             }
             
             fn backward (&mut self, _:Value) {
-                
                 // Note: no grad on equality; use val * (equality statement) to create grad
                 // However, we still set backward & grad because the resultant of equalities are treated as constants
+            }
+
+            fn val (&self) -> Option<Value> {
+                if self.parent.val().is_none() { return None }
+                self.val.clone()
             }
 
             fn grad (&self) -> Value {
                 Value::zeros(self.dim()) 
             }
             
-            fn val (&self) -> Value {
-                self.val.clone().expect("Need to run forward pass before val")
+            fn deep_copy (&self) -> Box<dyn NodeTrait> {
+                Box::new($node_name {
+                    parent: self.parent.deep_copy(),
+                    val: None
+                })
             }
         }
         
-        fn $core_name (a: &Value) -> Value {
-            let id = ir_b_id();
+        fn $core_name (a: &Value, id: Option<String>) -> Value {
+            let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
             ir_b_add(IRCmds::$ir_name {
                 a: a.id.clone(),
                 res: id.clone()

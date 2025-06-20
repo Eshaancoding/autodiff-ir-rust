@@ -14,7 +14,7 @@ pub struct ConcatNode {
 // ================== Basic Functionality ================== 
 impl NodeTrait for ConcatNode {
     fn forward (&mut self) -> Value {
-        if let Some(v) = self.val.clone() { 
+        if let Some(v) = self.val() { 
             return v;
         }       
 
@@ -24,7 +24,7 @@ impl NodeTrait for ConcatNode {
             values.push(n);
         }
 
-        let res = c_concat(values, self.dim);
+        let res = c_concat(values, self.dim, self.val.as_ref().map(|v| v.id.clone()));
         self.val = Some(res.clone());
         res
     }
@@ -48,8 +48,23 @@ impl NodeTrait for ConcatNode {
         } 
     }
 
-    fn val (&self) -> Value {
-        self.val.clone().expect("Run forward before getting value")
+    fn val (&self) -> Option<Value> {
+        for i in self.nodes.iter() {
+            if i.val().is_none() { return None }
+        }
+        self.val.clone()
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        let mut n: Vec<Tensor> = vec![];
+        for i in self.nodes.iter() {
+            n.push(i.deep_copy());
+        }
+        Box::new(ConcatNode {
+            nodes: n,
+            dim: self.dim,
+            val: None
+        }) 
     }
 }
 
@@ -65,7 +80,7 @@ pub fn concat (nodes: Vec<Tensor>, dim: i32) -> Tensor { // light wrapper in aut
 }
 
 // ============= Concat Core Functionality ============
-fn c_concat (nodes: Vec<Value>, dim: usize) -> Value { // main function used here
+fn c_concat (nodes: Vec<Value>, dim: usize, id: Option<String>) -> Value { // main function used here
     // check dimension
     let mut first_dim: Vec<usize> = vec![];
     for i in nodes.iter() {
@@ -86,9 +101,15 @@ fn c_concat (nodes: Vec<Value>, dim: usize) -> Value { // main function used her
     // continously apply concat
     let mut prev_node_id = nodes[0].id.clone();
     let mut total_d = nodes[0].dim.clone();
+    let last_id = id.or_else(|| Some(ir_b_id())).unwrap();
+
     for i in 1..nodes.len() {
         let node_id = nodes[i].id.clone();
-        let new_id = ir_b_id();
+        let new_id = if i == nodes.len()-1 { 
+            last_id.clone()
+        } else { 
+            ir_b_id() 
+        };
 
         ir_b_add(IRCmds::Concat {
             a: prev_node_id,

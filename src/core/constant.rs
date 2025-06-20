@@ -34,12 +34,16 @@ impl NodeTrait for ConstantNode {
         self.dim.clone()
     }
 
-    fn val (&self) -> Value {
-        self.val.clone().expect("Run forward propogation before running .val()")
+    fn val (&self) -> Option<Value> {
+        self.val.clone()
     }
 
     fn is_const (&self) -> bool {
         true 
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(self.clone()) 
     }
 } 
 

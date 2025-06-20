@@ -28,7 +28,7 @@ mod tests {
         autodiff::execute();
         // autodiff::ir_print();
         
-        let y_val = y.val().get();
+        let y_val = y.val().unwrap().get();
         assert_eq!(y_val.data, vec![10.0], "y data incorrect");
         assert_eq!(y_val.dim, vec![1], "y dim incorrect");
     }
@@ -61,11 +61,11 @@ mod tests {
         autodiff::execute();
         // autodiff::ir_print();
         
-        let y_val = y.val().get();
+        let y_val = y.val().unwrap().get();
         assert_eq!(y_val.data, vec![7.0], "y data incorrect");
         assert_eq!(y_val.dim, vec![1], "y dim incorrect");
 
-        let y_two_val = y_two.val().get();
+        let y_two_val = y_two.val().unwrap().get();
         assert_eq!(y_two_val.data, vec![13.0], "y_two data incorrect");
         assert_eq!(y_two_val.dim, vec![1], "y_two dim incorrect");
     }
@@ -76,14 +76,14 @@ mod tests {
         
         let mut y = autodiff::scalar(10.0);
         autodiff::ir_for(-3..5, |i| {
-            y += i;
+            y += i.clone();
             y.forward();
         });
 
         autodiff::execute();
         // autodiff::ir_print();
 
-        let y_val = y.val().get();
+        let y_val = y.val().unwrap().get();
         assert_eq!(y_val.data, vec![14.0], "y data incorrect");
         assert_eq!(y_val.dim, vec![1], "y dim incorrect");
     }
@@ -119,11 +119,11 @@ mod tests {
         autodiff::execute();
         // autodiff::ir_print();
 
-        let y_val = y.val().get();
+        let y_val = y.val().unwrap().get();
         assert_eq!(y_val.data, vec![-18.0], "y data incorrect");
         assert_eq!(y_val.dim, vec![1], "y dim incorrect");
 
-        let y_two_val = y_two.val().get();
+        let y_two_val = y_two.val().unwrap().get();
         assert_eq!(y_two_val.data, vec![72.0], "y_two data incorrect");
         assert_eq!(y_two_val.dim, vec![1], "y_two dim incorrect");
     }

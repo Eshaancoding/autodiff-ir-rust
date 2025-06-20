@@ -59,19 +59,19 @@ mod tests {
             res = y;
         });
 
-        res.val().keep(); // ensure we can get in dependecy list
+        res.val().unwrap().keep(); // ensure we can get in dependecy list
 
         autodiff::execute();    
         autodiff::ir_print(); // even more massive
 
-        let res_out_data = res.val().get().round(4);
+        let res_out_data = res.val().unwrap().get().round(4);
         assert_eq!(res_out_data.dim, vec![2,2], "Y output dim wrong");
         assert_eq!(res_out_data.data, vec![
             -1.6599, -1.5678,
             -1.6662, -1.5736
         ], "Y output data wrong");
         
-        let l1_w_out_data = l1_w.val().get().round(4);
+        let l1_w_out_data = l1_w.val().unwrap().get().round(4);
         assert_eq!(l1_w_out_data.dim, vec![5,3], "L1 Weight dim wrong");
         assert_eq!(l1_w_out_data.data, vec![
             0.0461, 0.0349, 0.025,
@@ -81,13 +81,13 @@ mod tests {
             0.0639, 0.0428, 0.0729
         ], "l1_w output data wrong");
 
-        let l1_b_out_data = l1_b.val().get().round(4);
+        let l1_b_out_data = l1_b.val().unwrap().get().round(4);
         assert_eq!(l1_b_out_data.dim, vec![3], "L1 Bias dim wrong");
         assert_eq!(l1_b_out_data.data, vec![
             0.4715, 0.4172, 0.4423
         ], "l1_b output data wrong");
 
-        let l2_w_out_data = l2_w.val().get().round(4);
+        let l2_w_out_data = l2_w.val().unwrap().get().round(4);
         assert_eq!(l2_w_out_data.dim, vec![3, 2], "L2 Weight dim wrong");
         assert_eq!(l2_w_out_data.data, vec![
             -1.0534, -1.0594,

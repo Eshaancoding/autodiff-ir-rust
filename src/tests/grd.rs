@@ -31,7 +31,7 @@ mod tests {
         autodiff::execute();      // actually executes operations from IR
         // autodiff::ir_print();
 
-        let a_val = a.val().get();
+        let a_val = a.val().unwrap().get();
         assert_eq!(a_val.dim, vec![2, 2]);
         assert_eq!(a_val.data, vec![5.0, 7.0, 3.0, 4.0]);
 

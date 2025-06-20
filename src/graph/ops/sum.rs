@@ -7,14 +7,14 @@ pub struct SumNode {
 
 impl NodeTrait for SumNode {
     fn forward (&mut self) -> Value {
-        if let Some(v) = self.val.clone() { 
+        if let Some(v) = self.val() { 
             return v;
         }       
         
         let val = self.parent.forward();
         assert_eq!(self.parent.dim().len(), 2, "Reduce (sum) node needs dim=2");
 
-        let res_val = c_sum(&val);
+        let res_val = c_sum(&val, self.val.as_ref().map(|v| v.id.clone()));
         self.val = Some(res_val.clone());
         res_val
     }
@@ -36,8 +36,16 @@ impl NodeTrait for SumNode {
         ); 
     }
 
-    fn val (&self) -> crate::Value {
-        self.val.clone().expect("Need to run forward before val")    
+    fn val (&self) -> Option<Value> {
+        if self.parent.val().is_none() { return None }
+        self.val.clone()
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(SumNode {
+            parent: self.parent.deep_copy(),
+            val: None
+        })
     }
 }
 
@@ -97,8 +105,8 @@ impl Tensor {
     }
 }
 
-fn c_sum (a: &Value) -> Value {
-    let id = ir_b_id();
+fn c_sum (a: &Value, id: Option<String>) -> Value {
+    let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
     ir_b_add(IRCmds::Sum { 
         a: a.id.clone(), 
         res: id.clone()

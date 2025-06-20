@@ -33,7 +33,8 @@ impl Device for CPUNew {
         
         let mut idx_offset = 0; // need to declare idx offset to satisfy borrow checker
 
-        let mut f = |proc: &mut IRProcedure| { let mut permute_idxs: Vec<(usize, String)> = vec![];
+        let mut f = |proc: &mut IRProcedure| { 
+            let mut permute_idxs: Vec<(usize, String)> = vec![];
             for (i, cmd ) in proc.iter().enumerate() {
                 if let IRCmds::DotProduct { b, .. } = cmd {
                     permute_idxs.push((i, b.clone()));

@@ -10,11 +10,11 @@ pub struct BroadcastNode {
 
 impl NodeTrait for BroadcastNode {
     fn forward (&mut self) -> Value {
-        if let Some(v) = self.val.clone() { 
+        if let Some(v) = self.val() { 
             return v;
         } 
         let p_val = self.parent.forward();
-        let res_val = c_broadcast(&p_val, self.repeat, self.dim);
+        let res_val = c_broadcast(&p_val, self.repeat, self.dim, self.val.as_ref().map(|v| v.id.clone()));
         self.val = Some(res_val.clone());
         res_val
     }
@@ -31,8 +31,18 @@ impl NodeTrait for BroadcastNode {
         );
     }      
 
-    fn val (&self) -> Value {
-        self.val.clone().expect("Run forward pass before val")
+    fn val (&self) -> Option<Value> {
+        if self.parent.val().is_none() { return None }
+        self.val.clone()
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(BroadcastNode {
+            parent: self.parent.deep_copy(),
+            repeat: self.repeat,
+            dim: self.dim,
+            val: None
+        }) 
     }
 }
 
@@ -83,9 +93,9 @@ for i in 0..self.d.len() {
 }
  */
 
-fn c_broadcast (p: &Value, r: usize, dim: usize) -> Value {
+fn c_broadcast (p: &Value, r: usize, dim: usize, id: Option<String>) -> Value {
     // check if broadcastable
-    let id = ir_b_id();    
+    let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
     ir_b_add(crate::IRCmds::Broadcast { 
         a: p.id.clone(), 
         r,

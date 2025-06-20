@@ -102,7 +102,6 @@ pub enum IRCmds {
 
     // Debug (does not get executed in the slightest)
     Heading {cmt: String},                       // just a comment
-    Subheading {h: Option<String>, cmt: String}, // comment that will only appear if at heading (if None, then displays everywhere)
 }
 
 // wrapper over list of instructions to run

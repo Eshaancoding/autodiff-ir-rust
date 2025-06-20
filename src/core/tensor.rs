@@ -37,8 +37,8 @@ impl NodeTrait for TensorNode {
         self.v.dim.clone()
     }
 
-    fn val (&self) -> Value {
-        self.v.clone()
+    fn val (&self) -> Option<Value> {
+        Some(self.v.clone())
     }
 
     fn grad (&self) -> Value {
@@ -47,6 +47,10 @@ impl NodeTrait for TensorNode {
 
     fn reset_grad (&mut self) {
         self.gd = None;
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(self.clone())  
     }
 }
 

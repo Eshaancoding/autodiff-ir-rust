@@ -55,11 +55,11 @@ pub fn br_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
     let mut br_to_parent: HashMap<String, (String, usize)> = HashMap::new();
     for (block_name, b_cmds) in cmds.clone() {
         for (i, cmd) in b_cmds.iter().enumerate() {
-            if let IRCmds::BR {block_id} = cmd.clone() {
-                br_to_parent
-                    .entry(block_id)
-                    .or_insert((block_name.clone(), i));
-            }
+            // if let IRCmds::BR {block_id} = cmd.clone() {
+            //     br_to_parent
+            //         .entry(block_id)
+            //         .or_insert((block_name.clone(), i));
+            // }
         }
     }
     

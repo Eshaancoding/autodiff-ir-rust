@@ -28,11 +28,11 @@ mod tests {
         res.forward();
         res.backward();
 
-        res.val().keep(); 
+        res.val().unwrap().keep(); 
         autodiff::execute();
 
         // ======== Check resultant value ========
-        let res_val = res.val().get().round(4);
+        let res_val = res.val().unwrap().get().round(4);
         assert_eq!(res_val.dim, vec![2, 4], "Result value dim incorrect");
         assert_eq!(res_val.data, vec![
             8.5169,   4.1459,  -0.9816, 783.7341,

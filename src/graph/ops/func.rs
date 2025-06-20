@@ -15,11 +15,11 @@ macro_rules! create_func {
         // ============ Basic Functionality ============ 
         impl NodeTrait for $st {
             fn forward (&mut self) -> Value {
-                if let Some(v) = self.val.clone() { 
+                if let Some(v) = self.val() { 
                     return v;
                 }
 
-                let res_val = $core_func(&self.parent.forward()); 
+                let res_val = $core_func(&self.parent.forward(), self.val.as_ref().map(|v| v.id.clone())); 
                 self.val = Some(res_val.clone());
                 res_val
             }
@@ -29,12 +29,20 @@ macro_rules! create_func {
             }          
 
             fn backward (&mut self, grad: Value) {
-                let v = self.parent.val();
+                let v = self.parent.val().expect("parent val invalid at unary func");
                 self.parent.n.borrow_mut().backward($bckw(v, grad));
             }
 
-            fn val (&self) -> Value {
-                self.val.clone().expect("Run forward pass before calling .val()")
+            fn val (&self) -> Option<Value> {
+                if self.parent.val().is_none() { return None }
+                self.val.clone()
+            }
+
+            fn deep_copy (&self) -> Box<dyn NodeTrait> {
+                Box::new($st {
+                    parent: self.parent.deep_copy(),
+                    val: None
+                }) 
             }
         }
 
@@ -48,8 +56,8 @@ macro_rules! create_func {
         }
 
         // ============= Add ELW Core Func --> Value + Value ============
-        pub fn $core_func (a: &Value) -> Value {
-            let id = ir_b_id();
+        pub fn $core_func (a: &Value, id: Option<String>) -> Value {
+            let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
         
             ir_b_add(IRCmds::$ir {
                 a: a.id.clone(),

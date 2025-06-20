@@ -19,7 +19,7 @@ impl NodeTrait for ViewNode {
         }
         
         let v = self.parent.forward();
-        let res_val = c_view(&v, self.target_dim.clone());
+        let res_val = c_view(&v, self.target_dim.clone(), self.val.as_ref().map(|v| v.id.clone()));
         self.val = Some(res_val.clone());
         res_val
     }
@@ -31,13 +31,23 @@ impl NodeTrait for ViewNode {
     fn backward (&mut self, grad:Value) {
         let g = c_view(
             &grad, 
-            self.parent.dim().clone()
+            self.parent.dim().clone(),
+            None
         );
         self.parent.n.borrow_mut().backward(g);
     }
     
-    fn val (&self) -> Value {
-        self.val.clone().expect("Need to run forward pass before val")
+    fn val (&self) -> Option<Value> {
+        if self.parent.val().is_none() { return None }
+        self.val.clone()
+    }
+    
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(ViewNode {
+            parent: self.parent.deep_copy(),
+            target_dim: self.target_dim.clone(),
+            val: None
+        }) 
     }
 }
 
@@ -107,7 +117,7 @@ impl Tensor {
 }
 
 // ================== Core Functionality ================== 
-fn c_view (p: &Value, target_dim: Vec<usize>) -> Value {
+fn c_view (p: &Value, target_dim: Vec<usize>, id: Option<String>) -> Value {
     assert_eq!(
         target_dim.iter().product::<usize>(), 
         p.dim.iter().product::<usize>(), 
@@ -115,7 +125,7 @@ fn c_view (p: &Value, target_dim: Vec<usize>) -> Value {
     );
 
     // add to IR
-    let id = ir_b_id();
+    let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
     ir_b_add(IRCmds::View { 
         a: p.id.clone(), 
         target_dim: target_dim.clone(), 

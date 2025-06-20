@@ -10,6 +10,7 @@ pub fn ir_optimize () {
     let mut guard = IRB.lock().unwrap();
     let irb = guard.as_mut().expect("Can't unpack IRBuilder");
     
+    /*
     // optimizations
     repeat_opt(&mut irb.proc);
     dep_opt(&mut irb.proc);  
@@ -46,6 +47,7 @@ pub fn ir_optimize () {
     }
 
     dep_opt(&mut irb.proc);  // we may have deleted a few things, so it doesn't hurt to delete things that are not referenced again
+    */
 
     drop(guard);
 }

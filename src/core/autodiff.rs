@@ -6,7 +6,7 @@ use rand_distr::{Normal, Distribution};
 pub use crate::graph::data::concat::concat;
 pub use crate::graph::ops::dot_product::dot;
 pub use crate::devices;
-use crate::{core::add_to_dep, ir::optimizations::optimize::*, ir_b_device_callback, ValueNode};
+use crate::{core::add_to_dep, ir::optimizations::optimize::*, ir_b_device_callback};
 
 pub use crate::{
     Device, 
@@ -21,7 +21,7 @@ pub use crate::{
 pub use super::control::*;
 
 use super::{ir_b_add, ir_b_execute, is_harsh, set_harsh_dep_list, ConstantNode, IRBase, DEP_TRACKER, IRB};
-use crate::IRCmds::{Heading, Subheading, EX};
+use crate::IRCmds::{Heading, EX};
 // new tensor
 pub fn tensor (data: Vec<f64>, dim: Vec<usize>) -> Tensor {
     if data.len() != dim.iter().product::<usize>() {
@@ -102,25 +102,11 @@ pub fn set_device <T: Device + Send + Sync + 'static> (device: T) {
 pub fn ir_print () {
     let mut guard = IRB.lock().unwrap();
     let v = guard.as_mut().expect("Can't unpack IRBuilder");
-    v.print();
+    println!("{}", v.proc);
 }
 
 pub fn add_heading (cmt: &str) {
     ir_b_add(Heading {
-        cmt: cmt.to_string()
-    });
-}
-
-pub fn add_subheading (h: &str, cmt: &str) {
-    ir_b_add(Subheading { 
-        h: Some(h.to_string()),
-        cmt: cmt.to_string()
-    });
-}
-
-pub fn add_all_subheading (cmt: &str) {
-    ir_b_add(Subheading { 
-        h: None,
         cmt: cmt.to_string()
     });
 }

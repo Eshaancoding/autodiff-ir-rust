@@ -36,13 +36,13 @@ mod tests {
         result.forward();
         result.r(0..2, 0).backward(); // test r next
 
-        result.val().keep();
+        result.val().unwrap().keep();
 
         autodiff::execute();
         autodiff::ir_print(); // ir print is massive
 
         // ======== Check resultant value ========
-        let res_val = result.val().get();
+        let res_val = result.val().unwrap().get();
         assert_eq!(res_val.dim, vec![3,2], "Result value dim incorrect");
         assert_eq!(res_val.data, vec![1518.0, 3.0, 1518.0, 12.0, 1518.0, 48.0], "Result value data incorrect");
 

@@ -1,4 +1,5 @@
 use crate::Value;
+use std::any::Any;
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -13,8 +14,8 @@ pub trait NodeTrait {
     // For dimensional checking and needs shape for Grad operations
     fn dim (&self) -> Vec<usize>;  
 
-    // val
-    fn val (&self) -> Value;
+    // gets the value of the node. However, could be None if the value is None (not forward) OR if any of the child nodes value is None (has to be recomputed)
+    fn val (&self) -> Option<Value>;
 
     // === grad ===
     fn grad (&self) -> Value {
@@ -27,6 +28,11 @@ pub trait NodeTrait {
 
     // Track whether constant node
     fn is_const (&self) -> bool { false }
+
+    // If we need to deep copy the node, it calls this function
+    // What usually happens when you do .clone() on a Tensor is that it just increments the reference.
+    // However, this actually clones the entire node and returns and new memory location RefCell
+    fn deep_copy (&self) -> Box<dyn NodeTrait>;
 }
 
 // this is just a concrete type over the traits; so we can use operation overloading
@@ -34,14 +40,18 @@ pub trait NodeTrait {
 pub struct Tensor {
     // Yes, it's not the most safest implementation. Let me know if there's any other methods
     // I skimmed over df/dx, which doesn't use Rc<RefCell<>>. However, a refactor that big will take some time.
-    pub n: Rc<RefCell<dyn NodeTrait>>,
+    pub n: Rc<RefCell<Box<dyn NodeTrait>>>,
 }
 
 impl Tensor {
     pub fn new<T: NodeTrait + 'static> (n: T) -> Tensor {
         Tensor {
-            n: Rc::new(RefCell::new(n))
+            n: Rc::new(RefCell::new(Box::new(n)))
         }
+    }
+
+    pub fn replace<T: NodeTrait + 'static> (&self, node: T) {
+        let _ = self.n.replace(Box::new(node));
     }
 
     // implement NodeTraits
@@ -61,7 +71,7 @@ impl Tensor {
         self.n.borrow().dim()
     }
 
-    pub fn val (&self) -> Value {
+    pub fn val (&self) -> Option<Value> {
         self.n.borrow().val()
     }
 
@@ -75,15 +85,21 @@ impl Tensor {
 
     pub fn detach (&self) -> Tensor {
         self.forward(); 
-        self.val().to_node()
+        self.val().expect("Forward process went wrong").to_node()
     }
 
     pub fn detach_grad (&self) -> Tensor {
         self.forward(); 
-        self.val().to_node_with_grad()
+        self.val().expect("Forward process went wrong").to_node_with_grad()
     }
 
     pub fn is_const (&self) -> bool {
         self.n.borrow().is_const()
+    }
+
+    pub fn deep_copy (&self) -> Tensor {
+        Tensor {
+            n: Rc::new(RefCell::new(self.n.borrow().deep_copy()))
+        }
     }
 }

@@ -13,15 +13,15 @@ pub struct DotProductNode {
 // ================== Basic Functionality ================== 
 impl NodeTrait for DotProductNode {
     fn forward (&mut self) -> Value {
-        if let Some(v) = self.val.clone() {
-            v
-        } else {
-            let left = self.left.forward();
-            let right = self.right.forward();
-            let r_val = c_dot_product(&left, &right);
-            self.val = Some(r_val.clone());
-            r_val
+        if let Some(v) = self.val() {
+            return v
         }
+
+        let left = self.left.forward();
+        let right = self.right.forward();
+        let r_val = c_dot_product(&left, &right, self.val.as_ref().map(|v| v.id.clone()));
+        self.val = Some(r_val.clone());
+        r_val
     }
 
     fn dim (&self) -> Vec<usize> {
@@ -41,8 +41,18 @@ impl NodeTrait for DotProductNode {
         );
     }
 
-    fn val (&self) -> Value {
-        self.val.clone().expect("Run forward propogation before running backward propogation")
+    fn val (&self) -> Option<Value> {
+        if self.left.val().is_none() { return None }
+        if self.right.val().is_none() { return None }
+        self.val.clone()
+    }
+
+    fn deep_copy (&self) -> Box<dyn NodeTrait> {
+        Box::new(DotProductNode {
+            left: self.left.deep_copy(),
+            right: self.right.deep_copy(),
+            val: None
+        })
     }
 }
 
@@ -56,7 +66,7 @@ pub fn dot (a: Tensor, b: Tensor) -> Tensor { // wrapper is in dot product
 }
 
 // ============= Outer Product Core Funct ============= 
-fn c_dot_product (left: &Value, right: &Value) -> Value {
+fn c_dot_product (left: &Value, right: &Value, id: Option<String>) -> Value {
     let a_dim = left.dim.clone();
     let b_dim = right.dim.clone();
 
@@ -64,7 +74,7 @@ fn c_dot_product (left: &Value, right: &Value) -> Value {
     assert_eq!(b_dim.len(), 2, "B must be a 2d array"); 
     assert_eq!(a_dim[1], b_dim[0], "A's second dimension must equal B's first dimension");
 
-    let id = ir_b_id();
+    let id = id.or_else(|| Some(ir_b_id()) ).unwrap();
     ir_b_add(IRCmds::DotProduct { 
         a: left.id.clone(),
         b: right.id.clone(),

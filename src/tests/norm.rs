@@ -16,10 +16,10 @@ mod tests {
         let res = rms_layer.f(x);
         res.forward();
         
-        res.val().keep();
+        res.val().unwrap().keep();
         autodiff::execute();
 
-        let data = res.val().get().round(4);    
+        let data = res.val().unwrap().get().round(4);    
         assert_eq!(data.dim, vec![2, 4]);
         assert_eq!(data.data, vec![
             0.3651, 0.7303, 1.0954, 1.4606,
@@ -40,10 +40,10 @@ mod tests {
         let res = layer_norm.f(x);
         res.forward();
         
-        res.val().keep();
+        res.val().unwrap().keep();
         autodiff::execute();
 
-        let data = res.val().get().round(4);    
+        let data = res.val().unwrap().get().round(4);    
         assert_eq!(data.dim, vec![2, 4]);
         assert_eq!(data.data, vec![
             -1.3416, -0.4472, 0.4472, 1.3416,

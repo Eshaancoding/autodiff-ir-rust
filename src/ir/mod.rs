@@ -1,4 +1,4 @@
-pub mod print;
+pub mod debug;
 pub mod optimizations;
 pub mod base;
 
