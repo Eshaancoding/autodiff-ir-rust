@@ -43,11 +43,7 @@ impl NodeTrait for ViewNode {
     }
     
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        Box::new(ViewNode {
-            parent: self.parent.deep_copy(),
-            target_dim: self.target_dim.clone(),
-            val: None
-        }) 
+        Box::new(self.clone())
     }
 }
 

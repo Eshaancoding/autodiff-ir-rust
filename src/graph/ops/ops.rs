@@ -86,12 +86,7 @@ macro_rules! create_op {
             }
 
             fn deep_copy (&self) -> Box<dyn NodeTrait> {
-                Box::new($node_name {
-                    left: self.left.deep_copy(),
-                    right: self.right.deep_copy(),
-                    val: None,
-                    is_op_equal: self.is_op_equal
-                }) 
+                Box::new(self.clone())
             }
         }
 

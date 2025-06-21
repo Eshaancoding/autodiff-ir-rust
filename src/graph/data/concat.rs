@@ -56,15 +56,7 @@ impl NodeTrait for ConcatNode {
     }
 
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        let mut n: Vec<Tensor> = vec![];
-        for i in self.nodes.iter() {
-            n.push(i.deep_copy());
-        }
-        Box::new(ConcatNode {
-            nodes: n,
-            dim: self.dim,
-            val: None
-        }) 
+        Box::new(self.clone()) 
     }
 }
 

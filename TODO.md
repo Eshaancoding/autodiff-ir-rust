@@ -219,8 +219,6 @@ Backend will refer to things that runs the internal operations and optimizations
         * Then you can improve the IR optimizations as well. 
             * etc. etc. etc. 
 
-   
-
 * **General Ideas**: 
     * Dynamic Shape
 

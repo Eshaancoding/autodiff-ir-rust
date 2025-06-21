@@ -39,10 +39,7 @@ macro_rules! create_func {
             }
 
             fn deep_copy (&self) -> Box<dyn NodeTrait> {
-                Box::new($st {
-                    parent: self.parent.deep_copy(),
-                    val: None
-                }) 
+                Box::new(self.clone())
             }
         }
 

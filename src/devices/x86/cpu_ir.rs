@@ -104,6 +104,7 @@ impl CPU  {
 fn proc_exec (proc: &IRProcedure, hms: &mut IndexMap<String, GenTensor<f64>>) -> bool {
     let mut exit = false;    
 
+    // TODO: test exit within nested for and if statements
     for cmd in proc.iter() {
         if let IRCmds::EX {} = cmd {
             return true;
@@ -141,6 +142,7 @@ impl Device for CPU {
     fn execute (&mut self, cmds: IRProcedure) {
         let mut hms: IndexMap<String, GenTensor<f64>> = IndexMap::new();
         proc_exec(&cmds, &mut hms);
+        // println!("hms: {:#?}", hms)
         
         // convert to Value Data
         for (key, value) in hms.iter() {

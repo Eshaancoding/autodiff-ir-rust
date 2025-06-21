@@ -25,7 +25,7 @@ mod tests {
             y.forward();
         });
 
-        autodiff::execute();
+        autodiff::print_and_exec();
         // autodiff::ir_print();
         
         let y_val = y.val().unwrap().get();

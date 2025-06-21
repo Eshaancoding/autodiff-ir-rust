@@ -44,10 +44,7 @@ macro_rules! create_equality {
             }
             
             fn deep_copy (&self) -> Box<dyn NodeTrait> {
-                Box::new($node_name {
-                    parent: self.parent.deep_copy(),
-                    val: None
-                })
+                Box::new(self.clone())
             }
         }
         

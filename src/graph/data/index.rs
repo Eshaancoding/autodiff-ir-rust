@@ -58,12 +58,7 @@ impl NodeTrait for IndexNode {
     }
 
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        Box::new(IndexNode {
-            parent: self.parent.deep_copy(),
-            idx: self.idx,
-            dim: self.dim,
-            val: None // set to None as we need to recompute value after deepcopy
-        }) 
+        Box::new(self.clone()) 
     }
 }
 

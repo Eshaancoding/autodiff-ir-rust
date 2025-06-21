@@ -86,10 +86,10 @@ pub enum IRCmds {
     /*
     No short circuiting (evaluates "if else" condition even if "if condition" is true)
 
-    if ( [conditions[0][0] <-- String ] == true ) {
+    if ( [conditions[0][0] <-- String ] == 1.0 ) {
         [ conditions[0][1] <-- block; IRProcedure ] 
     }
-    else if ( [conditions[1][0] <-- String ] == true ) {
+    else if ( [conditions[1][0] <-- String ] == 1.0 ) {
         [ conditions[1][1] <-- block; IRProcedure ] 
     } 
     else {
@@ -115,7 +115,7 @@ pub struct IRBase {
     pub current_block: String,
     pub main_block: String,
     pub proc: IRProcedure,
-    pub temp_proc: Option<IRProcedure> // used for appending 
+    pub temp_proc: Vec<IRProcedure> // Follows a stack processes
 }
 
 pub static DEVICE: Mutex<Option<Box<dyn Device + Send + Sync>>> = Mutex::new(None);

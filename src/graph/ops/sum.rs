@@ -1,5 +1,6 @@
 use crate::{ir_b_add, ir_b_id, Tensor, NodeTrait, Value, IRCmds};
 
+#[derive(Clone)]
 pub struct SumNode {
     parent: Tensor,
     val: Option<Value>
@@ -42,10 +43,7 @@ impl NodeTrait for SumNode {
     }
 
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        Box::new(SumNode {
-            parent: self.parent.deep_copy(),
-            val: None
-        })
+        Box::new(self.clone())
     }
 }
 

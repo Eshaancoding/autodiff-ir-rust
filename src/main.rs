@@ -122,12 +122,12 @@ pub fn reduce () {
 }
 
 pub fn forward () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
+    autodiff::set_device(autodiff::devices::CPU::new());
 
     let mut x = autodiff::tensor(vec![3.0], vec![1]);
     
-    autodiff::ir_for(2..6, |_| {
-        x += 1.0; 
+    autodiff::ir_for(2..6, |i| {
+        x += i.clone(); 
         x.forward();
     });    
 
@@ -135,6 +135,11 @@ pub fn forward () {
     result.forward();
 
     autodiff::print_and_exec();
+
+    let v = result.val().unwrap().get();
+    println!("value dim: {:#?}", v.dim);
+    println!("value data: {:#?}", v.data);
+    println!("value id: {:#?}", v.id);
 
     // do a while test after
 }

@@ -47,11 +47,7 @@ impl NodeTrait for PermuteNode {
     }
 
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        Box::new(PermuteNode {
-            parent: self.parent.deep_copy(),
-            permute: self.permute.clone(),
-            val: None
-        }) 
+        Box::new(self.clone()) 
     }
 }
 

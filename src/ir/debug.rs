@@ -26,13 +26,13 @@ pub fn print_if (f: &mut Formatter<'_>, cmd: &IRCmds, indent: usize) -> bool {
 
         for (idx, (condition, block)) in conditions.iter().enumerate() {
             if idx == 0 {
-                write!(f, "if ({} == true) {{", condition).expect("Can't write");
+                write!(f, "if ({} == 1.0) {{\n", condition).expect("Can't write");
                 print_proc(f, block, indent+1);
 
                 for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
                 write!(f, "}}\n").expect("Can't write");
             } else {
-                write!(f, "else if ({} == true) {{", condition).expect("Can't write");
+                write!(f, "else if ({} == 1.0) {{", condition).expect("Can't write");
                 print_proc(f, block, indent+1);
 
                 for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
@@ -41,7 +41,7 @@ pub fn print_if (f: &mut Formatter<'_>, cmd: &IRCmds, indent: usize) -> bool {
         }
         if let Some(else_p) = else_proc {
             for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-            write!(f, "else {{").expect("Can't write"); 
+            write!(f, "else {{\n").expect("Can't write"); 
             print_proc(f, else_p, indent+1);
             
             for _ in 0..indent { write!(f, "    ").expect("Can't write"); }

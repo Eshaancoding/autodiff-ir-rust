@@ -1,4 +1,3 @@
-use colored::Colorize;
 use crate::{IRBase, IRProcedure};
 use super::IRCmds;
 
@@ -10,7 +9,7 @@ impl IRBase {
             current_block: "main".to_string(),
             main_block: "main".to_string(),
             proc: IRProcedure::new(),
-            temp_proc: None
+            temp_proc: vec![]
         }
     }
 
@@ -37,17 +36,16 @@ impl IRBase {
     }
 
     pub fn create_temp_proc (&mut self) {
-        self.temp_proc = Some(IRProcedure::new());
+        self.temp_proc.push(IRProcedure::new());
     }
 
     pub fn return_temp_proc (&mut self) -> IRProcedure {
-        let c = self.temp_proc.clone().expect("Unwrapping procedure but none");
-        self.temp_proc = None;
+        let c = self.temp_proc.pop().expect("Unwrapping procedure but none");
         c 
     }
 
     pub fn add_cmd (&mut self, cmd: IRCmds) {
-        if let Some(proc) = &mut self.temp_proc { 
+        if let Some(proc) = self.temp_proc.last_mut() { 
             proc.push(cmd);
         } else {
             self.proc.push(cmd);

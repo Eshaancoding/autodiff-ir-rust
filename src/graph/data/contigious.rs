@@ -33,10 +33,7 @@ impl NodeTrait for ContigiousNode {
     }
 
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        Box::new(ContigiousNode {
-            parent: self.parent.deep_copy(),
-            val: self.val.clone()
-        })
+        Box::new(self.clone()) 
     }
 }
 

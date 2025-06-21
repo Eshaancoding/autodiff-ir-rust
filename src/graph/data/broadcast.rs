@@ -37,12 +37,7 @@ impl NodeTrait for BroadcastNode {
     }
 
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        Box::new(BroadcastNode {
-            parent: self.parent.deep_copy(),
-            repeat: self.repeat,
-            dim: self.dim,
-            val: None
-        }) 
+        Box::new(self.clone()) 
     }
 }
 

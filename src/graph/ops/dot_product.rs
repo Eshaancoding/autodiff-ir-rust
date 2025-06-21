@@ -48,11 +48,7 @@ impl NodeTrait for DotProductNode {
     }
 
     fn deep_copy (&self) -> Box<dyn NodeTrait> {
-        Box::new(DotProductNode {
-            left: self.left.deep_copy(),
-            right: self.right.deep_copy(),
-            val: None
-        })
+        Box::new(self.clone())
     }
 }
 
