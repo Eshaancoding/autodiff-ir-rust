@@ -1,20 +1,23 @@
 use crate::{
-    kernel::opt::fix_access_conflicts, kernel_decl::{KernelProcedure, Kernels}, to_instr::{to_comp, to_control, to_elw, to_special, to_unary}, Device, IRProcedure
+    conflicts::insert_alloc, kernel::conflicts::fix_access_conflicts, kernel_decl::{KernelProcedure, Kernels}, to_instr::{to_comp, to_control, to_elw, to_special, to_unary}, trackers::Location, Device, IRProcedure
 };
 use super::trackers::KernelTracker;
 
-pub fn convert_to_proc (device: &dyn Device, mat_tracker: &mut KernelTracker, proc: &IRProcedure) -> KernelProcedure {
+pub fn convert_to_proc<'a> (device: &dyn Device, kernel_tracker: &mut KernelTracker<'a>, proc: &'a IRProcedure) -> KernelProcedure {
     let mut kernels: Vec<Kernels> = vec![];
 
     for cmd in proc.main.iter() {
-        to_elw(cmd, &mut kernels, &mat_tracker);
-        to_comp(cmd, &mut kernels, &mat_tracker);
-        to_unary(cmd, &mut kernels, &mat_tracker);
-        to_special(device, cmd, &mut kernels, &mat_tracker);
-        to_control(device, cmd, &mut kernels, &mat_tracker); // note: recursive
+        to_elw(cmd, &mut kernels, &kernel_tracker);
+        to_comp(cmd, &mut kernels, &kernel_tracker);
+        to_unary(cmd, &mut kernels, &kernel_tracker);
+        to_special(device, cmd, &mut kernels, &kernel_tracker);
+        to_control(device, cmd, &mut kernels, kernel_tracker); // note: recursive
 
-        // step matrix tracker
-        mat_tracker.step(device, cmd);
+        // step kernel tracker
+        kernel_tracker.step(device, cmd, Location {
+            proc_id: proc.id.clone(),
+            loc: kernels.len()
+        });
     }
 
     KernelProcedure::new(
@@ -28,11 +31,12 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
     let mut kernel_tracker = KernelTracker::new();
     let mut kernel_proc = convert_to_proc(device, &mut kernel_tracker, proc);
 
-    // ...debug...
-    println!("{}", kernel_proc);
+
+    // ========= Kernel Fixes =========
+    insert_alloc(&mut kernel_proc, &kernel_tracker.alloc_tracker);
+    fix_access_conflicts(&mut kernel_proc);
 
     // ========= Kernel Optimizations =========
-    fix_access_conflicts(&mut kernel_proc); // not necessarily an "optimization". Program wouldn't run correctly without this
 
     // ========= Kernel Fusion =========
     // go to first OpenCL implementation --> implement --> then maybe reach back to x86 and see if you can make that better
@@ -41,6 +45,10 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
 
 
     // ========= Return =========
+
+    // ...debug...
+    println!("{}", kernel_tracker.alloc_tracker);
+    println!("{}", kernel_proc);
 
     kernel_proc
 }

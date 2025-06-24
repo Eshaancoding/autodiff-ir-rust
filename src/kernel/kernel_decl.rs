@@ -117,15 +117,15 @@ pub enum Kernels {
         size: usize,   // size of the result kernel
     },
 
-    // Alloc {
-    //     id: String,
-    //     dim: Vec<usize>        
-    // },
+    Alloc {
+        id: String,
+        size: usize
+    },
     
-    // Dealloc {
-    //     id: String,
-    //     dim: Vec<usize>
-    // },
+    Dealloc {
+        id: String,
+        size: usize
+    },
 
     // Control functions
     While {conditional_var: String, block: KernelProcedure},

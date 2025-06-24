@@ -4,7 +4,7 @@ Extremely helpful for debugging everything (kernel fusion, expression, trackers,
 */
 
 use std::fmt::{Display, Formatter};
-use crate::create_debug_hlp_funcs;
+use crate::{create_debug_hlp_funcs, trackers::Location};
 
 use super::{
     kernel_decl::{Expression, Input, Matrix, Value, KernelProcedure, Kernels}, 
@@ -97,6 +97,12 @@ impl Display for Input {
     }
 }
 
+impl Display for Location {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(block_id: {}, loc: {})", self.proc_id, self.loc)
+    }
+}
+
 impl<'a> Display for AllocTracker<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let _ = write!(f, "Alloc Tracker:\n");
@@ -105,6 +111,7 @@ impl<'a> Display for AllocTracker<'a> {
             let _ = write!(f, "\tIR name \"{}\":\n", ir_name);
             let _ = write!(f, "\t-> Alloc ID: {}\n", alloc_entry.id);
             let _ = write!(f, "\t-> Size: {}\n", alloc_entry.size);
+            let _ = write!(f, "\t-> Lifetime: {} --> {}\n", alloc_entry.alloc_loc, alloc_entry.dealloc_loc);
             let _ = write!(f, "\t-> Has initial content: {}\n", alloc_entry.initial_content.is_some());
             if let Some(v) = alloc_entry.initial_content {
                 let _ = write!(f, "\t-> Initial content size: {}\n", v.len());
@@ -142,11 +149,17 @@ impl Display for Kernels {
             Kernels::Movement { a, res , size} => {
                 let _ = write!(f, "{} {} {}", res, format!(" <-(Move {})- ", size.to_string().yellow()).bold(), a);
             },
-            Kernels::While { conditional_var, block } => {
+            Kernels::While { .. } => {
                 print_while(f, self, 0);
             },
             Kernels::If { .. } => {
                 print_if(f, self, 0);
+            },
+            Kernels::Alloc { id, size } => {
+                let _ = write!(f, "{} {} {}", "Alloc".green().bold(), id, size.to_string().yellow().bold());
+            },
+            Kernels::Dealloc { id, size } => {
+                let _ = write!(f, "{} {} {}", "Dealloc".red().bold(), id, size.to_string().yellow().bold());
             }
         }
         write!(f, "")

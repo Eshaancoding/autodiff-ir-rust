@@ -1,7 +1,7 @@
 pub mod linear;
 pub mod activations;
 pub mod module;
-pub mod opt;
+pub mod optimizers;
 pub mod sequential;
 pub mod norm;
 pub mod transformer;

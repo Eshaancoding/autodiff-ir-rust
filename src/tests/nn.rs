@@ -34,7 +34,7 @@ mod tests {
         // usually you would define a linear func like this
         // neural_net.insert(nn::Linear(3, 2, true)); 
 
-        let mut opt = nn::opt::SGD(neural_net.params(), 0.1);
+        let mut opt = nn::optimizers::SGD(neural_net.params(), 0.1);
 
         let x = autodiff::tensor(vec![
             0.01, 0.02, 0.037, 0.04, 0.05,

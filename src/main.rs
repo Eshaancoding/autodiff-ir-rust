@@ -50,7 +50,7 @@ pub fn nn_test () {
     neural_net.insert(nn::Sigmoid());
     neural_net.insert(nn::Linear(128, 64, true));
 
-    let mut opt = nn::opt::SGD(neural_net.params(), 0.1);
+    let mut opt = nn::optimizers::SGD(neural_net.params(), 0.1);
 
     let x = autodiff::randn(vec![2, 256]);
     let mut res = autodiff::empty();
@@ -82,7 +82,7 @@ pub fn multihead_att () {
     autodiff::set_device(autodiff::devices::CPUNew::new());
 
     let transformer = nn::MultiHeadAttention(64, 4);
-    let mut opt = nn::opt::SGD(transformer.params(), 0.01);
+    let mut opt = nn::optimizers::SGD(transformer.params(), 0.01);
 
     let x = autodiff::randn(vec![32, 64]);
     let res = transformer.f(x.clone(), x.clone(), x.clone());

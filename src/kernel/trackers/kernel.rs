@@ -1,7 +1,7 @@
 
 use std::collections::HashMap;
 use crate::{
-    ir::helper::ir_to_res, trackers::{AllocTracker, ConstantTracker}, Device, IRCmds
+    ir::helper::ir_to_res, trackers::{AllocEntry, AllocTracker, ConstantTracker, Location}, Device, IRCmds
 };
 use super::ShapeTracker;
 
@@ -75,16 +75,16 @@ impl<'a> KernelTracker<'a> {
         }
     }
 
-    pub fn step (&mut self, device: &dyn Device, cmd: &IRCmds) {
+    pub fn step (&mut self, device: &dyn Device, cmd: &'a IRCmds, loc: Location) {
         let mut prev_dim: Vec<usize> = vec![];
         if let IRCmds::View { a, .. } = cmd {
             prev_dim = self.shape_tracker.get_shape(&a).clone();
         }
 
         // needs to be sync with the Matrix Tracker
-        // we declare seperate shape tracker at alloc tracker
         self.shape_tracker.step(device, cmd);
         self.constant_tracker.step(cmd);
+        self.alloc_tracker.step(cmd, &self.shape_tracker, loc);
 
         // track the sources and the variables
         let mut dep_cmp: String = "".to_string();
@@ -242,5 +242,10 @@ impl<'a> KernelTracker<'a> {
     // wrapper over constant tracker
     pub fn get_constant (&self, id: &String) -> Option<f64> {
         self.constant_tracker.get_f64(id)
+    }
+
+    // wrapper over alloc tracker
+    pub fn get_alloc (&self, id: &String) -> &AllocEntry {
+        self.alloc_tracker.get_alloc(id)
     }
 }

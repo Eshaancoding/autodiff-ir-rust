@@ -59,22 +59,25 @@ Backend will refer to things that runs the internal operations and optimizations
 ## Backend
     
 * **Kernel**:
-    * <mark>automatic allocation and deallocation within graph</mark>
-        * partial allocation tracker is written for you technically
-        * requires better alloc tracker, which may need to start being moved in sync with the matrix tracker        
-        * handle merging with different procs/branches (if, while)
+    * ~~automatic allocation and deallocation within graph~~
+        * ~~partial allocation tracker is written for you technically~~
+        * ~~requires better alloc tracker, which may need to start being moved in sync with the matrix tracker~~
+        * ~~handle merging with different procs/branches (if, while)~~
         
-    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
+    * Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
         * Then, you need a temp allocation for this.
 
     * <mark>Host --> Device feeder</mark>
         * fix this before implementing the x86 implementation
     
+    * <mark>**THEN BUILD x86 BACKEND**</mark>
+        * no kernel fusion as of now
+
     * Divergent branching conflicts
         * Could be more complicated on various scenarious (sources, vars, concat, trackers, etc.)        
         * you have to know what is right and what is not right to be fair.
 
-    * **OPTS**: Swizzling memory
+    * **OPTS INDEXING**: Swizzling memory
         * dependending on access patterns IF there's like a single type of access pattern
             * if multiple, you might need to just rely on those different access patterns
             * just check and whether you can optimize
@@ -95,6 +98,8 @@ Backend will refer to things that runs the internal operations and optimizations
             2. computation...
             3. ~~dealloc A with size of 256~~ fills data region A with data of B
             4. computation that uses B will instead use memory address of A. 
+
+    * **OPTS**: reduce malloc and demalloc at while loops (should be just computation)
 
     * **OPTS**: Swapping accessing expressions between input and output of two adjacent kernels?
         * is it even possible? 
@@ -221,6 +226,8 @@ Backend will refer to things that runs the internal operations and optimizations
 ## Rust Codebase
 
 * Remove excessive clones (Ctrl+shift+F --> find)
+    * instead of strings as ids, just use usize and instead try to have String only appear at display/debug
+    * less clones --> usize implements copy traits
 * ~~Put `IndexMap<String, Vec<IRCmds>>` under a struct (represents HLIR cmds)~~
 * ~~we iter over `(block_name, b_cmds) in cmds.iter()... for cmd in b_cmds` a lot...~~
     * ~~but can this be really done? we have to trace the BR graph as we do matrix tracker, etc.~~
@@ -228,7 +235,8 @@ Backend will refer to things that runs the internal operations and optimizations
 * Use macros for repetitive statements
     * example, `kernel/to_instr` can be simplified to macros
     * in general the node trait is highly repeatable
-* instead of strings as ids, just use usize and instead try to have String only appear at display/debug
+* Especially for optimizations, there are some commonly shared functions 
+    * like insert X items into V locations
 * better debug messages (especially in frontend)
 
 ## Ignored

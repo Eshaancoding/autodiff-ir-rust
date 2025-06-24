@@ -2,7 +2,7 @@ use crate::{
     kernel_decl::{KernelProcedure, Kernels}, to_kernel::convert_to_proc, trackers::KernelTracker, Device, IRCmds, IRProcedure
 };
 
-fn handle_embed_proc (device: &dyn Device, mat_tracker: &KernelTracker, p: &IRProcedure) -> KernelProcedure {
+fn handle_embed_proc<'a> (device: &dyn Device, mat_tracker: &mut KernelTracker<'a>, p: &'a IRProcedure) -> KernelProcedure {
     // clone matrix tracker
     let mut mat_tracker_copy = mat_tracker.clone(); // EXPENSIVE OPERATION! Can be optimized?
     
@@ -10,11 +10,13 @@ fn handle_embed_proc (device: &dyn Device, mat_tracker: &KernelTracker, p: &IRPr
     let p = convert_to_proc(device, &mut mat_tracker_copy, p);
 
     // merge copy matrix tracker to orig matrix tracker (or any other variables if needed) 
+    // mat_tracker.merge(&mat_tracker_copy); 
+    mat_tracker.alloc_tracker = mat_tracker_copy.alloc_tracker;
 
     p
 }
 
-pub fn to_control (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker) {
+pub fn to_control<'a> (device: &dyn Device, cmd: &'a IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &mut KernelTracker<'a>) {
     match cmd {
         IRCmds::If { conditions, else_proc } => {
             let conditions: Vec<(String, KernelProcedure)> = conditions.iter().map(|(cond, p)| {
