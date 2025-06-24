@@ -2,7 +2,7 @@
 // attempts to move definitions closest to its most recent dependencies
 
 use std::collections::HashMap;
-use crate::{ir::optimizations::helper::{ir_to_dep, ir_to_res}, IRCmds, IRProcedure};
+use crate::{ir::helper::{ir_to_dep, ir_to_res}, IRCmds, IRProcedure};
 
 pub fn prox_rev_opt (proc: &mut IRProcedure) {
     let mut swap_tracker: HashMap<(String, usize, usize), usize> = HashMap::new();
@@ -98,6 +98,7 @@ pub fn prox_rev_opt (proc: &mut IRProcedure) {
             // don't swap Control statements. These commands are very location specific
             if let IRCmds::While { .. } = cmd { earliest_pos = None; }
             if let IRCmds::If { .. } = cmd { earliest_pos = None; }
+            if let IRCmds::CreateConstant { .. } = cmd { earliest_pos = None; } // don't move constants, I have an entire optimization that moves it to the front
 
             // success res location -> swap
             if let Some(loc) = earliest_pos {

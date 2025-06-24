@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::{
     core::ret_dep_list, 
-    ir::optimizations::helper::{ir_to_dep, ir_to_res, replace_res_cmd, replace_ref}, 
+    ir::helper::{ir_to_dep, ir_to_res, replace_res_cmd, replace_ref}, 
     IRCmds, 
     IRProcedure
 };

@@ -1,17 +1,17 @@
 use crate::{
-    helper::shape::{global_to_ndim, ndim_to_global}, 
+    helper::shape::{global_to_ndim, ndim_change_datacmds, ndim_to_global}, 
     kernel_decl::{Expression, Input, Matrix}
 };
 use crate::trackers::{
-    MatrixTracker,
+    KernelTracker,
     AccessType
 };
 
-impl MatrixTracker {    
+impl<'a> KernelTracker<'a> {    
     pub fn get_inp_dep (&self, id: &String, ndim: &mut Vec<Expression>) -> Input {
         // is vars concat
         if let Some(result) = self.vars_concat.get(id) {
-            self.ndim_change_datacmds(ndim, &result.data_cmds);
+            ndim_change_datacmds(ndim, &result.data_cmds);
 
             let mut ndim_two = ndim.clone();
             ndim_two[result.source.dim] = Expression::make_minus(
@@ -46,7 +46,7 @@ impl MatrixTracker {
 
         // dependency on var
         else if let Some(var_dep) = self.vars.get(id) {
-            self.ndim_change_datacmds(ndim, &var_dep.data_cmds);
+            ndim_change_datacmds(ndim, &var_dep.data_cmds);
 
             Input::Mat { 
                 mat: Matrix { 

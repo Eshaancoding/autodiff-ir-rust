@@ -1,13 +1,7 @@
-/*
-=== Matrix Tracker ===
-Given an id, extract's the source matrix id, the expression needed to go to id.
-Also, handles constants the concatenation matrixes + constants
-This is how memory is handled within all backend kernels.
-*/
 
 use std::collections::HashMap;
 use crate::{
-    ir::optimizations::helper::ir_to_res, trackers::ConstantTracker, Device, IRCmds
+    ir::helper::ir_to_res, trackers::{AllocTracker, ConstantTracker}, Device, IRCmds
 };
 use super::ShapeTracker;
 
@@ -48,7 +42,7 @@ pub struct VarConcatDep {
 }
 
 #[derive(Clone)]
-pub struct MatrixTracker {
+pub struct KernelTracker<'a> {
     // given sink variable, get source variable and the steps to reach to sink var
     // Vars and sources hashmap keys must always come from alloc tracker's id (except for concat vars)
     pub sources: HashMap<String, VarSource>,                // tracks source variables (no var dependency)
@@ -58,6 +52,7 @@ pub struct MatrixTracker {
 
     pub shape_tracker: ShapeTracker,                        // tracks the shape of variables
     pub constant_tracker: ConstantTracker,                  // tracks constant tracker
+    pub alloc_tracker: AllocTracker<'a>,                    // Tracks the allocation
 }
 
 // Different access types (depending on the kernel used) is needed
@@ -67,15 +62,16 @@ pub enum AccessType {
     XY,             // Dot product/Reduce; restricted to matrix 2-dim; uses X and Y. (SEE src/matmul_cpu/512_matmul.cpp for example of x + y)
 }
 
-impl MatrixTracker {
-    pub fn new () -> MatrixTracker {
-        MatrixTracker { 
+impl<'a> KernelTracker<'a> {
+    pub fn new () -> KernelTracker<'a> {
+        KernelTracker { 
             sources: HashMap::new(),
             vars: HashMap::new(), 
             sources_concat: HashMap::new(),
             vars_concat: HashMap::new(),            
             shape_tracker: ShapeTracker::new(),
             constant_tracker: ConstantTracker::new(),
+            alloc_tracker: AllocTracker::new()
         }
     }
 

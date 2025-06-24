@@ -1,10 +1,10 @@
 use crate::{
     kernel_decl::{UnaryOp, Kernels}, 
-    trackers::{MatrixTracker, AccessType}, 
+    trackers::{KernelTracker, AccessType}, 
     IRCmds,
 };
 
-pub fn to_unary (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker) {
+pub fn to_unary (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker) {
     match cmd {
         IRCmds::Exp2 { a, res } => { 
             let a_shape = mat_tracker.get_shape(a);

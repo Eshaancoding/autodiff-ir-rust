@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{ir::optimizations::helper::{ir_to_expr, ir_to_res, replace_ref_cmd}, IRProcedure};
+use crate::{ir::helper::{ir_to_expr, ir_to_res, replace_ref_cmd}, IRProcedure};
 
 pub fn repeat_opt (procedure: &mut IRProcedure, var_changed: &Vec<String>) -> usize {
     

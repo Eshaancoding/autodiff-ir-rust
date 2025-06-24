@@ -3,12 +3,12 @@
 
 use crate::{
     kernel_decl::{Kernels, ReduceOp},
-    trackers::{MatrixTracker, AccessType}, 
+    trackers::{KernelTracker, AccessType}, 
     IRCmds,
     Device
 };
 
-pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker) {
+pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker) {
     match cmd {
         IRCmds::Sum { a, res } => {
             let mut exp_dim = mat_tracker.get_shape(a).clone();

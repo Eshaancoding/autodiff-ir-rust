@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::{ir::optimizations::helper::ir_to_res, Device, IRCmds};
+use crate::{ir::helper::ir_to_res, Device, IRCmds};
 use super::ShapeTracker;
 
 #[derive(Clone, Debug)]
@@ -11,10 +11,8 @@ pub struct AllocEntry<'a> {
     // If this value is none, then some sort of computation needs to be done before this appears.
     // also note that the size of the initial content is not the same as the size of the alloc itself!
 }
+#[derive(Clone)]
 pub struct AllocTracker<'a> {
-    shape_tracker: ShapeTracker,
-    device: &'a dyn Device,
-
     // hlir id is same as the alloc id
     // However, not all hlir id will be in vars (ex: referencing source vars)
     pub vars: HashMap<String, AllocEntry<'a>>,  
@@ -22,11 +20,9 @@ pub struct AllocTracker<'a> {
 }
 
 impl<'a> AllocTracker<'a> {
-    pub fn new (device: &'a dyn Device) -> AllocTracker<'a> {
+    pub fn new () -> AllocTracker<'a> {
         AllocTracker {  
-            device,
-            vars: HashMap::new(),
-            shape_tracker: ShapeTracker::new()
+            vars: HashMap::new()
         }
     }
     
@@ -44,8 +40,8 @@ impl<'a> AllocTracker<'a> {
         }
     }
     
-    pub fn step (&mut self, cmd: &'a IRCmds) {
-        self.shape_tracker.step(self.device, cmd);
+    pub fn step (&mut self, cmd: &'a IRCmds, shape_tracker: &ShapeTracker) {
+        // step shape tracker before stepping alloc tracker
         match cmd {
             // ignore all data manipulation cmds
             IRCmds::View { .. } => {}, 
@@ -65,7 +61,7 @@ impl<'a> AllocTracker<'a> {
             },
             _ => {
                 if let Some(id) = ir_to_res(cmd) {
-                    let sh = self.shape_tracker.get_shape(&id).clone();
+                    let sh = shape_tracker.get_shape(&id).clone();
                     self.update_vars(&id, &sh);
                 }
             }

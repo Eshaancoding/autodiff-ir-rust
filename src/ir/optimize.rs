@@ -1,10 +1,10 @@
 // use crate::ir_print;
 use crate::{core::env_flags::disable_ir_opt,  IRB};
-use crate::ir::optimizations::opts::{
-    dep_opt, mem_opt, opeq_opt, prox_opt, prox_rev_opt, repeat_opt, track_var_changed
+use crate::ir::opts::{
+    const_begin, dep_opt, mem_opt, opeq_opt, prox_opt, prox_rev_opt, repeat_opt, track_var_changed
 };
 
-use super::helper::get_score;
+use crate::ir::helper::get_score;
 
 // note BR optimization I skipped
 // removed chain opt as it doesn't do much
@@ -30,13 +30,15 @@ pub fn ir_optimize () {
         if deleted == 0 { break; }
     }
     
+    // Set constants to the front --> no optimizations; just nicer to look at IR.
+    const_begin(&mut irb.proc);
+
     // Memory optimization --> replace unnecessary ids; less memory allocated at kernel level
     mem_opt(&mut irb.proc, &var_changed);
 
     // Opeq optimization --> after memory optimization, there's often times where m = m * eq would exist. This could be simplified to m *= eq
     opeq_opt(&mut irb.proc); 
     
-
     // Re-ordering optimizations --> tries to group together repeated memory locations together for better caching + kernel fusion
     let mut prev_max_val: Option<usize> = None;
     loop {

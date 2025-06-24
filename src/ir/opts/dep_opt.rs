@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     core::ret_dep_list, 
-    ir::optimizations::helper::{ir_to_dep, ir_to_res}, 
+    ir::helper::{ir_to_dep, ir_to_res}, 
     IRProcedure
 };
 

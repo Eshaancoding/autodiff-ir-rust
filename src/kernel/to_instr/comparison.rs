@@ -1,10 +1,10 @@
 use crate::{
     kernel_decl::{Kernels, UnaryOp}, 
-    trackers::{AccessType, MatrixTracker}, 
+    trackers::{AccessType, KernelTracker}, 
     IRCmds,
 };
 
-pub fn to_comp (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker) {
+pub fn to_comp (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker) {
     match cmd {
         IRCmds::EqualZero { a, res } => {
             let a_shape = mat_tracker.get_shape(a);

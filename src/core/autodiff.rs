@@ -6,7 +6,7 @@ use rand_distr::{Normal, Distribution};
 pub use crate::graph::data::concat::concat;
 pub use crate::graph::ops::dot_product::dot;
 pub use crate::devices;
-use crate::{core::add_to_dep, ir::optimizations::optimize::*, ir_b_device_callback};
+use crate::{core::add_to_dep, ir::optimize::*, ir_b_device_callback};
 
 pub use crate::{
     Device, 

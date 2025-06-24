@@ -1,10 +1,10 @@
 use crate::{
     kernel_decl::{Kernels, BinaryOp},
-    trackers::{MatrixTracker, AccessType}, 
+    trackers::{KernelTracker, AccessType}, 
     IRCmds,
 };
 
-pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker) {
+pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker) {
     match cmd {
         IRCmds::ElwMultiply { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 // tracks the changed variables
-use crate::{ir::optimizations::helper::ir_to_res, IRCmds, IRProcedure};
+use crate::{ir::helper::ir_to_res, IRCmds, IRProcedure};
 
 pub fn track_var_changed (procedure: &mut IRProcedure) -> Vec<String> {
     let mut var_changed: Vec<String> = vec![];

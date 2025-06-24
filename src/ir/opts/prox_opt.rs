@@ -2,7 +2,7 @@
 // attempts to move statements closest to its definition.
 
 use std::collections::HashMap;
-use crate::{ir::optimizations::helper::{ir_to_dep, ir_to_res}, IRCmds, IRProcedure};
+use crate::{ir::helper::{ir_to_dep, ir_to_res}, IRCmds, IRProcedure};
 
 pub fn prox_opt (proc: &mut IRProcedure) {
     let mut f = |proc: &mut IRProcedure, c_idx: &mut usize| {
@@ -60,6 +60,7 @@ pub fn prox_opt (proc: &mut IRProcedure) {
         // don't swap control statements. These commands are very location specific
         if let IRCmds::While { .. } = cmd { res_location = None; }
         if let IRCmds::If { .. } = cmd { res_location = None; }
+        if let IRCmds::CreateConstant { .. } = cmd { res_location = None; } // don't move constants, I have an entire optimization that moves it to the front
 
         // =================== successful res location -> move ================
         if let Some(loc) = res_location {

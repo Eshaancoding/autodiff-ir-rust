@@ -59,23 +59,22 @@ Backend will refer to things that runs the internal operations and optimizations
 ## Backend
     
 * **Kernel**:
-    * ~~Remove the BR shi~~
-        * ~~just do if + while~~
-        * ~~man this means redoing the entire repo lowk.~~
-        * ~~easier for NVIDIA backend asw~~
-
-    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
-        * Then, you need a temp allocation for this.
-
-    * <mark>Host --> Device feeder</mark>
-        * fix this before implementing the x86 implementation
-
     * <mark>automatic allocation and deallocation within graph</mark>
         * partial allocation tracker is written for you technically
         * requires better alloc tracker, which may need to start being moved in sync with the matrix tracker        
         * handle merging with different procs/branches (if, while)
         
-    * Swizzling memory
+    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
+        * Then, you need a temp allocation for this.
+
+    * <mark>Host --> Device feeder</mark>
+        * fix this before implementing the x86 implementation
+    
+    * Divergent branching conflicts
+        * Could be more complicated on various scenarious (sources, vars, concat, trackers, etc.)        
+        * you have to know what is right and what is not right to be fair.
+
+    * **OPTS**: Swizzling memory
         * dependending on access patterns IF there's like a single type of access pattern
             * if multiple, you might need to just rely on those different access patterns
             * just check and whether you can optimize
@@ -83,8 +82,7 @@ Backend will refer to things that runs the internal operations and optimizations
         * Remove movement opt if.. 
             * alr know contigious when 1. same id 2. same access expression
 
-    * once you do automatic alloc and dealloc, then perform a meory opt where you reuse allocated regions of memory even if it's dealloc
-
+    * **OPTS**: once you do automatic alloc and dealloc, then perform a meory opt where you reuse allocated regions of memory even if it's dealloc
         * example:
             1. alloc A with size of 256
             2. computation...
@@ -98,8 +96,8 @@ Backend will refer to things that runs the internal operations and optimizations
             3. ~~dealloc A with size of 256~~ fills data region A with data of B
             4. computation that uses B will instead use memory address of A. 
 
-    * Swapping accessing expressions between input and output of two adjacent kernels?
-        * can I do that? is that a thing?
+    * **OPTS**: Swapping accessing expressions between input and output of two adjacent kernels?
+        * is it even possible? 
 
     * Memory experiments needed (do this movement/no movement experiment after kernel fusion)
         * **You should test whether a weird write is slower than a fast write + movement**
@@ -177,6 +175,8 @@ Backend will refer to things that runs the internal operations and optimizations
         * Dept optimization can also be done with a graph (is it faster? no clue)
         * repeat optimization can also be done with a graph (not faster, but just easier for traversal)
         * But... you have to flatten graph and then put on prox_rev_opt 
+
+    * Prox opt doesn't have safegaurd for IF/While? (tests still work surprisingly)
 
     * Set contigious operations of var deps at the end of the program
         * Some contigious IR opts can be done
