@@ -20,7 +20,6 @@ impl NodeTrait for TensorNode {
     }
 
     fn backward (&mut self, grad:Value) {
-        println!("Calling backward on tensor v id: {} gd id: {}", self.v.id, grad.id);
         if let Some(gd_v) = self.gd.clone() {
             let mut gd_v_node = gd_v.to_node();
             gd_v_node += grad.to_node();

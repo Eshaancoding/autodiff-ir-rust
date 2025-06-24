@@ -4,8 +4,7 @@ We prioritize the length of the chain over the number of chains there are.
 However, the less the number of chains, the better (thus the - chain_len)
 */
 
-use indexmap::IndexMap;
-use crate::IRCmds;
+use crate::IRProcedure;
 use super::ir_to_res;
 
 fn number_of_digits(n: usize) -> u32 {
@@ -16,30 +15,27 @@ fn number_of_digits(n: usize) -> u32 {
     }
 }
 
-pub fn get_score (cmds: &IndexMap<String, Vec<IRCmds>>) -> usize {
+pub fn get_score (proc: &mut IRProcedure) -> usize {
     let mut chain_size: usize = 0;
     let mut chain_len: usize = 0;
     let mut max_instr_len: usize = 0;
 
-    let block_names: Vec<String> = cmds.iter().map(|(f, _)| f.clone()).collect();
-        
-    for block_name in block_names.iter() {
+    let mut func = |proc: &mut IRProcedure| {
         let mut chain: Vec<(usize, usize)> = vec![];
         let mut init_ch: Option<(String, usize)> = None;
-        let instr_list = cmds.get(block_name).unwrap();
         
-        if instr_list.len() > max_instr_len { max_instr_len = instr_list.len(); }
+        if proc.len() > max_instr_len { max_instr_len = proc.len(); }
 
-        for (idx, cmd) in instr_list.iter().enumerate() {
-            if let Some(result) = ir_to_res(cmd.clone()) {
+        for (idx, cmd) in proc.iter().enumerate() {
+            if let Some(result) = ir_to_res(cmd) {
                 match &init_ch {
                     None => { 
-                        init_ch = Some((result, idx));
+                        init_ch = Some((result.clone(), idx));
                     },
                     Some((start_res, start_idx)) => {
-                        if result != *start_res {
+                        if *result != *start_res {
                             if *start_idx != idx-1 { chain.push((*start_idx, idx-1)); }
-                            init_ch = Some((result, idx));
+                            init_ch = Some((result.clone(), idx));
                         }
                     }
                 } 
@@ -50,7 +46,9 @@ pub fn get_score (cmds: &IndexMap<String, Vec<IRCmds>>) -> usize {
             chain_size += end - start;
         }
         chain_len += chain.len();
-    }
+    };
+
+    proc.apply(&mut func);
 
     let ttl = 10usize.pow(number_of_digits(max_instr_len));
 

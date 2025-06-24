@@ -1,14 +1,13 @@
 // Function that converts from IRCmds to a "expression string" 
 // basically the print string without the result id embedded
+// This is only used for repeat_opt, where if the same calculation is repeated, then it removes the repeated op.
 // If there's no expression, then it returns None
 
 use crate::IRCmds;
 
 pub fn ir_to_expr (cmd: &IRCmds) -> Option<String> {
     match cmd {
-        IRCmds::CreateMat {dim, contents, ..} => {
-            Some(format!("mat(dim: {:?}, contents: {:?})", dim, contents))
-        },
+        // don't optimize create matrix
         IRCmds::CreateConstant { contents, dim, .. } => {
             Some(format!("const(f: {:?}, dim: {:?})", contents, dim))
         },

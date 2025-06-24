@@ -55,10 +55,10 @@ pub fn print_if (f: &mut Formatter<'_>, cmd: &IRCmds, indent: usize) -> bool {
 }
 
 pub fn print_proc (f: &mut Formatter<'_>, proc: &IRProcedure, indent: usize) {
-    for cmd in proc.iter() {
+    for (i, cmd) in proc.iter().enumerate() {
         if !print_while(f, cmd, indent) && !print_if(f, cmd, indent) {
             for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-            write!(f, "{}\n", cmd).expect("Can't write"); 
+            write!(f, "({}): {}\n", i, cmd).expect("Can't write"); 
         }
     }
 }
@@ -148,7 +148,7 @@ impl Display for IRCmds {
                 write!(f, "{} = {}.broadcast(dim={}, r={})", res, a, dim, r)
             },
             IRCmds::Heading { cmt } => {
-                write!(f, "{}", format!("\n    === {} ===", cmt).purple().blue())
+                write!(f, "{}", format!("\n=== {} ===", cmt).purple().blue())
             },
             IRCmds::EX => {
                 write!(f, "{}", "EXIT".red())

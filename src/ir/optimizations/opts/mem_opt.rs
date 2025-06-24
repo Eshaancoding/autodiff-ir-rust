@@ -1,80 +1,111 @@
-use std::collections::HashMap;
-use indexmap::IndexMap;
-use crate::{core::ret_dep_list, ir::optimizations::helper::{replace_ref, replace_res_cmd}, IRCmds};
+use std::collections::{HashMap, HashSet};
+use crate::{
+    core::ret_dep_list, 
+    ir::optimizations::helper::{ir_to_dep, ir_to_res, replace_res_cmd, replace_ref}, 
+    IRCmds, 
+    IRProcedure
+};
 
-use super::helper::{ir_to_dep, ir_to_res};
+#[derive(Debug, PartialEq)]
+pub struct RefLocation {
+    proc_id: String,
+    idx: usize
+}
 
-pub fn mem_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
+pub fn mem_opt (proc: &mut IRProcedure, var_changed: &Vec<String>) {
     let dep_list = ret_dep_list();
 
-    let block_names: Vec<String> = cmds.iter().map(|(f, _)| f.clone()).collect();
-    let mut block_name_idx = 0;
-    let mut cmd_idx = 0;
-    loop {
-        // ===================== get metadata about cmds ============
-        let mut res_to_block: HashMap<String, String> = HashMap::new();            // block tracker
-        let mut res_ref_location: HashMap<String, Vec<(String, usize)>> = HashMap::new();     // reference tracker
-        let mut res_location: HashMap<String, (String, IRCmds)> = HashMap::new();  // location tracker
+    // ========== get metadata about cmds ========== 
+    let mut res_to_procid: HashMap<String, String> = HashMap::new();
+    let mut res_ref_location: HashMap<String, Vec<RefLocation>> = HashMap::new();
+    let mut res_constants: HashSet<String> = HashSet::new();
 
-        for (block_name, b_cmds) in cmds.iter() {
-            for (idx, cmd) in b_cmds.iter().enumerate() {
-                let deps = ir_to_dep(cmd.clone());
-                let res = ir_to_res(cmd.clone());
+    let mut func_track = |proc: &mut IRProcedure, idx: &mut usize| {
+        let cmd = proc.get(*idx).unwrap();
 
-                if let Some(result) = res {
-                    if !deps.contains(&result) {
-                        res_to_block.insert(result.clone(), block_name.clone());
-                        res_ref_location.insert(result.clone(), vec![]); 
-                        res_location.insert(result.clone(), (block_name.clone(), cmd.clone()));
-                    }
-                }
+        let deps = ir_to_dep(cmd);
+        let res = ir_to_res(&cmd);
 
-                for d in deps {
-                    res_ref_location
-                        .entry(d)
-                        .and_modify(|x| x.push((block_name.clone(), idx)));
-                }
+        if let Some(result) = res {
+            if !deps.contains(&result) {
+                res_to_procid.insert(result.clone(), proc.id.clone());
+                res_ref_location.insert(result.clone(), vec![]); 
             }
         }
 
-        // =================== Get current block ================
-        let block_name = block_names.get(block_name_idx).unwrap();
-        let cmd = cmds.get_mut(block_name).unwrap().get_mut(cmd_idx).unwrap();
+        for d in deps {
+            res_ref_location
+                .entry(d.clone())
+                .and_modify(|x| x.push(RefLocation {
+                    proc_id: proc.id.clone(),
+                    idx: *idx
+                }));
+        }
 
-        // =================== Get current cmd is viable for replacement ================
+        if let IRCmds::CreateConstant { .. } = cmd {
+            res_constants.insert(res.unwrap().clone());
+        }
+
+        true
+    };
+
+    
+    proc.step_cmd(&mut func_track);
+
+    // ========== Step through Cmds ========== 
+    let mut func = |proc: &mut IRProcedure, c_idx: &mut usize| {
+        let idx = *c_idx;        
+
+        let IRProcedure {id, main } = proc;
+        let cmd = main.get_mut(idx).unwrap();
+        let deps = ir_to_dep(cmd);
+        let res = ir_to_res(cmd);
         let mut replace_var: Option<(String, String)> = None;
-        let deps = ir_to_dep(cmd.clone());
-        let res = ir_to_res(cmd.clone());
+
         if let Some(result) = res {
-            for dep in deps.iter() {
+            for &dep in deps.iter() {
                 // current command is a +=, /=, -=, etc.
                 if deps.contains(&result) { break; }
 
+                // don't include constants (these locations don't take up any sort of memory in the slightest)
+                if res_constants.contains(dep) { break; }
+
+                // if deps is in var_changed
+                let mut br = false;
+                for v in var_changed {
+                    if deps.contains(&v) {
+                        br = true;
+                        break;
+                    }
+                }
+                if br { break; }
+
                 // check each deps, see it's declared within same block
-                let bl_dep = res_to_block.get(dep).unwrap();
-                if bl_dep != block_name { continue; }
+                let pr_dep = res_to_procid.get(dep).unwrap();
+                if pr_dep != id { continue; }
                 
                 // check whether at deps there's no more than 1 reference 
                 let nref_dep = res_ref_location.get(dep).unwrap();
                 let nref_dep: Vec<usize> = nref_dep
                     .iter()
-                    .filter(|&(bl, idx)| (bl != block_name) || (*idx > cmd_idx))
-                    .map(|f| f.1)
+                    .filter(|&rl| (rl.proc_id != *id) || (rl.idx > idx))
+                    .map(|f| f.idx)
                     .collect();
+
                 if nref_dep.len() > 0 || dep_list.contains(dep) { continue; }
 
                 // check whether result and dep and not the same (ex: l = e * l after first round of opimization)
-                if result == *dep || dep_list.contains(&result) { continue; }
+                if result == dep || dep_list.contains(result) { continue; }
 
                 /*
                 check whether cmd is not a Concat operation
-                [id] = concat([id], [id_one]) is not allowed. Concat is a zero-cost operation. 
+                [id] = concat([id], [id_one]) is not allowed.
                 Due to the way that matrix tracker works (it works recursively), it's easier if we can gaurantee seperate inputs id to the result id
                 */
                 if let IRCmds::Concat { .. } = cmd { break; }
 
                 // if so, set replace var
-                replace_var = Some( (result, dep.clone()) );
+                replace_var = Some( (result.clone(), dep.clone()) );
                 break;
             }
         }
@@ -85,32 +116,28 @@ pub fn mem_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
             replace_res_cmd(cmd, b.clone());
 
             // replace all references from a to b
-            replace_ref(cmds, &a, b);
+            // re-iterating O(n^2) <-- could be faster since we already have the locations
+            replace_ref(proc, &a, b.clone());
+
+            // update metadata
+            let v = res_to_procid.remove(&a);
+            let ref_loc = res_ref_location.remove(&a);
+
+            if let Some(v) = v {
+                res_to_procid.insert(b.clone(), v);
+            }
+
+            if let Some(ref_loc) = ref_loc {
+                if let Some(b_rl) = res_ref_location.get_mut(&b) {
+                    b_rl.extend(ref_loc);
+                }
+            }
         }
 
-        // =================== Get next command ================
-        cmd_idx += 1;
-        if cmd_idx == cmds.get(block_name).unwrap().len() {
-            cmd_idx = 0;
-            block_name_idx += 1;
-        }
-        if block_name_idx == block_names.len() {
-            break;
-        }
-    }
+        true
+    };
+
+    proc.step_cmd(&mut func);
+    
+    // update metadata
 }
-
-/*
-s = c * b
-t = s.broadcast(dim=0, r=6)
-u = r + t
-v = n * u
-w = m + v
-
-===== can be converted to ======
-s = c * b
-s = s.broadcast(dim=0, r=6)
-u = r + s
-v = n * u
-w = m + v
-*/

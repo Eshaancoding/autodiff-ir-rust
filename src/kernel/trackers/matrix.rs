@@ -128,19 +128,19 @@ impl<'a> MatrixTracker<'a> {
             res_cmp = res.clone();
             data_cmd = Some(DataCmds::Broadcast { dim: *dim, r: *r });
         } else {
-            if let Some(id) = ir_to_res(cmd.clone()) {
+            if let Some(id) = ir_to_res(cmd) {
                 // only cmd satisfying this is CreateMat. If it's a constant, then skip
                 if let Some(_) = self.constant_tracker.get_f64(&id) {
                     return     
                 }
 
                 // if we are redefining a source, then remove from self.vars (which tracks broadcasting, view, etc.)
-                self.vars.remove_entry(&id);
+                self.vars.remove_entry(id);
 
                 let shape = self.shape_tracker.get_shape(&id).clone();
                 let alloc_id = self.alloc_tracker.get_alloc(&id).id.clone();
                 self.sources.insert(
-                    id, 
+                    id.clone(), 
                     VarSource { 
                         alloc_id,
                         dim: shape

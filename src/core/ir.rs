@@ -107,13 +107,13 @@ pub enum IRCmds {
 // wrapper over list of instructions to run
 #[derive(Clone, PartialEq, Debug)]
 pub struct IRProcedure {
-    pub main: Vec<IRCmds>
+    pub main: Vec<IRCmds>,
+    pub id: String
 }
 
 pub struct IRBase {
     pub id: u32, 
-    pub current_block: String,
-    pub main_block: String,
+    pub proc_id: u32,
     pub proc: IRProcedure,
     pub temp_proc: Vec<IRProcedure> // Follows a stack processes
 }

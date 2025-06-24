@@ -1,15 +1,9 @@
-use indexmap::IndexMap;
-use crate::IRCmds;
+use crate::{IRCmds, IRProcedure};
 
-pub fn opeq_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
-    let block_names: Vec<String> = cmds.iter().map(|(f, _)| f.clone()).collect();
-    let mut block_name_idx = 0;
-    let mut cmd_idx = 0;
+pub fn opeq_opt (proc: &mut IRProcedure) {
 
-    loop {
-        // =================== Get current block ================
-        let block_name = block_names.get(block_name_idx).unwrap();
-        let cmd = cmds.get_mut(block_name).unwrap().get_mut(cmd_idx).unwrap();
+    let mut f = |proc: &mut IRProcedure, idx: &mut usize| {
+        let cmd = proc.get_mut(*idx).unwrap();
 
         // =================== Replace Elw Add ================
         let mut rp: Option<(String, String)> = None;
@@ -31,14 +25,8 @@ pub fn opeq_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
             *cmd = IRCmds::ElwMultiplyEq { s, o };
         }
 
-        // =================== Get next command ================
-        cmd_idx += 1;
-        if cmd_idx == cmds.get(block_name).unwrap().len() {
-            cmd_idx = 0;
-            block_name_idx += 1;
-        }
-        if block_name_idx == block_names.len() {
-            break;
-        }
-    }
+        true
+    };
+
+    proc.step_cmd(&mut f);
 }

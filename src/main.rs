@@ -145,11 +145,11 @@ pub fn forward () {
 }
 
 pub fn main () {
-    forward();
+    // forward();
     // me_life();
     // nn_test();
     // broadcasting_test();
-    // multihead_att();
+    multihead_att();
     // reduce();
     // concat_test();
     // broadcasting_test();

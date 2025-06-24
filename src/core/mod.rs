@@ -19,4 +19,3 @@ pub use constant::*;
 pub use ir::*;
 pub use dependency::*;
 pub use env::*;
-pub use procedure::*;

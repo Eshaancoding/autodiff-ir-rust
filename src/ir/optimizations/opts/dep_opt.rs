@@ -1,57 +1,72 @@
-// Removes variables that is not used at all
-
 use std::collections::HashMap;
-use indexmap::IndexMap;
-use crate::{core::ret_dep_list, IRCmds};
 
-use super::helper::{ir_to_dep, ir_to_res};
+use crate::{
+    core::ret_dep_list, 
+    ir::optimizations::helper::{ir_to_dep, ir_to_res}, 
+    IRProcedure
+};
 
-pub fn dep_opt (cmds: &mut IndexMap<String, Vec<IRCmds>>) {
-    
+
+pub fn dep_opt (procedure: &mut IRProcedure, var_changed: &Vec<String>) -> usize {
+    let mut deleted: usize = 0; 
     let dep_list = ret_dep_list();
 
-    loop {
-        let mut var_tracker: HashMap<String, bool> = HashMap::new();
-        let mut var_placement: HashMap<String, (String, IRCmds)> = HashMap::new();
-        
-        for (block_name, b_cmds) in cmds.iter() {
-            for cmd in b_cmds {
-                let deps = ir_to_dep(cmd.clone());
-                let res = ir_to_res(cmd.clone());
-                
-                if let Some(result) = res {
-                    if !dep_list.contains(&result) {
-                        var_tracker.insert(result.clone(), false); // mark as not used.
-                        var_placement.insert(result, (block_name.clone(), cmd.clone()));
-                    }
+    let mut var_tracker: HashMap<String, bool> = HashMap::new();
+    let mut var_placement: HashMap<String, (String, usize)> = HashMap::new();
+    
+    let mut func = |proc: &mut IRProcedure| {
+        for (idx, cmd) in proc.iter().enumerate() {
+            let deps = ir_to_dep(cmd);
+            let res = ir_to_res(cmd);
+            
+            if let Some(result) = res {
+                if !dep_list.contains(result) && !var_changed.contains(result) {
+                    var_tracker.insert(result.clone(), false); // mark as not used.
+                    var_placement.insert(result.clone(), (proc.id.clone(), idx));
                 }
+            }
 
-                for d in deps {
-                    var_tracker
-                        .entry(d.clone())
-                        .and_modify(|v| *v = true);
-                }
-            } 
+            for d in deps {
+                var_tracker
+                    .entry(d.clone())
+                    .and_modify(|v| *v = true);
+            }
+        } 
+    };
+
+    procedure.apply(&mut func);
+
+    let var_tracker: Vec<&String> = var_tracker
+        .iter()
+        .filter(|(_, &is_used)| !is_used)
+        .map(|f| f.0)
+        .collect();
+
+    let mut var_tracker: Vec<&(String, usize)> = var_tracker
+        .iter()
+        .map(|&v| var_placement.get(v).unwrap() )
+        .collect();
+
+    // sort by location
+    var_tracker.sort_by(|&a, &b| a.1.cmp(&b.1) );
+
+    let mut delete_counter: HashMap<String, usize> = HashMap::new();
+
+    let mut func = |proc: &mut IRProcedure| {
+        for &(proc_id, loc) in var_tracker.iter() {
+            if proc.id == *proc_id {
+                let r = delete_counter
+                    .entry(proc_id.clone()) 
+                    .and_modify(|v| *v += 1)
+                    .or_insert(0);
+
+                proc.main.remove(*loc - *r);
+                deleted += 1;
+            }
         }
+    };
 
+    procedure.apply(&mut func);
 
-        // delete variables
-        let var_tracker: Vec<&String> = var_tracker
-            .iter()
-            .filter(|(_, &is_used)| !is_used)
-            .map(|f| f.0)
-            .collect();
-
-        for var in var_tracker.iter() {
-            let (block_name, cmd) = var_placement.get(*var).unwrap();
-            let block = cmds.get_mut(block_name).unwrap();
-            let idx = block.iter().position(|x| x == cmd).unwrap();
-            block.remove(idx);
-        }
-
-        if var_tracker.len() == 0 {
-            break;
-        }
-    }
-
+    deleted
 }

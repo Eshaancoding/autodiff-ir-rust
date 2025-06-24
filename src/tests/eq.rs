@@ -47,7 +47,6 @@ mod tests {
         res.val().unwrap().keep();
         all_no.val().unwrap().keep();
         all_yes.val().unwrap().keep();
-        // autodiff::ir_print();
         autodiff::execute();
 
         // ============ Check ============ 

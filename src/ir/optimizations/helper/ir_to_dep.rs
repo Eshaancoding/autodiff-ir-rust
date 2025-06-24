@@ -3,7 +3,7 @@
 
 use crate::IRCmds;
 
-pub fn ir_to_dep (cmd: IRCmds) -> Vec<String> {
+pub fn ir_to_dep (cmd: &IRCmds) -> Vec<&String> {
     match cmd {
         IRCmds::ElwMultiply {a, b, ..} => vec![a, b],
         IRCmds::ElwAdd {a, b, ..} => vec![a, b],
@@ -31,6 +31,13 @@ pub fn ir_to_dep (cmd: IRCmds) -> Vec<String> {
         IRCmds::Sin { a, .. } => vec![a],
         IRCmds::Recip { a, .. } => vec![a],
         IRCmds::Sqrt { a, .. } => vec![a],
+
+        IRCmds::If { conditions, .. } => {
+            conditions.iter().map(|(v, _)| v).collect()
+        },
+        IRCmds::While { conditional_var, .. } => {
+            vec![conditional_var]
+        }
 
         _ => { vec![] }
     }

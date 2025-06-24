@@ -133,7 +133,7 @@ Backend will refer to things that runs the internal operations and optimizations
             * access expression assumes global id...
         * anyway to do dotprod fusion?  
             * similar to flash attention
-            * look into optimized [cuda matmul kernel](https://siboehm.com/articles/22/CUDA-MMM)
+            * look into optimized [link](https://siboehm.com/articles/22/CUDA-MMM)
             * even better optimization for [kernels](https://salykova.github.io/sgemm-gpu)
             * technically, there's even more [kernels at llm.c](https://github.com/karpathy/llm.c/tree/master/dev/cuda)
             * more kernel opt (+ read kernel fusion) [here](https://mesozoic-egg.github.io/tinygrad-notes/20241203_beam.html)
@@ -169,18 +169,20 @@ Backend will refer to things that runs the internal operations and optimizations
     * basicallyyyyyyyy implement all of the backend for that
 
 * **HLIR Opts**
-    * <mark>*MAKE IT FAST*</mark>
-        * again, there are some operations that might make it faster by assuming it as a graph, then traversal, then pattern match  
-            * I believe this is majority of what tinygrad does 
-            * IR optimization is somehow the most slowest part of this entire process...
+    * ~~MAKE IT FAST~~
 
-    * <mark>Rewrite entire thing to support while and if statements rather BR statements </mark>
+    * ~~Rewrite entire thing to support while and if statements rather BR statements~~
         * have the graph idea in mind as well
 
     * <mark>Not sure if you can improve even further/less bugs if you turn it into a GRAPH rather than a list of optimizations</mark>
         * maybe some optimizations can benefit from this, not everything...
         * `to_graph` func should be created and used across IRs that benefit from it.
             * good for debugging as well
+        * I think really simple HLIR opts (like view + view, constant evaluation, etc.) can be represented as a graph and optimized from there
+            * opeq as well
+        * Dept optimization can also be done with a graph (is it faster? no clue)
+        * repeat optimization can also be done with a graph (not faster, but just easier for traversal)
+        * But... you have to flatten graph and then put on prox_rev_opt 
 
     * Set contigious operations of var deps at the end of the program
         * Some contigious IR opts can be done
@@ -194,11 +196,6 @@ Backend will refer to things that runs the internal operations and optimizations
         * Should be replaced in graphical format
         * r instruction?
         * main problem with transformer implementation right now (and well, any other implementations)
-
-    * if matrix is always used in it's transposed form, then set the contents such that it is in transposed and remove transpose operation
-        * Good for weight optimization :)
-        * e --> e = e.t <-- just transform the matrix manually
-        * At the end, transpose is it back
 
     * View removal
         * If multiple views in sequence, just turn it into the one single view (the last view operation)
@@ -231,13 +228,13 @@ Backend will refer to things that runs the internal operations and optimizations
 
 * Remove excessive clones (Ctrl+shift+F --> find)
 * ~~Put `IndexMap<String, Vec<IRCmds>>` under a struct (represents HLIR cmds)~~
-* we iter over `(block_name, b_cmds) in cmds.iter()... for cmd in b_cmds` a lot...
-    * but can this be really done? we have to trace the BR graph as we do matrix tracker, etc.
+* ~~we iter over `(block_name, b_cmds) in cmds.iter()... for cmd in b_cmds` a lot...~~
+    * ~~but can this be really done? we have to trace the BR graph as we do matrix tracker, etc.~~
 * Rebrand from IR to "HLIR"
 * Use macros for repetitive statements
     * example, `kernel/to_instr` can be simplified to macros
     * in general the node trait is highly repeatable
-* Remove dimension within the Value and just do all dimension checking at the Tensor
+* instead of strings as ids, just use usize and instead try to have String only appear at display/debug
 * better debug messages (especially in frontend)
 
 ## Ignored

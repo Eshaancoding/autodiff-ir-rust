@@ -25,8 +25,7 @@ mod tests {
             y.forward();
         });
 
-        autodiff::print_and_exec();
-        // autodiff::ir_print();
+        autodiff::execute();
         
         let y_val = y.val().unwrap().get();
         assert_eq!(y_val.data, vec![10.0], "y data incorrect");

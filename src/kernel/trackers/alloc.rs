@@ -64,7 +64,7 @@ impl<'a> AllocTracker<'a> {
                 );
             },
             _ => {
-                if let Some(id) = ir_to_res(cmd.clone()) {
+                if let Some(id) = ir_to_res(cmd) {
                     let sh = self.shape_tracker.get_shape(&id).clone();
                     self.update_vars(&id, &sh);
                 }
