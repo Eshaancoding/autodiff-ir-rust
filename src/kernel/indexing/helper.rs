@@ -7,7 +7,7 @@ use crate::trackers::{
     MatrixTracker,
 };
 
-impl<'a> MatrixTracker<'a> {
+impl MatrixTracker {
     pub fn ndim_change_datacmds (&self, ndim: &mut Vec<Expression>, data_cmds: &Vec<DataCmds>) {
         for cmd in data_cmds.iter().rev() {
             match cmd { 

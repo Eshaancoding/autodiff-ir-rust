@@ -59,38 +59,32 @@ Backend will refer to things that runs the internal operations and optimizations
 ## Backend
     
 * **Kernel**:
-    * ~~Put constants within the HLIR level (therefore, no broadcasting or whatever)...~~
-        * ~~less IR --> more readability~~
-        * ~~andddddd yeah just less headache~~
-        * ~~Should contain only one value~~
-
-    * <mark>Remove the BR shi</mark>
-        * just do if + while 
-        * man this means redoing the entire repo lowk.
-        * easier for NVIDIA backend asw
+    * ~~Remove the BR shi~~
+        * ~~just do if + while~~
+        * ~~man this means redoing the entire repo lowk.~~
+        * ~~easier for NVIDIA backend asw~~
 
     * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
         * Then, you need a temp allocation for this.
 
     * <mark>Host --> Device feeder</mark>
         * fix this before implementing the x86 implementation
+
+    * <mark>automatic allocation and deallocation within graph</mark>
+        * partial allocation tracker is written for you technically
+        * requires better alloc tracker, which may need to start being moved in sync with the matrix tracker        
+        * handle merging with different procs/branches (if, while)
         
     * Swizzling memory
         * dependending on access patterns IF there's like a single type of access pattern
             * if multiple, you might need to just rely on those different access patterns
             * just check and whether you can optimize
 
-    * fix divergent branching issue (each branch neesd to have its own version of matrix tracker so to speak)
-        * therefore, we can use block name, cmd, etc.
-        * Should be ideal to have shape tracker and alloc tracker be sync with matrix
-            * I have a somewhat uneasy feeling whenever they are out of sync 
-            * might be related to the divergent branching issue (next)
-
-    * automatic allocation and deallocation within graph
-        * tracing through BRs will be challenging, however...
-        * change kernel_decl.rs and do efficiently
+        * Remove movement opt if.. 
+            * alr know contigious when 1. same id 2. same access expression
 
     * once you do automatic alloc and dealloc, then perform a meory opt where you reuse allocated regions of memory even if it's dealloc
+
         * example:
             1. alloc A with size of 256
             2. computation...

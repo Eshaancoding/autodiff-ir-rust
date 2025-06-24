@@ -4,7 +4,7 @@ use crate::{
     IRCmds,
 };
 
-pub fn handle_unary<'a> (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker<'a>) {
+pub fn to_unary (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker) {
     match cmd {
         IRCmds::Exp2 { a, res } => { 
             let a_shape = mat_tracker.get_shape(a);

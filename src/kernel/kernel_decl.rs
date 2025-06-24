@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[derive(Clone, Debug)]
 pub enum Value {
     Constant { val: i32 },
@@ -129,10 +127,9 @@ pub enum Kernels {
     //     dim: Vec<usize>
     // },
 
-    // Control functions;
-    BR {block_id: String},
-    BRE {block_id: String, a: String},
-    BRZ {block_id: String, a: String},
+    // Control functions
+    While {conditional_var: String, block: KernelProcedure},
+    If {conditions: Vec<(String, KernelProcedure)>, else_proc: Option<KernelProcedure>},
     EX
 }
 
@@ -141,6 +138,8 @@ pub enum Kernels {
 // Implementations defined in procedure.rs
 // String in HashMap<String, ...> represents the block name
 // Vec<ComputeInstr> is the order of kernels to be executed
+#[derive(Clone, Debug)]
 pub struct KernelProcedure {
-    pub cmd_computeinstr: HashMap<String, Vec<Kernels>>
+    pub kernels: Vec<Kernels>,
+    pub id: String
 }

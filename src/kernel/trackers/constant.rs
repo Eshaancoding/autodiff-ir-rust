@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::IRCmds;
 
+#[derive(Clone)]
 pub struct ConstantTracker {
     pub vars: HashMap<String, f64>
 }

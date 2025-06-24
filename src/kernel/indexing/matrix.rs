@@ -7,9 +7,8 @@ use crate::trackers::{
     AccessType
 };
 
-impl<'a> MatrixTracker<'a> {    
+impl MatrixTracker {    
     pub fn get_inp_dep (&self, id: &String, ndim: &mut Vec<Expression>) -> Input {
-        
         // is vars concat
         if let Some(result) = self.vars_concat.get(id) {
             self.ndim_change_datacmds(ndim, &result.data_cmds);
@@ -51,7 +50,7 @@ impl<'a> MatrixTracker<'a> {
 
             Input::Mat { 
                 mat: Matrix { 
-                    id: var_dep.alloc_id.clone(), 
+                    id: var_dep.id.clone(), 
                     access: Expression::simplify(
                         ndim_to_global(ndim, &var_dep.source_dims)
                     ) 
@@ -63,7 +62,7 @@ impl<'a> MatrixTracker<'a> {
         else if let Some(source_res) = self.sources.get(id) {
             Input::Mat { 
                 mat: Matrix { 
-                    id: source_res.alloc_id.clone(), 
+                    id: source_res.id.clone(), 
                     access: Expression::simplify(
                         ndim_to_global(ndim, &source_res.dim)
                     )
@@ -103,7 +102,7 @@ impl<'a> MatrixTracker<'a> {
             match access_type {
                 AccessType::Global => {
                     Input::Mat { mat: Matrix { 
-                        id: source_res.alloc_id.clone(),
+                        id: source_res.id.clone(),
                         access: Expression::make_global()
                     } }
                 },
@@ -115,7 +114,7 @@ impl<'a> MatrixTracker<'a> {
                     );   
 
                     Input::Mat { mat: Matrix { 
-                        id: source_res.alloc_id.clone(),
+                        id: source_res.id.clone(),
                         access: Expression::simplify(
                             ndim_to_global(
                                 &vec![Expression::make_x(), Expression::make_y()],

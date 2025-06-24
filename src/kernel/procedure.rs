@@ -1,17 +1,15 @@
-use std::collections::HashMap;
-
-use super::kernel_decl::{Kernels, KernelProcedure};
+use crate::kernel_decl::Kernels;
+use std::slice::Iter;
+use super::kernel_decl::{KernelProcedure};
 
 impl KernelProcedure {
-    pub fn new () -> KernelProcedure {
-        KernelProcedure { cmd_computeinstr: HashMap::new() } 
+    pub fn new (kernels: Vec<Kernels>, id: String) -> KernelProcedure {
+        KernelProcedure {
+            kernels, id
+        }
     }
 
-    pub fn add_block (&mut self, block_name: &String, cmds: Vec<Kernels>) {
-        self.cmd_computeinstr.insert(block_name.clone(), cmds);
-    }
-
-    pub fn block (&mut self, name: &String) -> &Vec<Kernels> {
-        self.cmd_computeinstr.get(name).expect("Unable to get block")
+    pub fn iter (&self) -> Iter<'_, Kernels> {
+        self.kernels.iter()
     }
 }

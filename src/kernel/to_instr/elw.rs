@@ -4,7 +4,7 @@ use crate::{
     IRCmds,
 };
 
-pub fn handle_elw<'a> (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker<'a>) {
+pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker) {
     match cmd {
         IRCmds::ElwMultiply { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);

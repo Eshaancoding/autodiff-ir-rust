@@ -2,66 +2,85 @@ use crate::{IRCmds, IRProcedure};
 use colored::Colorize;
 use std::fmt::{Display, Formatter};
 
-pub fn print_while (f: &mut Formatter<'_>, cmd: &IRCmds, indent: usize) -> bool {
-    if let IRCmds::While { conditional_var, block } = cmd {
-        write!(f, "\n").expect("Can't write");
-        for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
+// This is a macro as we use it in kernel/helper/debug.rs
+#[macro_export]
+macro_rules! create_debug_hlp_funcs {
+    (
+        $id:ident,
+        $proc_id:ident
+    ) => {
+        fn print_while (f: &mut Formatter<'_>, cmd: &$id, indent: usize) -> bool {
+            if let $id::While { conditional_var, block } = cmd {
+                write!(f, "\n").expect("Can't write");
+                for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
 
-        write!(f, "while ({} != 0) {{\n", conditional_var).expect("Can't write");
-        print_proc(f, block, indent+1);
-
-        for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-        write!(f, "}}\n").expect("can't write");
-
-        return true
-    }
-    false
-}
-
-pub fn print_if (f: &mut Formatter<'_>, cmd: &IRCmds, indent: usize) -> bool {
-    if let IRCmds::If { conditions, else_proc } = cmd {
-
-        write!(f, "\n").expect("Can't write");
-        for _ in 0..indent { write!(f, "\n    ").expect("Can't write"); }
-
-        for (idx, (condition, block)) in conditions.iter().enumerate() {
-            if idx == 0 {
-                write!(f, "if ({} == 1.0) {{\n", condition).expect("Can't write");
+                write!(f, "while ({} != 0) {{\n", conditional_var).expect("Can't write");
                 print_proc(f, block, indent+1);
 
                 for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-                write!(f, "}}\n").expect("Can't write");
-            } else {
-                write!(f, "else if ({} == 1.0) {{", condition).expect("Can't write");
-                print_proc(f, block, indent+1);
+                write!(f, "}}\n").expect("can't write");
 
-                for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-                write!(f, "}}\n").expect("Can't write");
+                return true
+            }
+            false
+        }
+
+        fn print_if (f: &mut Formatter<'_>, cmd: &$id, indent: usize) -> bool {
+            if let $id::If { conditions, else_proc } = cmd {
+
+                write!(f, "\n").expect("Can't write");
+                for _ in 0..indent { write!(f, "\n    ").expect("Can't write"); }
+
+                for (idx, (condition, block)) in conditions.iter().enumerate() {
+                    if idx == 0 {
+                        write!(f, "if ({} == 1.0) {{\n", condition).expect("Can't write");
+                        print_proc(f, block, indent+1);
+
+                        for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
+                        write!(f, "}}\n").expect("Can't write");
+                    } else {
+                        write!(f, "else if ({} == 1.0) {{", condition).expect("Can't write");
+                        print_proc(f, block, indent+1);
+
+                        for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
+                        write!(f, "}}\n").expect("Can't write");
+                    }
+                }
+                if let Some(else_p) = else_proc {
+                    for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
+                    write!(f, "else {{\n").expect("Can't write"); 
+                    print_proc(f, else_p, indent+1);
+                    
+                    for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
+                    write!(f, "}}\n").expect("Can't write");
+                } 
+                
+                return true
+            }
+
+            false
+        }
+
+        fn print_proc (f: &mut Formatter<'_>, proc: &$proc_id, indent: usize) {
+            for (i, cmd) in proc.iter().enumerate() {
+                if !print_while(f, cmd, indent) && !print_if(f, cmd, indent) {
+                    for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
+                    write!(f, "({}): {}\n", i, cmd).expect("Can't write"); 
+                }
             }
         }
-        if let Some(else_p) = else_proc {
-            for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-            write!(f, "else {{\n").expect("Can't write"); 
-            print_proc(f, else_p, indent+1);
-            
-            for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-            write!(f, "}}\n").expect("Can't write");
-        } 
-        
-        return true
-    }
 
-    false
-}
-
-pub fn print_proc (f: &mut Formatter<'_>, proc: &IRProcedure, indent: usize) {
-    for (i, cmd) in proc.iter().enumerate() {
-        if !print_while(f, cmd, indent) && !print_if(f, cmd, indent) {
-            for _ in 0..indent { write!(f, "    ").expect("Can't write"); }
-            write!(f, "({}): {}\n", i, cmd).expect("Can't write"); 
+        impl Display for $proc_id {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                print_proc(f, self, 0);
+                write!(f,"")
+            }
         }
     }
 }
+
+create_debug_hlp_funcs!(IRCmds, IRProcedure);
+
 
 impl Display for IRCmds {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -165,9 +184,3 @@ impl Display for IRCmds {
     } 
 }
 
-impl Display for IRProcedure {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        print_proc(f, self, 0);
-        write!(f,"")
-    }
-}

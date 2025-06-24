@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use crate::{
     ir::optimizations::helper::ir_to_res, trackers::ConstantTracker, Device, IRCmds
 };
-use super::{AllocTracker, ShapeTracker};
+use super::ShapeTracker;
 
 // Cmds that are only pertinent to data manipulation
 #[derive(Clone, Debug)]
@@ -22,14 +22,14 @@ pub enum DataCmds {
 
 #[derive(Clone, Debug)]
 pub struct VarDependency {
-    pub alloc_id: String,
+    pub id: String,
     pub source_dims: Vec<usize>,
     pub data_cmds: Vec<DataCmds>
 }
 
 #[derive(Clone, Debug)]
 pub struct VarSource {
-    pub alloc_id: String,
+    pub id: String,
     pub dim: Vec<usize>
 }
 
@@ -47,7 +47,8 @@ pub struct VarConcatDep {
     pub data_cmds: Vec<DataCmds>
 }
 
-pub struct MatrixTracker<'a> {
+#[derive(Clone)]
+pub struct MatrixTracker {
     // given sink variable, get source variable and the steps to reach to sink var
     // Vars and sources hashmap keys must always come from alloc tracker's id (except for concat vars)
     pub sources: HashMap<String, VarSource>,                // tracks source variables (no var dependency)
@@ -56,7 +57,6 @@ pub struct MatrixTracker<'a> {
     pub vars_concat: HashMap<String, VarConcatDep>,         // tracks variables that references concat variables
 
     pub shape_tracker: ShapeTracker,                        // tracks the shape of variables
-    pub alloc_tracker: &'a AllocTracker<'a>,                // tracks allocation / size of variables
     pub constant_tracker: ConstantTracker,                  // tracks constant tracker
 }
 
@@ -67,8 +67,8 @@ pub enum AccessType {
     XY,             // Dot product/Reduce; restricted to matrix 2-dim; uses X and Y. (SEE src/matmul_cpu/512_matmul.cpp for example of x + y)
 }
 
-impl<'a> MatrixTracker<'a> {
-    pub fn new (alloc_tracker: &'a AllocTracker) -> MatrixTracker<'a> {
+impl MatrixTracker {
+    pub fn new () -> MatrixTracker {
         MatrixTracker { 
             sources: HashMap::new(),
             vars: HashMap::new(), 
@@ -76,7 +76,6 @@ impl<'a> MatrixTracker<'a> {
             vars_concat: HashMap::new(),            
             shape_tracker: ShapeTracker::new(),
             constant_tracker: ConstantTracker::new(),
-            alloc_tracker,
         }
     }
 
@@ -138,11 +137,10 @@ impl<'a> MatrixTracker<'a> {
                 self.vars.remove_entry(id);
 
                 let shape = self.shape_tracker.get_shape(&id).clone();
-                let alloc_id = self.alloc_tracker.get_alloc(&id).id.clone();
                 self.sources.insert(
                     id.clone(), 
                     VarSource { 
-                        alloc_id,
+                        id: id.clone(),
                         dim: shape
                     }
                 );
@@ -164,7 +162,7 @@ impl<'a> MatrixTracker<'a> {
                 self.vars.insert(
                     res_cmp.clone(),
                     VarDependency {
-                        alloc_id: var_source.alloc_id.clone(),
+                        id: var_source.id.clone(),
                         source_dims: var_source.dim.clone(),
                         data_cmds: vec![cmd],
                     }

@@ -3,7 +3,9 @@ Implements displays for everything in the kernel folder
 Extremely helpful for debugging everything (kernel fusion, expression, trackers, etc.)
 */
 
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
+use crate::create_debug_hlp_funcs;
+
 use super::{
     kernel_decl::{Expression, Input, Matrix, Value, KernelProcedure, Kernels}, 
     trackers::AllocTracker
@@ -95,18 +97,30 @@ impl Display for Input {
     }
 }
 
+impl<'a> Display for AllocTracker<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let _ = write!(f, "Alloc Tracker:\n");
+        for (ir_name, alloc_entry) in self.vars.iter() {
+            let _ = write!(f, "\n");
+            let _ = write!(f, "\tIR name \"{}\":\n", ir_name);
+            let _ = write!(f, "\t-> Alloc ID: {}\n", alloc_entry.id);
+            let _ = write!(f, "\t-> Size: {}\n", alloc_entry.size);
+            let _ = write!(f, "\t-> Has initial content: {}\n", alloc_entry.initial_content.is_some());
+            if let Some(v) = alloc_entry.initial_content {
+                let _ = write!(f, "\t-> Initial content size: {}\n", v.len());
+            }
+        }
+
+        write!(f, "")
+    }
+}
+
+// ======================================= Kernel Procedure printing ======================================= 
+create_debug_hlp_funcs!(Kernels, KernelProcedure);
+
 impl Display for Kernels {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Kernels::BR { block_id } => {
-                let _ = write!(f, "BR {}\n", block_id.blue());
-            },
-            Kernels::BRE { block_id, a }  => {
-                let _ = write!(f, "if {} == 1 --> BR {}\n", a, block_id.blue());
-            },
-            Kernels::BRZ { block_id, a } => {
-                let _ = write!(f, "if {} == 0 --> BRZ {}\n", a, block_id.blue());
-            },
             Kernels::EX => {
                 let _ = write!(f, "{}", "EXIT".red());
             },
@@ -127,40 +141,15 @@ impl Display for Kernels {
             },
             Kernels::Movement { a, res , size} => {
                 let _ = write!(f, "{} {} {}", res, format!(" <-(Move {})- ", size.to_string().yellow()).bold(), a);
+            },
+            Kernels::While { conditional_var, block } => {
+                print_while(f, self, 0);
+            },
+            Kernels::If { .. } => {
+                print_if(f, self, 0);
             }
         }
-        write!(f, "\n")
-    }
-}
-
-impl Display for KernelProcedure {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (block_name, cmds) in self.cmd_computeinstr.iter() {
-            let _ = write!(f, "\n{}:\n", block_name.blue());
-            
-            for (i, cmd) in cmds.iter().enumerate() {
-                let _ = write!(f, "\t({}): {}", i+1, cmd);
-            }
-        }
-
-        write!(f, "")        
-    }
-}
-
-impl<'a> Display for AllocTracker<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let _ = write!(f, "Alloc Tracker:\n");
-        for (ir_name, alloc_entry) in self.vars.iter() {
-            let _ = write!(f, "\n");
-            let _ = write!(f, "\tIR name \"{}\":\n", ir_name);
-            let _ = write!(f, "\t-> Alloc ID: {}\n", alloc_entry.id);
-            let _ = write!(f, "\t-> Size: {}\n", alloc_entry.size);
-            let _ = write!(f, "\t-> Has initial content: {}\n", alloc_entry.initial_content.is_some());
-            if let Some(v) = alloc_entry.initial_content {
-                let _ = write!(f, "\t-> Initial content size: {}\n", v.len());
-            }
-        }
-
         write!(f, "")
     }
 }
+

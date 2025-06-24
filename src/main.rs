@@ -147,9 +147,9 @@ pub fn forward () {
 pub fn main () {
     // forward();
     // me_life();
-    // nn_test();
+    nn_test();
     // broadcasting_test();
-    multihead_att();
+    // multihead_att();
     // reduce();
     // concat_test();
     // broadcasting_test();

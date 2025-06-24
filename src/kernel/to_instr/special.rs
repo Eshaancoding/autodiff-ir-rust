@@ -1,0 +1,55 @@
+// Dot product, movement, and sum are considered "special" kernels
+// The reason why is because they require different access expressions than most other kernels
+
+use crate::{
+    kernel_decl::{Kernels, ReduceOp},
+    trackers::{MatrixTracker, AccessType}, 
+    IRCmds,
+    Device
+};
+
+pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &MatrixTracker) {
+    match cmd {
+        IRCmds::Sum { a, res } => {
+            let mut exp_dim = mat_tracker.get_shape(a).clone();
+            let vec_size = exp_dim.first().unwrap().clone();
+            let reduce_size = exp_dim.last().unwrap().clone();
+            exp_dim.remove(exp_dim.len()-1); // remove last dim
+
+            instr.push(Kernels::Reduce { 
+                a: mat_tracker.get_input(a, AccessType::XY),
+                res: mat_tracker.get_res(res, AccessType::XY, &exp_dim),
+                op: ReduceOp::Sum,
+                vec_size,
+                reduce_size
+            });
+        },
+        IRCmds::DotProduct { a, b, res } => {
+            let a_shape = mat_tracker.get_shape(a);  
+            let b_shape = mat_tracker.get_shape(b); 
+            let res_shape = device.dot_prod_shape(a_shape, b_shape);
+            
+            assert!(a_shape.len() == 2 && b_shape.len() == 2, "dot prod at kernel lowering has wrong dimensions");
+
+            // Dot product instruction
+            instr.push(Kernels::DotProd { 
+                a: mat_tracker.get_input(a, AccessType::XY), 
+                b: mat_tracker.get_input(b, AccessType::XY), 
+                res: mat_tracker.get_res(res, AccessType::XY, &res_shape),
+                batch_size: *res_shape.first().unwrap(),
+                input_size: *a_shape.last().unwrap(),
+                output_size: *res_shape.last().unwrap()                         
+            });
+        },
+        IRCmds::Contigious { a, res } => {
+            let a_shape = mat_tracker.get_shape(a);
+
+            instr.push(Kernels::Movement { 
+                a: mat_tracker.get_input(a, AccessType::Global), 
+                res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
+                size: a_shape.iter().product()
+            });
+        },
+        _ => {}
+    }
+}

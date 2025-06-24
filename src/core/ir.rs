@@ -7,7 +7,7 @@ use std::sync::Mutex;
 #[derive(Clone, PartialEq, Debug)]
 pub enum IRCmds {
     // Create
-    CreateMat {contents: Vec<f64>, dim: Vec<usize>, id: String},
+    CreateMat {contents: Vec<f64>, dim: Vec<usize>, id: String}, // COULD BE VERY LARGE IN SIZE
     CreateConstant {contents: f64, id: String, dim: Vec<usize>},
 
     // ELW Operations 
@@ -123,7 +123,7 @@ pub static IRB: Mutex<Option<IRBase>> = Mutex::new(None);
 
 pub trait Device {
     // Execute a list of instructions 
-    fn execute (&mut self, cmds: IRProcedure);
+    fn execute (&mut self, cmds: &IRProcedure);
     
     // Transfers matrix id to device.
     fn get_tensor (&self, id: &String) -> ValueData;
@@ -177,15 +177,15 @@ pub fn ir_b_device_callback () {
 
 pub fn ir_b_execute () {
     // get cmds
-    let mut guard = IRB.lock().unwrap();
-    let ir_b = guard.as_mut().expect("Can't unpack IRBuilder");
-    let cmds = ir_b.proc.clone();
-    drop(guard);
+    let mut guard_irb = IRB.lock().unwrap();
+    let IRBase { proc, .. } = guard_irb.as_mut().expect("Can't unpack IRBuilder");
 
-    let mut guard = DEVICE.lock().unwrap();
-    let device = guard.as_mut().expect("Can't unpack IRBuilder");
-    device.execute(cmds);
-    drop(guard);
+    let mut guard_device = DEVICE.lock().unwrap();
+    let device = guard_device.as_mut().expect("Can't unpack IRBuilder");
+    device.execute(&proc);
+
+    drop(guard_device);
+    drop(guard_irb);
 }
 
 pub fn ir_b_create_temp_proc () {

@@ -13,13 +13,12 @@ If we are on cmd (1), b hasn't been fully realized by the matrix tracker. It has
 However, we still need to know the dimensions. This is calculated manually without using shape tracker
 */ 
 
-impl<'a> MatrixTracker<'a> {
+impl MatrixTracker {
     pub fn get_res (&self, id: &String, access_type: AccessType, expected_shape: &Vec<usize>) -> Matrix {
-        let entry = self.alloc_tracker.get_alloc(id);
         return match access_type {
             AccessType::XY => {
                 Matrix { 
-                    id: entry.id.clone(), 
+                    id: id.clone(), 
                     access: Expression::simplify(ndim_to_global(
                         &vec![Expression::make_x(), Expression::make_y()], 
                         &expected_shape
@@ -28,7 +27,7 @@ impl<'a> MatrixTracker<'a> {
             },
             AccessType::Global => {
                 Matrix { 
-                    id: entry.id.clone(), 
+                    id: id.clone(), 
                     access: Expression::make_global() 
                 }
             }

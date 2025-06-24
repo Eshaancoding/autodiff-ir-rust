@@ -1,4 +1,4 @@
-use indexmap::IndexMap;
+use std::collections::HashMap;
 use tensor_rs::{tensor_impl::gen_tensor::GenTensor, tensor_trait::{elemwise::ElemwiseTensorOp, index_slicing::IndexSlicing, reduction::ReduceTensor}};
 use crate::IRCmds;
 
@@ -11,7 +11,7 @@ fn is_sw (a: &Vec<usize>, b: &Vec<usize>) -> bool {
     }
 }
 
-pub fn exec (cmd: &IRCmds, hms: &mut IndexMap<String, GenTensor<f64>>) {
+pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f64>>) {
     match cmd {
         IRCmds::CreateMat { contents, dim, id } => {
             hms.insert(

@@ -1,8 +1,9 @@
 // Using Tensor Rs library, we can create matrix and create operations
 // Only single threaded operations
 
-use indexmap::IndexMap;
-use crate::{to_kernel::to_kernel, Device, IRBase, IRCmds, IRProcedure, ValueData, IRB};
+use std::collections::HashMap;
+
+use crate::{to_kernel::to_kernel, Device, IRBase, IRCmds, IRProcedure, ValueData};
 use super::exec::exec;
 use tensor_rs::tensor_impl::gen_tensor::GenTensor;
 
@@ -18,8 +19,8 @@ impl CPUNew {
 }
 
 impl Device for CPUNew {
-    fn execute (&mut self, cmds: IRProcedure) {
-        // let _ = to_kernel(self, &cmds);
+    fn execute (&mut self, cmds: &IRProcedure) {
+        let _ = to_kernel(self, cmds);
     }
 
     fn get_tensor (&self, _: &String) -> ValueData {
@@ -89,19 +90,18 @@ impl Device for CPUNew {
 
 // ==================== tensor rs ==================== 
 pub struct CPU {
-
-    hmap: IndexMap<String, ValueData>,
+    hmap: HashMap<String, ValueData>,
 }
 
 impl CPU  {
     pub fn new () -> CPU {
         CPU  {
-            hmap: IndexMap::new(),
+            hmap: HashMap::new(),
         }
     }
 }
 
-fn proc_exec (proc: &IRProcedure, hms: &mut IndexMap<String, GenTensor<f64>>) -> bool {
+fn proc_exec (proc: &IRProcedure, hms: &mut HashMap<String, GenTensor<f64>>) -> bool {
     let mut exit = false;    
 
     // TODO: test exit within nested for and if statements
@@ -139,9 +139,9 @@ fn proc_exec (proc: &IRProcedure, hms: &mut IndexMap<String, GenTensor<f64>>) ->
 }
 
 impl Device for CPU {
-    fn execute (&mut self, cmds: IRProcedure) {
-        let mut hms: IndexMap<String, GenTensor<f64>> = IndexMap::new();
-        proc_exec(&cmds, &mut hms);
+    fn execute (&mut self, cmds: &IRProcedure) {
+        let mut hms: HashMap<String, GenTensor<f64>> = HashMap::new();
+        proc_exec(cmds, &mut hms);
         // println!("hms: {:#?}", hms)
         
         // convert to Value Data
