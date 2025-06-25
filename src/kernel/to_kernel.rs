@@ -58,7 +58,6 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
     // ========= Return =========
 
     // ...debug...
-    println!("{}", kernel_tracker.alloc_tracker);
     println!("{}", kernel_proc);
 
     kernel_proc

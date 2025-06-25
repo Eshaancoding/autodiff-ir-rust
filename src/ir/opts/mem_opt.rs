@@ -68,17 +68,10 @@ pub fn mem_opt (proc: &mut IRProcedure, var_changed: &Vec<String>) {
                 if deps.contains(&result) { break; }
 
                 // don't include constants (these locations don't take up any sort of memory in the slightest)
-                if res_constants.contains(dep) { break; }
+                if res_constants.contains(result) { break; }
 
                 // if deps is in var_changed
-                let mut br = false;
-                for v in var_changed {
-                    if deps.contains(&v) {
-                        br = true;
-                        break;
-                    }
-                }
-                if br { break; }
+                if var_changed.contains(result) { break; }
 
                 // check each deps, see it's declared within same block
                 let pr_dep = res_to_procid.get(dep).unwrap();
