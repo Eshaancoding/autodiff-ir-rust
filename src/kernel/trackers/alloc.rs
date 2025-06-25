@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
 use crate::{ir::helper::{ir_to_res, ir_to_dep}, IRCmds};
 use super::ShapeTracker;
 
@@ -12,12 +13,16 @@ pub struct Location {
 pub struct AllocEntry<'a> {
     pub id: String,
     pub size: usize,
-    pub initial_content: Option<&'a Vec<f64>>,
-    pub alloc_loc: Location,
-    pub dealloc_loc: Location
+
     // if there's data needed to be allocation before running program, then specify what content this is
     // If this value is none, then some sort of computation needs to be done before this appears.
     // also note that the size of the initial content is not the same as the size of the alloc itself!
+    pub initial_content: Option<&'a Vec<f64>>,
+
+    pub alloc_loc: Location,
+    
+    // If the deallocation location does not exist, then we know it is a dependency variable
+    pub dealloc_loc: Option<Location>
 }
 
 #[derive(Clone)]
@@ -26,15 +31,17 @@ pub struct AllocTracker<'a> {
     // However, not all hlir id will be in vars (ex: referencing source vars)
     pub vars: HashMap<String, AllocEntry<'a>>,  
     pub alloc: HashMap<String, Location>,
-    pub dealloc: HashMap<String, Location>
+    pub dealloc: HashMap<String, Location>,
+    pub dep_vars: &'a HashSet<String>
 }
 
 impl<'a> AllocTracker<'a> {
-    pub fn new () -> AllocTracker<'a> {
+    pub fn new (dep_vars: &'a HashSet<String>) -> AllocTracker<'a> {
         AllocTracker {  
             vars: HashMap::new(),
             alloc: HashMap::new(),
-            dealloc: HashMap::new()
+            dealloc: HashMap::new(),
+            dep_vars
         }
     }
     
@@ -51,8 +58,16 @@ impl<'a> AllocTracker<'a> {
                     id: ir_id.clone(), 
                     size: total_dim, 
                     initial_content: None,
-                    alloc_loc: loc.clone(),
-                    dealloc_loc: loc
+                    alloc_loc: 
+                        if self.dep_vars.contains(ir_id) {
+                            Location {
+                                proc_id: "main".to_string(),
+                                loc: 0
+                            }
+                        } else {
+                            loc.clone()
+                        },
+                    dealloc_loc: None
                 }
             );
         }
@@ -67,6 +82,7 @@ impl<'a> AllocTracker<'a> {
             IRCmds::Concat { .. } => {}, 
             IRCmds::Permute { .. } => {}, 
             IRCmds::Broadcast { .. } => {}, 
+            IRCmds::CreateConstant { .. } => { }, // skip create constant
             IRCmds::CreateMat { contents, dim, id } => {
                 self.vars.insert(
                     id.clone(),
@@ -74,12 +90,19 @@ impl<'a> AllocTracker<'a> {
                         id: id.clone(), 
                         size: dim.iter().product::<usize>(),
                         initial_content: Some(contents),
-                        alloc_loc: loc.clone(),
-                        dealloc_loc: loc.clone()
+                        alloc_loc: 
+                            if self.dep_vars.contains(id) {
+                                Location {
+                                    proc_id: "main".to_string(),
+                                    loc: 0
+                                }
+                            } else {
+                                loc.clone()
+                            },
+                        dealloc_loc: None
                     } 
                 );
             },
-            IRCmds::CreateConstant { .. } => { }, // skip create constant
             _ => {
                 if let Some(id) = ir_to_res(cmd) {
                     let sh = shape_tracker.get_shape(&id).clone();
@@ -89,8 +112,12 @@ impl<'a> AllocTracker<'a> {
         }
 
         for v in ir_to_dep(cmd) {
+            // skip dealloc loc if it contains one of the dep variables
+            if self.dep_vars.contains(v) { continue; }
+            
+            // update dealloc location
             if let Some(entry) = self.vars.get_mut(v) {
-                entry.dealloc_loc = loc.clone();
+                entry.dealloc_loc = Some(loc.clone());
             }
         }
 

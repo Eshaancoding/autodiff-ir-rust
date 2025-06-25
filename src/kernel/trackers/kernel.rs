@@ -1,5 +1,5 @@
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use crate::{
     ir::helper::ir_to_res, trackers::{AllocEntry, AllocTracker, ConstantTracker, Location}, Device, IRCmds
 };
@@ -63,7 +63,7 @@ pub enum AccessType {
 }
 
 impl<'a> KernelTracker<'a> {
-    pub fn new () -> KernelTracker<'a> {
+    pub fn new (dep_vars: &'a HashSet<String>) -> KernelTracker<'a> {
         KernelTracker { 
             sources: HashMap::new(),
             vars: HashMap::new(), 
@@ -71,7 +71,7 @@ impl<'a> KernelTracker<'a> {
             vars_concat: HashMap::new(),            
             shape_tracker: ShapeTracker::new(),
             constant_tracker: ConstantTracker::new(),
-            alloc_tracker: AllocTracker::new()
+            alloc_tracker: AllocTracker::new(dep_vars)
         }
     }
 

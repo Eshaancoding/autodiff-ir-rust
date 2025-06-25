@@ -59,12 +59,7 @@ Backend will refer to things that runs the internal operations and optimizations
 ## Backend
     
 * **Kernel**:
-    * ~~automatic allocation and deallocation within graph~~
-        * ~~partial allocation tracker is written for you technically~~
-        * ~~requires better alloc tracker, which may need to start being moved in sync with the matrix tracker~~
-        * ~~handle merging with different procs/branches (if, while)~~
-        
-    * Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
+    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
         * Then, you need a temp allocation for this.
 
     * <mark>Host --> Device feeder</mark>

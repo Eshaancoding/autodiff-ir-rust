@@ -9,7 +9,10 @@ pub fn insert_alloc<'a> (kernel_proc: &mut KernelProcedure, alloc_tracker: &Allo
 
     let deallocations: Vec<_> = alloc_tracker.vars.iter().map(|(_, v)| {
         (v.id.clone(), v.size, v.dealloc_loc.clone(), false)
-    }).collect();
+    })
+    .filter(|v| v.2.is_some())
+    .map(|v| (v.0, v.1, v.2.unwrap(), v.3)) 
+    .collect();
 
     total_list.extend(deallocations);
     total_list.sort_by(|a, b| a.2.loc.cmp(&b.2.loc));
@@ -31,7 +34,11 @@ pub fn insert_alloc<'a> (kernel_proc: &mut KernelProcedure, alloc_tracker: &Allo
                     id: var_id.clone(),
                     size: *size 
                 } };
-                proc.insert(loc.loc + *r, k)
+
+                let loc = loc.loc + *r;
+                let loc = if loc > 0 && *is_alloc { loc - 1 } else { loc };
+
+                proc.insert(loc, k)
             }
         }
     });

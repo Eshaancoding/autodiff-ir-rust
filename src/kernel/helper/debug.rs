@@ -111,7 +111,12 @@ impl<'a> Display for AllocTracker<'a> {
             let _ = write!(f, "\tIR name \"{}\":\n", ir_name);
             let _ = write!(f, "\t-> Alloc ID: {}\n", alloc_entry.id);
             let _ = write!(f, "\t-> Size: {}\n", alloc_entry.size);
-            let _ = write!(f, "\t-> Lifetime: {} --> {}\n", alloc_entry.alloc_loc, alloc_entry.dealloc_loc);
+            let _ = write!(
+                f, 
+                "\t-> Lifetime: {} --> {}\n", 
+                alloc_entry.alloc_loc, 
+                alloc_entry.dealloc_loc.as_ref().map_or("None".to_string(), |v| format!("{}", v).to_string())
+            );
             let _ = write!(f, "\t-> Has initial content: {}\n", alloc_entry.initial_content.is_some());
             if let Some(v) = alloc_entry.initial_content {
                 let _ = write!(f, "\t-> Initial content size: {}\n", v.len());
