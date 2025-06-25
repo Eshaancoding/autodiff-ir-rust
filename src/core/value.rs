@@ -2,6 +2,7 @@
 // This the class actually representing the computation. 
 // Node, Tensor, Ops, etc. are classes used to just build the computation graph. 
 
+use std::sync::Arc;
 use crate::{IRCmds, NodeTrait, ValueData};
 use super::{add_to_dep, ir_b_add, ir_b_id, Tensor, TensorNode, DEVICE};
 
@@ -65,7 +66,7 @@ impl Value {
     pub fn new (data: Vec<f64>, dim: Vec<usize>) -> Value {
         let id = ir_b_id(); 
         ir_b_add(IRCmds::CreateMat { 
-            contents: data.clone(), 
+            contents: Arc::new(data.clone()),
             dim: dim.clone(), 
             id: id.clone() 
         });

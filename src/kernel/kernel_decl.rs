@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #[derive(Clone, Debug)]
 pub enum Value {
     Constant { val: i32 },
@@ -119,7 +121,8 @@ pub enum Kernels {
 
     Alloc {
         id: String,
-        size: usize
+        size: usize,
+        content: Option<Arc<Vec<f64>>>
     },
     
     Dealloc {

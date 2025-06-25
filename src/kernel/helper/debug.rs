@@ -118,7 +118,7 @@ impl<'a> Display for AllocTracker<'a> {
                 alloc_entry.dealloc_loc.as_ref().map_or("None".to_string(), |v| format!("{}", v).to_string())
             );
             let _ = write!(f, "\t-> Has initial content: {}\n", alloc_entry.initial_content.is_some());
-            if let Some(v) = alloc_entry.initial_content {
+            if let Some(v) = alloc_entry.initial_content.as_ref() {
                 let _ = write!(f, "\t-> Initial content size: {}\n", v.len());
             }
         }
@@ -160,8 +160,11 @@ impl Display for Kernels {
             Kernels::If { .. } => {
                 print_if(f, self, 0);
             },
-            Kernels::Alloc { id, size } => {
+            Kernels::Alloc { id, size, content } => {
                 let _ = write!(f, "{} {} {}", "Alloc".green().bold(), id, size.to_string().yellow().bold());
+                if let Some(c) = content {
+                    let _ = write!(f, " (with content of size: {})", c.len().to_string().yellow().bold());
+                }
             },
             Kernels::Dealloc { id, size } => {
                 let _ = write!(f, "{} {} {}", "Dealloc".red().bold(), id, size.to_string().yellow().bold());

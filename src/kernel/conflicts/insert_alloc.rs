@@ -4,14 +4,14 @@ use crate::{kernel_decl::{KernelProcedure, Kernels}, trackers::AllocTracker};
 
 pub fn insert_alloc<'a> (kernel_proc: &mut KernelProcedure, alloc_tracker: &AllocTracker<'a>) {
     let mut total_list: Vec<_> = alloc_tracker.vars.iter().map(|(_, v)| {
-        (v.id.clone(), v.size, v.alloc_loc.clone(), true)
+        (v.id.clone(), v.size, v.alloc_loc.clone(), true, v.initial_content.clone())
     }).collect();
 
     let deallocations: Vec<_> = alloc_tracker.vars.iter().map(|(_, v)| {
-        (v.id.clone(), v.size, v.dealloc_loc.clone(), false)
+        (v.id.clone(), v.size, v.dealloc_loc.clone(), false, None)
     })
     .filter(|v| v.2.is_some())
-    .map(|v| (v.0, v.1, v.2.unwrap(), v.3)) 
+    .map(|v| (v.0, v.1, v.2.unwrap(), v.3, v.4)) 
     .collect();
 
     total_list.extend(deallocations);
@@ -20,7 +20,7 @@ pub fn insert_alloc<'a> (kernel_proc: &mut KernelProcedure, alloc_tracker: &Allo
     let mut delete_counter: HashMap<String, usize> = HashMap::new();
 
     kernel_proc.apply(&mut |proc| {
-        for (var_id, size, loc, is_alloc) in total_list.iter() {
+        for (var_id, size, loc, is_alloc, content) in total_list.iter() {
             if loc.proc_id == proc.id {
                 let r = delete_counter
                     .entry(proc.id.clone()) 
@@ -29,7 +29,8 @@ pub fn insert_alloc<'a> (kernel_proc: &mut KernelProcedure, alloc_tracker: &Allo
 
                 let k = if *is_alloc { Kernels::Alloc { 
                     id: var_id.clone(),
-                    size: *size 
+                    size: *size,
+                    content: content.clone()
                 } } else { Kernels::Dealloc { 
                     id: var_id.clone(),
                     size: *size 
@@ -39,6 +40,7 @@ pub fn insert_alloc<'a> (kernel_proc: &mut KernelProcedure, alloc_tracker: &Allo
                 let loc = if loc > 0 && *is_alloc { loc - 1 } else { loc };
 
                 proc.insert(loc, k)
+                
             }
         }
     });

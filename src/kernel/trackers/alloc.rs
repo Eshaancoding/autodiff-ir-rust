@@ -1,5 +1,5 @@
+use std::sync::Arc;
 use std::collections::{HashMap, HashSet};
-
 use crate::{ir::helper::{ir_to_res, ir_to_dep}, IRCmds};
 use super::ShapeTracker;
 
@@ -10,14 +10,14 @@ pub struct Location {
 }
 
 #[derive(Clone, Debug)]
-pub struct AllocEntry<'a> {
+pub struct AllocEntry {
     pub id: String,
     pub size: usize,
 
     // if there's data needed to be allocation before running program, then specify what content this is
     // If this value is none, then some sort of computation needs to be done before this appears.
     // also note that the size of the initial content is not the same as the size of the alloc itself!
-    pub initial_content: Option<&'a Vec<f64>>,
+    pub initial_content: Option<Arc<Vec<f64>>>,
 
     pub alloc_loc: Location,
     
@@ -29,7 +29,7 @@ pub struct AllocEntry<'a> {
 pub struct AllocTracker<'a> {
     // hlir id is same as the alloc id
     // However, not all hlir id will be in vars (ex: referencing source vars)
-    pub vars: HashMap<String, AllocEntry<'a>>,  
+    pub vars: HashMap<String, AllocEntry>,  
     pub alloc: HashMap<String, Location>,
     pub dealloc: HashMap<String, Location>,
     pub dep_vars: &'a HashSet<String>
@@ -89,7 +89,7 @@ impl<'a> AllocTracker<'a> {
                     AllocEntry { 
                         id: id.clone(), 
                         size: dim.iter().product::<usize>(),
-                        initial_content: Some(contents),
+                        initial_content: Some(contents.clone()),
                         alloc_loc: 
                             if self.dep_vars.contains(id) {
                                 Location {

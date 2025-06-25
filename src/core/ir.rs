@@ -1,13 +1,13 @@
 use std::string::String;
 use crate::ValueData;
-use std::sync::Mutex;
+use std::sync::{Mutex, Arc};
 
 // All different IR needs to implement these functions
 // See Tensor_rs
 #[derive(Clone, PartialEq, Debug)]
 pub enum IRCmds {
     // Create
-    CreateMat {contents: Vec<f64>, dim: Vec<usize>, id: String}, // COULD BE VERY LARGE IN SIZE
+    CreateMat {contents: Arc<Vec<f64>>, dim: Vec<usize>, id: String}, // COULD BE VERY LARGE IN SIZE; this is why we encapsulate it in Rc
     CreateConstant {contents: f64, id: String, dim: Vec<usize>},
 
     // ELW Operations 
@@ -120,6 +120,8 @@ pub struct IRBase {
 
 pub static DEVICE: Mutex<Option<Box<dyn Device + Send + Sync>>> = Mutex::new(None);
 pub static IRB: Mutex<Option<IRBase>> = Mutex::new(None);
+
+pub static L: Option<IRBase> = None;
 
 pub trait Device {
     // Execute a list of instructions 
