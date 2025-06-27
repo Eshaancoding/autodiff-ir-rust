@@ -142,7 +142,6 @@ impl Device for CPU {
     fn execute (&mut self, cmds: &IRProcedure) {
         let mut hms: HashMap<String, GenTensor<f64>> = HashMap::new();
         proc_exec(cmds, &mut hms);
-        // println!("hms: {:#?}", hms)
         
         // convert to Value Data
         for (key, value) in hms.iter() {

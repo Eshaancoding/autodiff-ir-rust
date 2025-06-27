@@ -22,6 +22,10 @@ impl KernelProcedure {
         self.kernels.iter_mut()
     }
 
+    pub fn remove (&mut self, idx: usize) -> Kernels {
+        self.kernels.remove(idx)
+    }
+
     pub fn apply<T> (&mut self, f: &mut T)
         where T: FnMut(&mut KernelProcedure)
     {

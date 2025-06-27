@@ -96,6 +96,16 @@ pub fn mem_opt (proc: &mut IRProcedure, var_changed: &Vec<String>) {
                 Due to the way that matrix tracker works (it works recursively), it's easier if we can gaurantee seperate inputs id to the result id
                 */
                 if let IRCmds::Concat { .. } = cmd { break; }
+                
+                // We require these 3 commands to have unique result + input IDs as well.
+                // If we allow same ids, then we can get a result like this: by = sum(by, dim=-1)
+                // If you look at an access expression of something like this: 
+                // M (id: by, access: #x) = Sum (Vec/X: 128, Reduce/Y: 2)  (M (id: by, access: ((#y << 7) + #x)))
+                // by is being accessed + written at the same time (with different access expressions), which can cause a conflict.
+                // This does hurt the memory optimizations, but we optimize memory within the kernel level as well
+                if let IRCmds::DotProduct { .. } = cmd { break; }
+                if let IRCmds::Sum { .. } = cmd { break; }
+                if let IRCmds::Contigious { .. } = cmd { break; }
 
                 // if so, set replace var
                 replace_var = Some( (result.clone(), dep.clone()) );

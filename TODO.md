@@ -58,43 +58,42 @@ Backend will refer to things that runs the internal operations and optimizations
 
 ## Backend
     
+* **OpenCL Device**
+    * The lowest level!
+    * Generate opencl code and stuff
+    * with allocations and deallocations
+    * ain't that nice.
+
 * **Kernel**:
-    * <mark>Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT</mark>
-        * Then, you need a temp allocation for this.
+    * ~~Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT~~
+        * ~~Then, you need a temp allocation for this.~~
 
     * <mark>Host --> Device feeder</mark>
         * fix this before implementing the x86 implementation
     
-    * <mark>**THEN BUILD x86 BACKEND**</mark>
-        * no kernel fusion as of now
+    * **MEM OPTS** Technically, all memory can just be under one HUGE memory block 
+        * "Tetris" Block optimizations
+        * or you can do "LANE" optimization
+        * only apply these variables that are NOT 1. initially initialized with some content 2. not in dep vars
+        * this way, only temporary variables fall under this tetris optimization
+
+    * **MEM OPTS**: You need to first implement kernel fusion, but after that, you can remove entire allocations altogether
+        * if alloc + dealloc is in one fused op, delete alloc, and then just use a "temporary var"
 
     * Divergent branching conflicts
         * Could be more complicated on various scenarious (sources, vars, concat, trackers, etc.)        
         * you have to know what is right and what is not right to be fair.
 
-    * **OPTS INDEXING**: Swizzling memory
+    * Fix constant as part of contigious, view, etc.
+        * also the problem with multihead attention asw
+
+    * **MEM OPTS**: Swizzling memory
         * dependending on access patterns IF there's like a single type of access pattern
             * if multiple, you might need to just rely on those different access patterns
             * just check and whether you can optimize
 
         * Remove movement opt if.. 
             * alr know contigious when 1. same id 2. same access expression
-
-    * **OPTS**: once you do automatic alloc and dealloc, then perform a meory opt where you reuse allocated regions of memory even if it's dealloc
-        * example:
-            1. alloc A with size of 256
-            2. computation...
-            3. dealloc A with size of 256
-            4. some computation...
-            5. alloc B with size of 256
-            6. more computation
-        * you can instead do:    
-            1. alloc A with size of 256
-            2. computation...
-            3. ~~dealloc A with size of 256~~ fills data region A with data of B
-            4. computation that uses B will instead use memory address of A. 
-
-    * **OPTS**: reduce malloc and demalloc at while loops (should be just computation)
 
     * **OPTS**: Swapping accessing expressions between input and output of two adjacent kernels?
         * is it even possible? 
@@ -120,7 +119,7 @@ Backend will refer to things that runs the internal operations and optimizations
             * v & 63 & 63 --> v & 63
 
     * **Kernel Fusion**
-        * do basic multiple binary/unary kernel fusion
+        * ~~do basic multiple binary/unary kernel fusion~~
         * dot prod impl is kinda wacky
             * access expression assumes global id...
         * anyway to do dotprod fusion?  
@@ -154,11 +153,6 @@ Backend will refer to things that runs the internal operations and optimizations
         * How/where to organize this? Each device will have different kernels which will have different params to opts...
             * probably within each device?  
             * **YOU NEED BOTH**
-
-* **X86 Device implementation**:
-    * Allow dot prod implementation to support varied shapes rather than just power of 2
-    * 3. Efficient Reduce kernels
-    * basicallyyyyyyyy implement all of the backend for that
 
 * **HLIR Opts**
     * ~~MAKE IT FAST~~

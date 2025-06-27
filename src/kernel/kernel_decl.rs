@@ -105,20 +105,21 @@ pub enum Kernels {
         a: Input,
         b: Input,
         res: Matrix,
-        batch_size: usize, // batch size (B in BxI dotprod I*O --> B*O)
-        input_size: usize, // input size (I in BxI dotprod I*O --> B*O)
-        output_size: usize, // output size (O in BxI dotprod I*O --> B*O)
+        batch_size: usize,  // batch size  (B in BxI * IxO --> BxO)
+        input_size: usize,  // input size  (I in BxI * IxO --> BxO)
+        output_size: usize, // output size (O in BxI * IxO --> BxO)
     }, 
 
     // kernels that turns movement / permutations / concatenation of tensors into single contigious tensor.  
     // note that this movement kernel is not initially created; it's generated lazily or during optimizations. 
-    // Note that for dot prod, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
+    // Note that for some implementations of dot prod, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
     Movement { 
         a: Input,
         res: Matrix,
         size: usize,   // size of the result kernel
     },
 
+    // Kernels related to allocation + deallocation
     Alloc {
         id: String,
         size: usize,
@@ -133,7 +134,29 @@ pub enum Kernels {
     // Control functions
     While {conditional_var: String, block: KernelProcedure},
     If {conditions: Vec<(String, KernelProcedure)>, else_proc: Option<KernelProcedure>},
-    EX
+    EX,
+
+    // ================ Kernel Fusion ================ 
+    // Note that each device can set support/unsupport for each fusion operation
+    ElwExpr {
+        kernels: Vec<Kernels>, // only unary and binary kernels allowed
+        size: usize // size of the fused operations
+    },
+
+    // Dot product fused with elw expression
+    DPElwExpr {
+        kernels: Vec<Kernels>,
+        batch_size: usize,
+        input_size: usize,
+        output_size: usize
+    },
+
+    // Reduce operation fused with elw expression
+    ReduceElwExpr {
+        kernels: Vec<Kernels>,
+        vec_size: usize,
+        reduce_size: usize
+    },
 }
 
 // list the procedure of kernels to declare

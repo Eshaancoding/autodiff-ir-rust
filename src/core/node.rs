@@ -1,4 +1,4 @@
-use crate::Value;
+use crate::{constant, Value};
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -62,6 +62,10 @@ impl Tensor {
     pub fn backward (&self) {
         let dim = self.dim();         
 
+        // let constant_one = constant(1.0, dim);
+        // let v = constant_one.forward();
+        // in the future, set support to this.
+        
         // start autograd with grad 1 (df/df)
         self.n.borrow_mut().backward(Value::ones(dim));
     }

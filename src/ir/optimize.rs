@@ -40,6 +40,7 @@ pub fn ir_optimize () {
     opeq_opt(&mut irb.proc); 
     
     // Re-ordering optimizations --> tries to group together repeated memory locations together for better caching + kernel fusion
+    // Kernel fusion **relies** on the specific order of operations to determine fused operations
     let mut prev_max_val: Option<usize> = None;
     loop {
         // copy, change, score

@@ -147,7 +147,7 @@ impl<'a> KernelTracker<'a> {
         if let Some(d) = data_clone {
             self.sources_concat.insert(d.0, d.1);
         }
-        else if let Some(cmd) = data_cmd {
+        else if let Some(cmds) = data_cmd {
 
             // =============== Variables =============== 
             /*
@@ -160,7 +160,7 @@ impl<'a> KernelTracker<'a> {
                     VarDependency {
                         id: var_source.id.clone(),
                         source_dims: var_source.dim.clone(),
-                        data_cmds: vec![cmd],
+                        data_cmds: vec![cmds],
                     }
                 );
 
@@ -184,10 +184,10 @@ impl<'a> KernelTracker<'a> {
                     (14): l = l.broadcast(dim=0, r=2)
                     (15): l = l.broadcast(dim=1, r=128)           
                     */
-                    dep.data_cmds.push(cmd);
+                    dep.data_cmds.push(cmds);
                 } else {
                     let mut dep = dep.clone();
-                    dep.data_cmds.push(cmd);
+                    dep.data_cmds.push(cmds);
                     self.vars.insert(
                         res_cmp.clone(),
                         dep
@@ -205,7 +205,7 @@ impl<'a> KernelTracker<'a> {
                     res_cmp.clone(),
                     VarConcatDep {
                         source: res.clone(),
-                        data_cmds: vec![cmd],
+                        data_cmds: vec![cmds],
                     }
                 );
 
@@ -218,10 +218,10 @@ impl<'a> KernelTracker<'a> {
             */
             else if let Some(dep) = self.vars_concat.get_mut(&dep_cmp) {
                 if res_cmp == dep_cmp {
-                    dep.data_cmds.push(cmd);
+                    dep.data_cmds.push(cmds);
                 } else {
                     let mut dep = dep.clone();
-                    dep.data_cmds.push(cmd);
+                    dep.data_cmds.push(cmds);
                     self.vars_concat.insert(
                         res_cmp.clone(),
                         dep
@@ -229,7 +229,7 @@ impl<'a> KernelTracker<'a> {
                 }
             }
             else {
-                panic!("Unable to step through cmd in Matrix tracker");
+                panic!("Unable to step through cmd in Matrix tracker at cmd: {}", cmd);
             }
         }
     }

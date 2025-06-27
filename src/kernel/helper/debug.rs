@@ -168,6 +168,30 @@ impl Display for Kernels {
             },
             Kernels::Dealloc { id, size } => {
                 let _ = write!(f, "{} {} {}", "Dealloc".red().bold(), id, size.to_string().yellow().bold());
+            },
+            Kernels::ElwExpr { kernels, size} => {
+                let _ = write!(f, "ElwExpr Kernel Fusion ({})\n\n", size.to_string().yellow().bold());
+                for k in kernels.iter() {
+                    let _ = write!(f, "\t{}\n", k);
+                }
+            },
+            Kernels::DPElwExpr { kernels, batch_size, input_size, output_size } => {
+                let b_yel = batch_size.to_string().yellow();
+                let i_yel = input_size.to_string().yellow();
+                let o_yel = output_size.to_string().yellow(); 
+                let elw_size_yel = (batch_size*output_size).to_string().yellow();
+                let _ = write!(f, "DP + Elw Kernel Fusion {}\n\n", format!("({}x{} DP {}x{}) -(elw)-> {}", b_yel, i_yel, i_yel, o_yel, elw_size_yel).bold());
+                for k in kernels.iter() {
+                    let _ = write!(f, "\t{}\n", k);
+                }
+            },
+            Kernels::ReduceElwExpr { kernels, vec_size, reduce_size } => {
+                let v_yel = vec_size.to_string().yellow();
+                let extra_info = format!("(Vec/X: {}, Reduce/Y: {}) -(elw)-> {}", v_yel, reduce_size.to_string().yellow(), v_yel).bold();
+                let _ = write!(f, "Reduce + Elw Kernel Fusion {}\n\n", extra_info);
+                for k in kernels.iter() {
+                    let _ = write!(f, "\t{}\n", k);
+                }
             }
         }
         write!(f, "")

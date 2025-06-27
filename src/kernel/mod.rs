@@ -6,3 +6,4 @@ pub mod to_instr;
 pub mod procedure;
 pub mod indexing;
 pub mod conflicts;
+pub mod fusion;

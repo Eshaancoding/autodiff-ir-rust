@@ -60,7 +60,6 @@ pub fn nn_test () {
         let y = neural_net.f(x.clone());
         opt.zero_grad();
         y.forward();
-        println!("{:#?}", y.sum(-1).sum(-1).dim());
         y.backward();
         opt.step();
 
@@ -140,8 +139,6 @@ pub fn forward () {
     println!("value dim: {:#?}", v.dim);
     println!("value data: {:#?}", v.data);
     println!("value id: {:#?}", v.id);
-
-    // do a while test after
 }
 
 pub fn main () {

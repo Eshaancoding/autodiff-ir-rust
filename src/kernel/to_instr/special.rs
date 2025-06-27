@@ -1,5 +1,7 @@
 // Dot product, movement, and sum are considered "special" kernels
 // The reason why is because they require different access expressions than most other kernels
+// If you notice at mem_opt, we skip these special kernels because their access expressions can be intrude one another
+// This is not the case for Element-wise, comparison, or unary operations
 
 use crate::{
     kernel_decl::{Kernels, ReduceOp},
