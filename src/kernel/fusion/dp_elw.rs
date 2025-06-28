@@ -5,9 +5,9 @@ pub struct DpExprKernelInfo {
     pub start_loc: usize,
     pub end_loc: usize,
 
-    pub batch_size: Option<usize>,
-    pub input_size: Option<usize>,
-    pub output_size: Option<usize>,
+    pub a_shape: Option<(usize, usize)>,
+    pub b_shape: Option<(usize, usize)>,
+    pub out_shape: Option<(usize, usize)>
 }
 
 pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
@@ -17,21 +17,21 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
         let mut in_kernel: Option<DpExprKernelInfo> = None; 
         
         for (i, cmd) in proc.iter().enumerate() {
-            if let Kernels::DotProd { batch_size, input_size, output_size, .. } = cmd {
+            if let Kernels::DotProd { a_shape, b_shape, res_shape: out_shape, .. } = cmd {
                 let new_kernel_info = DpExprKernelInfo { 
                     start_loc: i,
                     end_loc: i,
-                    batch_size: Some(*batch_size),
-                    input_size: Some(*input_size),
-                    output_size: Some(*output_size)
+                    a_shape: Some(*a_shape),
+                    b_shape: Some(*b_shape),
+                    out_shape: Some(*out_shape) 
                 };
 
                 if let Some(kernel_info) = &mut in_kernel {
-                    if kernel_info.batch_size.is_none() {
+                    if kernel_info.a_shape.is_none() {
                         // Alloc/dealloc previously --> update information
-                        kernel_info.batch_size = Some(*batch_size);
-                        kernel_info.input_size = Some(*input_size);
-                        kernel_info.output_size = Some(*output_size);
+                        kernel_info.a_shape = Some(*a_shape);
+                        kernel_info.b_shape = Some(*b_shape);
+                        kernel_info.out_shape = Some(*out_shape);
                         kernel_info.end_loc += 1;
                     } else {
                         // Dot product followed by another dot product (update to latest dp)
@@ -47,7 +47,7 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                 // in current kernel with dot product previously
                 if let Some(kernel_info) = &mut in_kernel {
                     // elw matches dot product dimensions
-                    if kernel_info.batch_size.is_some() && kernel_info.batch_size.unwrap() * kernel_info.output_size.unwrap() == *size {
+                    if kernel_info.out_shape.is_some_and(|f| f.0 * f.1 == *size) {
                         // push to elw ks 
                         kernel_info.end_loc += 1;
                         elw_ks.push(kernel_info.clone())
@@ -61,7 +61,7 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                 // in current kernel with dot product previously
                 if let Some(kernel_info) = &mut in_kernel {
                     // elw matches dot product dimensions
-                    if kernel_info.batch_size.is_some() && kernel_info.batch_size.unwrap() * kernel_info.output_size.unwrap() == *size {
+                    if kernel_info.out_shape.is_some_and(|f| f.0 * f.1 == *size) {
                         // push to elw ks 
                         kernel_info.end_loc += 1;
                         elw_ks.push(kernel_info.clone())
@@ -75,7 +75,7 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                 // in current kernel with dot product previously
                 if let Some(kernel_info) = &mut in_kernel {
                     // elw matches dot product dimensions
-                    if kernel_info.batch_size.is_some() && kernel_info.batch_size.unwrap() * kernel_info.output_size.unwrap() == *size {
+                    if kernel_info.out_shape.is_some_and(|f| f.0 * f.1 == *size) {
                         // push to elw ks 
                         kernel_info.end_loc += 1;
                         elw_ks.push(kernel_info.clone())
@@ -92,9 +92,9 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                     in_kernel = Some(DpExprKernelInfo { 
                         start_loc: i,
                         end_loc: i,
-                        batch_size: None,
-                        input_size: None,
-                        output_size: None 
+                        a_shape: None,
+                        b_shape: None,
+                        out_shape: None 
                     })
                 }
             }
@@ -105,9 +105,9 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                     in_kernel = Some(DpExprKernelInfo { 
                         start_loc: i,
                         end_loc: i,
-                        batch_size: None,
-                        input_size: None,
-                        output_size: None 
+                        a_shape: None,
+                        b_shape: None,
+                        out_shape: None 
                     })
                 }
             }
@@ -135,9 +135,9 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                 fused_info.start_loc - to_delete,
                 Kernels::DPElwExpr { 
                     kernels: to_insert,
-                    batch_size: fused_info.batch_size.unwrap(),
-                    input_size: fused_info.input_size.unwrap(),
-                    output_size: fused_info.output_size.unwrap()
+                    a_shape: fused_info.a_shape.unwrap(),
+                    b_shape: fused_info.b_shape.unwrap(),
+                    res_shape: fused_info.out_shape.unwrap()
                 }
             );
 

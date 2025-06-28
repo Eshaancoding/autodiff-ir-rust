@@ -4,7 +4,7 @@ Extremely helpful for debugging everything (kernel fusion, expression, trackers,
 */
 
 use std::fmt::{Display, Formatter};
-use crate::{create_debug_hlp_funcs, trackers::Location};
+use crate::{create_debug_hlp_funcs, kernel_decl::Output, trackers::Location};
 
 use super::{
     kernel_decl::{Expression, Input, Matrix, Value, KernelProcedure, Kernels}, 
@@ -92,8 +92,24 @@ impl Display for Input {
             }
             Input::ConcatMatrix { id_one, id_two, conditional } => {
                 write!(f, "C (a: {}, b: {}, cond: {})", id_one, id_two, conditional)
+            },
+            Input::Temp => {
+                write!(f, "{}", "TEMP".to_string().cyan())
             }
         }
+    }
+}
+
+impl Display for Output {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Output::Mat { mat } => {
+                write!(f, "{}", mat)
+            }
+            Output::Temp => {
+                write!(f, "{}", "TEMP".to_string().cyan()) 
+            }
+        } 
     }
 }
 
@@ -145,11 +161,12 @@ impl Display for Kernels {
             Kernels::Reduce { a, res, op, vec_size, reduce_size} => {
                 let _ = write!(f, "{} {} {} ({})", res, " = ".on_blue(), format!(" {:#?} (Vec/X: {}, Reduce/Y: {}) ", op, vec_size.to_string().yellow(), reduce_size.to_string().yellow()).bold(), a);
             },
-            Kernels::DotProd { a, b, res, batch_size, input_size, output_size } => {
-                let b_yel = batch_size.to_string().yellow();
-                let i_yel = input_size.to_string().yellow();
-                let o_yel = output_size.to_string().yellow(); 
-                let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" ({}x{} DP {}x{})", b_yel, i_yel, i_yel, o_yel).bold(), b);
+            Kernels::DotProd { a, b, res, a_shape, b_shape, ..} => {
+                let a_one = a_shape.0.to_string().yellow();
+                let a_two = a_shape.1.to_string().yellow();
+                let b_one = b_shape.0.to_string().yellow();
+                let b_two = b_shape.1.to_string().yellow();
+                let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" ({}x{} DP {}x{})", a_one, a_two, b_one, b_two).bold(), b);
             },
             Kernels::Movement { a, res , size} => {
                 let _ = write!(f, "{} {} {}", res, format!(" <-(Move {})- ", size.to_string().yellow()).bold(), a);
@@ -175,12 +192,13 @@ impl Display for Kernels {
                     let _ = write!(f, "\t{}\n", k);
                 }
             },
-            Kernels::DPElwExpr { kernels, batch_size, input_size, output_size } => {
-                let b_yel = batch_size.to_string().yellow();
-                let i_yel = input_size.to_string().yellow();
-                let o_yel = output_size.to_string().yellow(); 
-                let elw_size_yel = (batch_size*output_size).to_string().yellow();
-                let _ = write!(f, "DP + Elw Kernel Fusion {}\n\n", format!("({}x{} DP {}x{}) -(elw)-> {}", b_yel, i_yel, i_yel, o_yel, elw_size_yel).bold());
+            Kernels::DPElwExpr { kernels, a_shape, b_shape, res_shape } => {
+                let a_one = a_shape.0.to_string().yellow();
+                let a_two = a_shape.1.to_string().yellow();
+                let b_one = b_shape.0.to_string().yellow();
+                let b_two = b_shape.1.to_string().yellow();
+                let elw_shape = (res_shape.0 * res_shape.1).to_string().yellow();
+                let _ = write!(f, "DP + Elw Kernel Fusion {}\n\n", format!("({}x{} DP {}x{}) -(elw)-> {}", a_one, a_two, b_one, b_two, elw_shape).bold());
                 for k in kernels.iter() {
                     let _ = write!(f, "\t{}\n", k);
                 }

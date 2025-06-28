@@ -21,5 +21,5 @@ impl Device for OpenCL {
         ValueData::none()  
     }
 
-    fn ir_callback (&self, cmds: &mut crate::IRBase) {}
+    fn ir_callback (&self, _: &mut crate::IRBase) {}
 }

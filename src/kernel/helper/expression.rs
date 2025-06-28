@@ -100,4 +100,11 @@ impl Expression {
     pub fn make_y () -> Expression {
         Expression::Val { v: Value::Y }
     }
+
+    pub fn is_global (&self) -> bool {
+        match self {
+            Expression::Val { v: Value::Global } => true,
+            _ => false
+        }
+    }
 }

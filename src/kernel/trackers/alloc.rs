@@ -1,10 +1,8 @@
 use std::sync::Arc;
 use std::collections::{HashMap, HashSet};
-use crate::kernel_decl::{KernelProcedure, Kernels};
+use crate::kernel_decl::{Kernels};
 use crate::trackers::ShapeTrackerKernel;
 use crate::Device;
-use crate::{ir::helper::{ir_to_res, ir_to_dep}, IRCmds};
-use super::ShapeTracker;
 
 #[derive(Clone, Debug)]
 pub struct Location {
@@ -101,7 +99,7 @@ impl<'a> AllocTracker<'a> {
             }
         }
 
-        for v in cmd.get_dep() {
+        for v in cmd.get_dep_id() {
             // skip dealloc loc if it contains one of the dep variables
             if self.dep_vars.contains(v) { continue; }
             
@@ -115,7 +113,8 @@ impl<'a> AllocTracker<'a> {
 
     pub fn merge (&mut self, other: AllocTracker, merge_loc: &Location) {
         self.vars = other.vars;    
-        
+        self.shape_tracker = other.shape_tracker;
+
         for (_, entry) in self.vars.iter_mut() {
             if let Some(dealloc_loc) = entry.dealloc_loc.as_mut() {
                 if dealloc_loc.proc_id != entry.alloc_loc.proc_id {

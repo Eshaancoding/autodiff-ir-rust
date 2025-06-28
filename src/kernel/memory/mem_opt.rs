@@ -24,7 +24,7 @@ pub fn mem_opt (proc: &mut KernelProcedure, var_changed: &Vec<String>) {
     let mut func_track = |proc: &mut KernelProcedure, idx: &mut usize| {
         let cmd = proc.get(*idx).unwrap();
 
-        let deps = cmd.get_dep();
+        let deps = cmd.get_dep_id();
         let res = cmd.get_res();
 
         if let Some(result) = res {
@@ -55,7 +55,7 @@ pub fn mem_opt (proc: &mut KernelProcedure, var_changed: &Vec<String>) {
 
         let KernelProcedure {id, kernels } = proc;
         let cmd = kernels.get_mut(idx).unwrap();
-        let deps = cmd.get_dep();
+        let deps = cmd.get_dep_id();
         let res = cmd.get_res();
         let mut replace_var: Option<(String, String)> = None;
 
@@ -104,7 +104,7 @@ pub fn mem_opt (proc: &mut KernelProcedure, var_changed: &Vec<String>) {
         // =================== Replace ================
         if let Some( (a, b) ) = replace_var {
             // replace result
-            cmd.change_res(b.clone());
+            cmd.change_res_id(b.clone());
 
             // replace all references from a to b
             // re-iterating O(n^2) <-- could be faster since we already have the locations

@@ -15,7 +15,7 @@ pub fn prox_opt (proc: &mut KernelProcedure) {
         for i in 0..cmd_idx {
             let i_cmd = proc.get(i).unwrap();
             let res = i_cmd.get_res();
-            let deps = i_cmd.get_dep();
+            let deps = i_cmd.get_dep_id();
 
             if let Some(result) = res {
                 res_loc
@@ -36,7 +36,7 @@ pub fn prox_opt (proc: &mut KernelProcedure) {
         let cmd = proc.get_mut(cmd_idx).unwrap();
         
         // deps --> definition location 
-        for dep in cmd.get_dep() {
+        for dep in cmd.get_dep_id() {
             if let Some(dep_idx) = res_loc.get(dep) {
                 if res_location.is_none_or(|f| (*dep_idx+1) > f) {
                     res_location = Some(*dep_idx + 1);

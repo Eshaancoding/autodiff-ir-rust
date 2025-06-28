@@ -32,13 +32,13 @@ pub fn prox_rev_opt (proc: &mut KernelProcedure) {
         let len_proc = proc.len();
         let cmd = proc.get(cmd_idx).unwrap();
         if let Some(dep) = cmd.get_res() {
-            let current_deps = cmd.get_dep();
+            let current_deps = cmd.get_dep_id();
 
             // ============ find latest definitions locations ============
             let mut earliest_pos: Option<usize> = None;
             for i in (cmd_idx+1)..len_proc {
                 let pot_cmd = proc.get(i).unwrap();
-                let pot_ref = pot_cmd.get_dep();
+                let pot_ref = pot_cmd.get_dep_id();
                 let pot_res = pot_cmd.get_res();
 
                 // again, location specific statements 

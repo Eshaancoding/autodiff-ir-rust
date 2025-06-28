@@ -31,6 +31,11 @@ pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, 
             let b_shape = mat_tracker.get_shape(b); 
             let res_shape = device.dot_prod_shape(a_shape, b_shape);
             
+            let convert_tuple = |v: &Vec<usize>| { 
+                assert_eq!(v.len(), 2, "convert tuple to length 2 invalid");
+                (v[0], v[1])
+            };
+            
             assert!(a_shape.len() == 2 && b_shape.len() == 2, "dot prod at kernel lowering has wrong dimensions");
 
             // Dot product instruction
@@ -38,9 +43,9 @@ pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, 
                 a: mat_tracker.get_input(a, AccessType::XY), 
                 b: mat_tracker.get_input(b, AccessType::XY), 
                 res: mat_tracker.get_res(res, AccessType::XY, &res_shape),
-                batch_size: *res_shape.first().unwrap(),
-                input_size: *a_shape.last().unwrap(),
-                output_size: *res_shape.last().unwrap()                         
+                a_shape: convert_tuple(&a_shape),
+                b_shape: convert_tuple(&b_shape),
+                res_shape: convert_tuple(&res_shape)
             });
         },
         IRCmds::Contigious { a, res } => {

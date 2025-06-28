@@ -43,6 +43,13 @@ pub enum Input {
         id_two: Box<Input>, 
         conditional: Expression // conditional on whether to access expression id_one or id_two
     }, 
+    Temp 
+}
+
+#[derive(Clone, Debug)]
+pub enum Output {
+    Mat { mat: Matrix }, // Usually, it's a matrix
+    Temp,                // On other times, it could be a temporary variable
 }
 
 #[derive(Clone, Debug)]
@@ -75,7 +82,7 @@ pub enum Kernels {
     // unary expressions, such as b = a.exp()
     Unary {
         a: Input,
-        res: Matrix,
+        res: Output,
         op: UnaryOp,
         size: usize   // size of the input
     },
@@ -84,7 +91,7 @@ pub enum Kernels {
     Binary {  
         a: Input,
         b: Input,
-        res: Matrix,
+        res: Output,
         op: BinaryOp,
         size: usize  // size of both a and b (both are same size)
     },  
@@ -92,7 +99,7 @@ pub enum Kernels {
     // reduce kernels, specifically along a dim (ex: sum)
     Reduce { 
         a: Input,
-        res: Matrix,
+        res: Output,
         op: ReduceOp,
         vec_size: usize,    // num of vecs to be reduced (represents x)
         reduce_size: usize, // how much you have to reduce over (this represents y)
@@ -104,10 +111,10 @@ pub enum Kernels {
     DotProd { 
         a: Input,
         b: Input,
-        res: Matrix,
-        batch_size: usize,  // batch size  (B in BxI * IxO --> BxO)
-        input_size: usize,  // input size  (I in BxI * IxO --> BxO)
-        output_size: usize, // output size (O in BxI * IxO --> BxO)
+        res: Output,
+        a_shape: (usize, usize),
+        b_shape: (usize, usize),
+        res_shape: (usize, usize),
     }, 
 
     // kernels that turns movement / permutations / concatenation of tensors into single contigious tensor.  
@@ -115,7 +122,7 @@ pub enum Kernels {
     // Note that for some implementations of dot prod, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
     Movement { 
         a: Input,
-        res: Matrix,
+        res: Output,
         size: usize,   // size of the result kernel
     },
 
@@ -138,6 +145,7 @@ pub enum Kernels {
 
     // ================ Kernel Fusion ================ 
     // Note that each device can set support/unsupport for each fusion operation
+    // whenever you add anything here, make sure you add in metainfo.rs
     ElwExpr {
         kernels: Vec<Kernels>, // only unary and binary kernels allowed
         size: usize // size of the fused operations
@@ -146,9 +154,9 @@ pub enum Kernels {
     // Dot product fused with elw expression
     DPElwExpr {
         kernels: Vec<Kernels>,
-        batch_size: usize,
-        input_size: usize,
-        output_size: usize
+        a_shape: (usize, usize),
+        b_shape: (usize, usize),
+        res_shape: (usize, usize)
     },
 
     // Reduce operation fused with elw expression

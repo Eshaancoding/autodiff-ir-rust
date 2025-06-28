@@ -1,7 +1,7 @@
 use crate::trackers::{KernelTracker, Location};
 
 impl KernelTracker {
-    pub fn merge (&mut self, other: KernelTracker, merge_loc: &Location) {
+    pub fn merge (&mut self, _other: KernelTracker, _merge_loc: &Location) {
         /* 
         merge kernel tracker with cloned kernel tracker (this is called during branching) 
 

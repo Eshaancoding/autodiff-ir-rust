@@ -1,5 +1,5 @@
 use crate::{
-    kernel_decl::{KernelProcedure, Kernels}, to_kernel::convert_to_proc, trackers::{KernelTracker, Location}, Device, IRCmds, IRProcedure
+    kernel_decl::{KernelProcedure, Kernels}, to_kernel::convert_to_proc, trackers::KernelTracker, Device, IRCmds, IRProcedure
 };
 
 fn handle_embed_proc (device: &dyn Device, mat_tracker: &mut KernelTracker, p: &IRProcedure) -> KernelProcedure {

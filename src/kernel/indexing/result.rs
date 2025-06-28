@@ -1,5 +1,5 @@
 use crate::helper::shape::ndim_to_global;
-use crate::kernel_decl::{Matrix, Expression};
+use crate::kernel_decl::{Expression, Matrix, Output};
 use crate::trackers::{AccessType, KernelTracker};
 
 /*
@@ -14,21 +14,23 @@ However, we still need to know the dimensions. This is calculated manually witho
 */ 
 
 impl KernelTracker {
-    pub fn get_res (&self, id: &String, access_type: AccessType, expected_shape: &Vec<usize>) -> Matrix {
+    pub fn get_res (&self, id: &String, access_type: AccessType, expected_shape: &Vec<usize>) -> Output {
         return match access_type {
             AccessType::XY => {
-                Matrix { 
+                Output::Mat { mat: Matrix { 
                     id: id.clone(), 
                     access: Expression::simplify(ndim_to_global(
                         &vec![Expression::make_x(), Expression::make_y()], 
                         &expected_shape
                     ))
                 }
-            },
+            } },
             AccessType::Global => {
-                Matrix { 
-                    id: id.clone(), 
-                    access: Expression::make_global() 
+                Output::Mat { mat: 
+                    Matrix { 
+                        id: id.clone(), 
+                        access: Expression::make_global() 
+                    }
                 }
             }
         }

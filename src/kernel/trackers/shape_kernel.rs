@@ -17,23 +17,26 @@ impl ShapeTrackerKernel {
                 self.shape.insert(id.clone(), *size);
             },
             Kernels::Unary { res, size, .. } => {
-                self.shape.insert(res.id.clone(), *size);
+                self.shape.insert(res.id().clone(), *size);
             },
             Kernels::Binary { res, size, .. } => {
-                self.shape.insert(res.id.clone(), *size);
+                self.shape.insert(res.id().clone(), *size);
             },
             Kernels::Reduce { res, vec_size, .. } => {
-                self.shape.insert(res.id.clone(), *vec_size);
+                self.shape.insert(res.id().clone(), *vec_size);
             },
-            Kernels::DotProd { res, batch_size, input_size, output_size , .. }  => {
+            Kernels::DotProd { res, a_shape, b_shape, .. }  => {
+                let a_shape_vec = vec![a_shape.0, a_shape.1];
+                let b_shape_vec = vec![b_shape.0, b_shape.1];
+
                 let out_shape = device.dot_prod_shape(
-                    &vec![*batch_size, *input_size], 
-                    &vec![*input_size, *output_size]
+                    &a_shape_vec,
+                    &b_shape_vec
                 );
-                self.shape.insert(res.id.clone(),  out_shape.iter().product::<usize>());
+                self.shape.insert(res.id().clone(),  out_shape.iter().product::<usize>());
             },
             Kernels::Movement { res, size, ..} => {
-                self.shape.insert(res.id.clone(), *size);
+                self.shape.insert(res.id().clone(), *size);
             },
             _ => {} 
         }
