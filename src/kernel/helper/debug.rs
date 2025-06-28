@@ -160,7 +160,7 @@ impl Display for Kernels {
             Kernels::If { .. } => {
                 print_if(f, self, 0);
             },
-            Kernels::Alloc { id, size, content } => {
+            Kernels::Alloc { id, size, content, .. } => {
                 let _ = write!(f, "{} {} {}", "Alloc".green().bold(), id, size.to_string().yellow().bold());
                 if let Some(c) = content {
                     let _ = write!(f, " (with content of size: {})", c.len().to_string().yellow().bold());
@@ -192,7 +192,7 @@ impl Display for Kernels {
                 for k in kernels.iter() {
                     let _ = write!(f, "\t{}\n", k);
                 }
-            }
+            },
         }
         write!(f, "")
     }

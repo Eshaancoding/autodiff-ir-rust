@@ -4,18 +4,15 @@ use crate::ir::opts::{
     const_begin, dep_opt, mem_opt, opeq_opt, prox_opt, prox_rev_opt, repeat_opt, track_var_changed
 };
 
-use crate::ir::helper::get_score;
-
-// note BR optimization I skipped
-// removed chain opt as it doesn't do much
 
 pub fn ir_optimize () {
+    // Very basic IR optimizations
+
     // skip opt if we don't want it
     if disable_ir_opt() { return; }
     
     let mut guard = IRB.lock().unwrap();
     let irb = guard.as_mut().expect("Can't unpack IRBuilder");
-    
     let var_changed = track_var_changed(&mut irb.proc);
     
     // Dept optimizations --> deletes unused variables
@@ -33,7 +30,20 @@ pub fn ir_optimize () {
     // Set constants to the front --> no optimizations; just nicer to look at IR.
     const_begin(&mut irb.proc);
 
+    // also do graph optimizations here for nicer simplification
+    // constant evalutation
+    // *= opts
+    // probably more ideas in TODO
+    // etc.
+
+
+
+
+
     // Memory optimization --> replace unnecessary ids; less memory allocated at kernel level
+    
+    // switch memory opts into kernel size
+    /*
     mem_opt(&mut irb.proc, &var_changed);
 
     // Opeq optimization --> after memory optimization, there's often times where m = m * eq would exist. This could be simplified to m *= eq
@@ -64,6 +74,7 @@ pub fn ir_optimize () {
         
         prev_max_val = Some(max_val);
     }
+    */
 
     drop(guard);
 }

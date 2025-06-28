@@ -7,7 +7,7 @@ use crate::trackers::{
     AccessType
 };
 
-impl<'a> KernelTracker<'a> {    
+impl KernelTracker {    
     pub fn get_inp_dep (&self, id: &String, ndim: &mut Vec<Expression>) -> Input {
         // is vars concat
         if let Some(result) = self.vars_concat.get(id) {

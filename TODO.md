@@ -224,6 +224,7 @@ Backend will refer to things that runs the internal operations and optimizations
 * Use macros for repetitive statements
     * example, `kernel/to_instr` can be simplified to macros
     * in general the node trait is highly repeatable
+    * fusion (dp elw) is also highly repetitive
 * Especially for optimizations, there are some commonly shared functions 
     * like insert X items into V locations
 * better debug messages (especially in frontend)

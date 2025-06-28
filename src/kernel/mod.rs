@@ -7,3 +7,4 @@ pub mod procedure;
 pub mod indexing;
 pub mod conflicts;
 pub mod fusion;
+pub mod memory;

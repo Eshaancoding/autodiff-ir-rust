@@ -52,6 +52,16 @@ pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, 
                 size: a_shape.iter().product()
             });
         },
+
+        // "special" in not the traditional sense. Device doesn't implement AllocEntry
+        // this exists for allocations
+        IRCmds::CreateMat { contents, dim, id } => {
+            instr.push(Kernels::Alloc { 
+                id: id.clone(), 
+                size: dim.iter().product::<usize>(), 
+                content: Some(contents.clone())
+            })
+        }
         _ => {}
     }
 }

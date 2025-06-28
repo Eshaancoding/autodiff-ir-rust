@@ -13,7 +13,7 @@ If we are on cmd (1), b hasn't been fully realized by the matrix tracker. It has
 However, we still need to know the dimensions. This is calculated manually without using shape tracker
 */ 
 
-impl<'a> KernelTracker<'a> {
+impl KernelTracker {
     pub fn get_res (&self, id: &String, access_type: AccessType, expected_shape: &Vec<usize>) -> Matrix {
         return match access_type {
             AccessType::XY => {

@@ -41,7 +41,7 @@ pub fn broadcasting_test () {
 
 // nn_test
 pub fn nn_test () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
+    autodiff::set_device(autodiff::devices::OpenCL::new());
 
     autodiff::eager_dep_opt();
 
@@ -78,7 +78,7 @@ pub fn nn_test () {
 
 // Transformer Test
 pub fn multihead_att () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
+    autodiff::set_device(autodiff::devices::OpenCL::new());
 
     let transformer = nn::MultiHeadAttention(64, 4);
     let mut opt = nn::optimizers::SGD(transformer.params(), 0.01);
@@ -142,11 +142,12 @@ pub fn forward () {
 }
 
 pub fn main () {
+    nn_test();
+    // multihead_att();
+
     // forward();
     // me_life();
-    nn_test();
     // broadcasting_test();
-    // multihead_att();
     // reduce();
     // concat_test();
     // broadcasting_test();

@@ -57,6 +57,34 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                     in_kernel = None;
                 }
             }
+            else if let Kernels::Binary { size, .. } = cmd {
+                // in current kernel with dot product previously
+                if let Some(kernel_info) = &mut in_kernel {
+                    // elw matches dot product dimensions
+                    if kernel_info.batch_size.is_some() && kernel_info.batch_size.unwrap() * kernel_info.output_size.unwrap() == *size {
+                        // push to elw ks 
+                        kernel_info.end_loc += 1;
+                        elw_ks.push(kernel_info.clone())
+                    }
+
+                    // reset in kernel
+                    in_kernel = None;
+                }
+            }
+            else if let Kernels::Unary { size, .. } = cmd {
+                // in current kernel with dot product previously
+                if let Some(kernel_info) = &mut in_kernel {
+                    // elw matches dot product dimensions
+                    if kernel_info.batch_size.is_some() && kernel_info.batch_size.unwrap() * kernel_info.output_size.unwrap() == *size {
+                        // push to elw ks 
+                        kernel_info.end_loc += 1;
+                        elw_ks.push(kernel_info.clone())
+                    }
+
+                    // reset in kernel
+                    in_kernel = None;
+                }
+            }
             else if let Kernels::Dealloc { .. } = cmd {
                 if let Some(current_kernel) = in_kernel.as_mut() {
                     current_kernel.end_loc += 1;

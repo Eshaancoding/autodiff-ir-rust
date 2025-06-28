@@ -1,7 +1,7 @@
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use crate::{
-    ir::helper::ir_to_res, trackers::{AllocEntry, AllocTracker, ConstantTracker, Location}, Device, IRCmds
+    ir::helper::ir_to_res, trackers::ConstantTracker, Device, IRCmds
 };
 use super::ShapeTracker;
 
@@ -42,7 +42,7 @@ pub struct VarConcatDep {
 }
 
 #[derive(Clone)]
-pub struct KernelTracker<'a> {
+pub struct KernelTracker {
     // given sink variable, get source variable and the steps to reach to sink var
     // Vars and sources hashmap keys must always come from alloc tracker's id (except for concat vars)
     pub sources: HashMap<String, VarSource>,                // tracks source variables (no var dependency)
@@ -52,7 +52,6 @@ pub struct KernelTracker<'a> {
 
     pub shape_tracker: ShapeTracker,                        // tracks the shape of variables
     pub constant_tracker: ConstantTracker,                  // tracks constant tracker
-    pub alloc_tracker: AllocTracker<'a>,                    // Tracks the allocation
 }
 
 // Different access types (depending on the kernel used) is needed
@@ -62,8 +61,8 @@ pub enum AccessType {
     XY,             // Dot product/Reduce; restricted to matrix 2-dim; uses X and Y. (SEE src/matmul_cpu/512_matmul.cpp for example of x + y)
 }
 
-impl<'a> KernelTracker<'a> {
-    pub fn new (dep_vars: &'a HashSet<String>) -> KernelTracker<'a> {
+impl KernelTracker {
+    pub fn new () -> KernelTracker {
         KernelTracker { 
             sources: HashMap::new(),
             vars: HashMap::new(), 
@@ -71,11 +70,10 @@ impl<'a> KernelTracker<'a> {
             vars_concat: HashMap::new(),            
             shape_tracker: ShapeTracker::new(),
             constant_tracker: ConstantTracker::new(),
-            alloc_tracker: AllocTracker::new(dep_vars)
         }
     }
 
-    pub fn step (&mut self, device: &dyn Device, cmd: &'a IRCmds, loc: Location) {
+    pub fn step (&mut self, device: &dyn Device, cmd: &IRCmds) {
         let mut prev_dim: Vec<usize> = vec![];
         if let IRCmds::View { a, .. } = cmd {
             prev_dim = self.shape_tracker.get_shape(&a).clone();
@@ -84,7 +82,6 @@ impl<'a> KernelTracker<'a> {
         // needs to be sync with the Matrix Tracker
         self.shape_tracker.step(device, cmd);
         self.constant_tracker.step(cmd);
-        self.alloc_tracker.step(cmd, &self.shape_tracker, loc);
 
         // track the sources and the variables
         let mut dep_cmp: String = "".to_string();
@@ -242,10 +239,5 @@ impl<'a> KernelTracker<'a> {
     // wrapper over constant tracker
     pub fn get_constant (&self, id: &String) -> Option<f64> {
         self.constant_tracker.get_f64(id)
-    }
-
-    // wrapper over alloc tracker
-    pub fn get_alloc (&self, id: &String) -> &AllocEntry {
-        self.alloc_tracker.get_alloc(id)
     }
 }

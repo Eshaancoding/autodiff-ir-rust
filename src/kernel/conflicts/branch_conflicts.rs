@@ -1,7 +1,7 @@
 use crate::trackers::{KernelTracker, Location};
 
-impl<'a> KernelTracker<'a> {
-    pub fn merge (&mut self, other: KernelTracker<'a>, merge_loc: &Location) {
+impl KernelTracker {
+    pub fn merge (&mut self, other: KernelTracker, merge_loc: &Location) {
         /* 
         merge kernel tracker with cloned kernel tracker (this is called during branching) 
 
@@ -10,6 +10,8 @@ impl<'a> KernelTracker<'a> {
 
         // ======================== Allocation ======================== 
         // detect if any variables that have the allocation that is not in the same proc id
+        
+        /*
         self.alloc_tracker = other.alloc_tracker.clone();
         for (_, entry) in self.alloc_tracker.vars.iter_mut() {
             if let Some(dealloc_loc) = entry.dealloc_loc.as_mut() {
@@ -18,5 +20,6 @@ impl<'a> KernelTracker<'a> {
                 }
             }
         }
+        */
     }
 }
