@@ -68,17 +68,15 @@ Backend will refer to things that runs the internal operations and optimizations
     * ~~Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT~~
         * ~~Then, you need a temp allocation for this.~~
 
-    * <mark>Host --> Device feeder</mark>
-        * fix this before implementing the x86 implementation
-    
-    * **MEM OPTS** Technically, all memory can just be under one HUGE memory block 
-        * "Tetris" Block optimizations
-        * or you can do "LANE" optimization
-        * only apply these variables that are NOT 1. initially initialized with some content 2. not in dep vars
-        * this way, only temporary variables fall under this tetris optimization
+    * ~~MEM OPTS Technically, all memory can just be under one HUGE memory block~~
+        * ~~"Tetris" Block optimizations~~
 
     * ~~MEM OPTS: You need to first implement kernel fusion, but after that, you can remove entire allocations altogether~~
         * ~~if alloc + dealloc is in one fused op, delete alloc, and then just use a "temporary var"~~
+
+    * <mark>Host --> Device feeder</mark>
+        * fix this before implementing the x86 implementation
+    
 
     * Divergent branching conflicts
         * Could be more complicated on various scenarious (sources, vars, concat, trackers, etc.)        
