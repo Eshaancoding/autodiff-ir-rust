@@ -1,4 +1,4 @@
-use crate::kernel_decl::{Expression, Output};
+use crate::kernel_decl::{Expression, Matrix, Output};
 
 
 impl Output {
@@ -20,6 +20,13 @@ impl Output {
         match self {
             Output::Mat { mat } => { &mat.access },
             Output::Temp => panic!("Calling access() of temp")
+        }
+    }
+
+    pub fn get_mut_mat (&mut self) -> Option<&mut Matrix> {
+        match self {
+            Output::Mat { mat } => Some(mat),
+            _ => None
         }
     }
 }

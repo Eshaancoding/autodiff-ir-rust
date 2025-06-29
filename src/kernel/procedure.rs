@@ -91,9 +91,48 @@ impl KernelProcedure {
 
             if should_continue { cmd_idx += 1; }
 
-            if cmd_idx == self.kernels.len() {
+            if cmd_idx >= self.kernels.len() {
                 break;
             }
+        }
+    }
+
+    pub fn step_cmd_fusion<T> (&mut self, f: &mut T)
+        where T: FnMut(&mut Vec<Kernels>, &mut usize)
+        // block id, current cmd -> should continue loop
+    {
+        step_cmd_fusion_vec(&mut self.kernels, f);
+    }
+}
+
+fn step_cmd_fusion_vec<T> (k: &mut Vec<Kernels>, f: &mut T)
+    where T: FnMut(&mut Vec<Kernels>, &mut usize)
+    // block id, current cmd -> should continue loop
+{
+    let mut cmd_idx = 0;
+    
+    loop {
+        f(k, &mut cmd_idx);
+
+        if let Kernels::While { block, .. } = k.get_mut(cmd_idx).unwrap() {
+            step_cmd_fusion_vec(&mut block.kernels, f);
+        }
+        else if let Kernels::If { conditions, else_proc } = k.get_mut(cmd_idx).unwrap() {
+            for (_, i_proc) in conditions {
+                step_cmd_fusion_vec(&mut i_proc.kernels, f);
+            } 
+            if let Some(e_proc) = else_proc {
+                step_cmd_fusion_vec(&mut e_proc.kernels, f);
+            }
+        }
+        else if let Some(kernels) = k.get_mut(cmd_idx).unwrap().fus_get_mut_kernels() {
+            step_cmd_fusion_vec(kernels, f);
+        }
+
+        cmd_idx += 1;
+
+        if cmd_idx >= k.len() {
+            break;
         }
     }
 }

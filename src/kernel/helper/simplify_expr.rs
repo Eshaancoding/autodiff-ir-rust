@@ -1,6 +1,8 @@
 // The actual baseline of this code was written in ChatGPT...
 // Thanks ChatGPT!
 
+use crate::kernel_decl::{KernelProcedure, Kernels};
+
 use super::kernel_decl::{Expression, Value};
 
 impl Expression {
@@ -139,7 +141,7 @@ impl Expression {
         }
 
         
-        // ======== if b >= a at x % a % b, it's equivalent to x % a +==========
+        /*
         fn make_opt_remainder (a: Expression, b: Expression) -> Expression {
             if let Some(b_val) = b.get_const() {
                 let log_two_res = (b_val as f32).log2();
@@ -152,28 +154,90 @@ impl Expression {
             }
             Expression::make_remainder(a, b)
         }
+        */
 
+        // ======== if b >= a at x % a % b, it's equivalent to x % a +==========
         if op_str == "remainder" {
             match (&a_simplified, &b_simplified) {
                 (
-                    Expression::Remainder { a, b},
-                    Expression::Val { v: Value::Constant { val } },
+                    Expression::Remainder { a, b },
+                    Expression::Val { v: Value::Constant { val: val_two } }
                 ) => {
-                    let val_b = val.clone();
-
-                    if let Some(val_a) = b.get_const() {
-                        if val_b >= val_a {
-                            return make_opt_remainder(*a.clone(), Expression::make_const(val_a));
-                        }
+                    match &**b {
+                        Expression::Val { v: Value::Constant { val: val_one } } => {
+                            if val_one == val_two {
+                                return Expression::make_remainder(*a.clone(), Expression::Val { v: Value::Constant { val: *val_one } })
+                            }
+                        },
+                        _ => {}
                     }
                 },
-                _ => {
-                    return make_opt_remainder(a_simplified, b_simplified);
-                }
+                _ => {}
             }
         }
 
         // if not, just return the orig expression
         constructor(a_simplified, b_simplified)
     }
+}
+
+
+
+// M (id: ax, access: #global)  =  CS (V: 0.1)  Multiply (128)  M (id: ax, access: (#global % 128))
+// there are some cases like this where (#global % 128) can be simplified to #global because of the size of the elw operation
+// this only applies to unary, binary operations, and movement (dot prod, reduce, etc. invalid)
+pub fn could_replace (expr: &Expression, s: usize) -> Option<&Box<Expression>> {
+    match expr {
+        Expression::Remainder { a, b } => {
+            match &**b {
+                Expression::Val { v: Value::Constant { val } } => {
+                    if (*val as usize) == s {
+                        return Some(a)
+                    }
+                },
+                _ => {}
+            }
+        },
+        _ => {}
+    }
+
+    None
+}
+
+pub fn simplify_global_expr (kernel_proc: &mut KernelProcedure) {
+    kernel_proc.step_cmd(&mut |proc, idx| {
+        let cmd = proc.get_mut(*idx).unwrap(); 
+        if let Some(p) = cmd.fus_get_mut_kernels() {
+            for kernel in p.iter_mut() {
+                
+                let mut s = 0;
+                if let Kernels::Unary { size, .. } = kernel { s = *size; }
+                if let Kernels::Binary { size, .. } = kernel { s = *size; }
+                if let Kernels::Movement { size, .. } = kernel { s = *size; }
+
+                if s == 0 { continue; }
+
+                for expr in kernel.get_any_mut_access_expr() {
+                    if let Some(a) = could_replace(expr, s) {
+                        *expr = *a.clone();
+                    }
+                }
+            }
+        } else {
+            let mut s = 0;
+            if let Kernels::Unary { size, .. } = cmd { s = *size; }
+            if let Kernels::Binary { size, .. } = cmd { s = *size; }
+            if let Kernels::Movement { size, .. } = cmd { s = *size; }
+
+            if s == 0 { return true; }
+
+            for expr in cmd.get_any_mut_access_expr() {
+                if let Some(a) = could_replace(expr, s) {
+                    *expr = *a.clone();
+                }
+            }
+        }
+
+        true
+    });
 }

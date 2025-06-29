@@ -1,11 +1,5 @@
 use crate::{
-    alloc::{alloc_out_fused, alloc_switch, alloc_temp_opt, insert_alloc},  
-    fusion::{dp_elw::fuse_dp_expr, fuse_elw_expr, fuse_rd_expr}, 
-    kernel_decl::{KernelProcedure, Kernels}, 
-    memory::{get_score, mem_opt, prox_opt, prox_rev_opt}, 
-    to_instr::{to_comp, to_control, to_elw, to_special, to_unary}, 
-    Device, 
-    IRProcedure
+    alloc::{alloc_out_fused, alloc_switch, alloc_temp_opt, insert_alloc, tetris_opt}, fusion::{dp_elw::fuse_dp_expr, fuse_elw_expr, fuse_rd_expr}, helper::simplify_expr::simplify_global_expr, kernel_decl::{KernelProcedure, Kernels}, memory::{get_score, mem_opt, prox_opt, prox_rev_opt}, to_instr::{to_comp, to_control, to_elw, to_special, to_unary}, Device, IRProcedure
 };
 use super::trackers::KernelTracker;
 
@@ -74,12 +68,10 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
 
     // ========= Allocation Optimizations =========
     alloc_switch(&mut kernel_proc);
-
-    // you need access expression simplification even more for this to work the best
-    alloc_temp_opt(&mut kernel_proc);
-    
+    simplify_global_expr(&mut kernel_proc);
+    alloc_temp_opt(&mut kernel_proc);  // you need access expression simplification even more for this to work the best
+    tetris_opt(&mut kernel_proc);
     alloc_out_fused(&mut kernel_proc);
-    // lastly, tetris opt
 
     // ====== Kernel checks for sanity purposes ======= 
     // in fusion kernels, check if only allowed kernel irs are inserted

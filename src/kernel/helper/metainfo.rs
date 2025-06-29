@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::kernel_decl::{Expression, Input, KernelProcedure, Kernels, Output};
+use crate::kernel_decl::{Expression, Input, KernelProcedure, Kernels, Matrix, Output};
 
 // split this up when you have the chance
 
@@ -39,10 +39,27 @@ impl Input {
         }
     }
 
-    pub fn get_mat_access_expr (&self) -> Option<&Expression> {
+    pub fn get_mut_mat (&mut self) -> Option<&mut Matrix> {
+        match self {
+            Input::Mat { mat } => Some(mat),
+            _ => None
+        }
+    }
+
+    pub fn get_access_expr (&self) -> Option<&Expression> {
         match self {
             Input::Mat { mat } => {
                 Some(&mat.access)
+            },
+            // ignore concatenation matrix for alloc_temp_opt
+            _ => { None }
+        }
+    }
+
+    pub fn get_mut_access_expr (&mut self) -> Option<&mut Expression> {
+        match self {
+            Input::Mat { mat } => {
+                Some(&mut mat.access)
             },
             // ignore concatenation matrix for alloc_temp_opt
             _ => { None }
@@ -54,13 +71,27 @@ impl Input {
 fn filter_access_expr<'a> (v: Vec<&'a Input>, id: &String) -> Vec<&'a Expression> {
     let res: Vec<_> = v.iter()
         .filter(|&&f| f.get_mat_id().is_some_and(|v| *v == *id))
-        .map(|&f| f.get_mat_access_expr().unwrap())
+        .map(|&f| f.get_access_expr().unwrap())
         .collect();
 
     res
 }
 
+fn get_any_expr<'a> (v: Vec<&'a mut Input>) -> Vec<&'a mut Expression> {
+    let mut n: Vec<&'a mut Expression> = vec![];
+
+    for i in v {
+        let b = i.get_mut_access_expr();
+        if b.is_some() {
+            n.push(b.unwrap())
+        }
+    }
+
+    n
+}
+
 // Get dependencies and results
+// you can abstract pretty much this entire thing into mat info or something like that
 impl Kernels {
     // get dependency access expressions
     pub fn get_dep_access_expr (&self, id: &String) -> Vec<&Expression> {
@@ -74,6 +105,22 @@ impl Kernels {
             Kernels::Unary { a, .. }  => { filter_access_expr(vec![a], id) },
             Kernels::Reduce { a, .. }  => {  filter_access_expr(vec![a], id) },
             Kernels::Movement { a, .. }  => {  filter_access_expr(vec![a], id) },
+            // Kernel fusion operations are created only after memory optimization 
+            _ => { vec![] }
+        }
+    }
+
+    pub fn get_any_mut_access_expr (&mut self) -> Vec<&mut Expression> {
+        match self {
+            Kernels::Binary { a, b, .. } => {
+                get_any_expr(vec![a, b])
+            },
+            Kernels::DotProd { a, b, .. } => {
+                get_any_expr(vec![a, b])
+            },
+            Kernels::Unary { a, .. }  => { get_any_expr(vec![a]) },
+            Kernels::Reduce { a, .. }  => {  get_any_expr(vec![a]) },
+            Kernels::Movement { a, .. }  => {  get_any_expr(vec![a]) },
             // Kernel fusion operations are created only after memory optimization 
             _ => { vec![] }
         }
