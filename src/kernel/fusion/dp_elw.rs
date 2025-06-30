@@ -10,7 +10,7 @@ pub struct DpExprKernelInfo {
     pub out_shape: Option<(usize, usize)>
 }
 
-pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
+pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure, kernel_id: &mut usize) {
     kernel_proc.apply(&mut |proc| {
         // ============== Track potential kernel fusion operations ============== 
         let mut elw_ks: Vec<DpExprKernelInfo> = vec![];
@@ -137,10 +137,12 @@ pub fn fuse_dp_expr (kernel_proc: &mut KernelProcedure) {
                     kernels: to_insert,
                     a_shape: fused_info.a_shape.unwrap(),
                     b_shape: fused_info.b_shape.unwrap(),
-                    res_shape: fused_info.out_shape.unwrap()
+                    res_shape: fused_info.out_shape.unwrap(),
+                    id: *kernel_id
                 }
             );
 
+            *kernel_id += 1;
             to_delete += size;
         }
 

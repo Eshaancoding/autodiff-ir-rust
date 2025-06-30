@@ -1,18 +1,25 @@
 use crate::{
-    alloc::{alloc_out_fused, alloc_switch, alloc_temp_opt, insert_alloc, tetris_opt}, fusion::{dp_elw::fuse_dp_expr, fuse_elw_expr, fuse_rd_expr}, helper::simplify_expr::simplify_global_expr, kernel_decl::{KernelProcedure, Kernels}, memory::{get_score, mem_opt, prox_opt, prox_rev_opt}, to_instr::{to_comp, to_control, to_elw, to_special, to_unary}, Device, IRProcedure
+    alloc::{alloc_out_fused, alloc_switch, alloc_temp_opt, insert_alloc, tetris_opt}, 
+    fusion::{dp_elw::fuse_dp_expr, fuse_elw_expr, fuse_rd_expr}, 
+    helper::simplify_expr::simplify_global_expr, 
+    kernel_decl::{KernelProcedure, Kernels}, 
+    memory::{get_score, mem_opt, prox_opt, prox_rev_opt}, 
+    to_instr::{to_comp, to_control, to_elw, to_special, to_unary}, 
+    Device, 
+    IRProcedure
 };
 use super::trackers::KernelTracker;
 
-pub fn convert_to_proc (device: &dyn Device, kernel_tracker: &mut KernelTracker, proc: &IRProcedure) -> KernelProcedure {
+pub fn convert_to_proc (device: &dyn Device, kernel_tracker: &mut KernelTracker, proc: &IRProcedure, kernel_id: &mut usize) -> KernelProcedure {
     let mut kernels: Vec<Kernels> = vec![];
 
     for cmd in proc.iter() {
-        to_elw(cmd, &mut kernels, &kernel_tracker);
-        to_comp(cmd, &mut kernels, &kernel_tracker);
-        to_unary(cmd, &mut kernels, &kernel_tracker);
-        to_special(device, cmd, &mut kernels, &kernel_tracker);
+        to_elw(cmd, &mut kernels, &kernel_tracker, kernel_id);
+        to_comp(cmd, &mut kernels, &kernel_tracker, kernel_id);
+        to_unary(cmd, &mut kernels, &kernel_tracker, kernel_id);
+        to_special(device, cmd, &mut kernels, &kernel_tracker, kernel_id);
 
-        to_control(device, cmd, &mut kernels, kernel_tracker); // note: recursive
+        to_control(device, cmd, &mut kernels, kernel_tracker, kernel_id); // note: recursive
 
         // step kernel tracker
         kernel_tracker.step(device, cmd);
@@ -25,10 +32,11 @@ pub fn convert_to_proc (device: &dyn Device, kernel_tracker: &mut KernelTracker,
 }
 
 pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
+    let mut kernel_id: usize = 0;
 
     // ========== Create initial procedure with kernel tracker ========== 
     let mut kernel_tracker = KernelTracker::new();
-    let mut kernel_proc = convert_to_proc(device, &mut kernel_tracker, proc);
+    let mut kernel_proc = convert_to_proc(device, &mut kernel_tracker, proc, &mut kernel_id);
 
     // ========= Memory Optimization ==========
     let var_changed = kernel_proc.get_var_changed(); 
@@ -62,9 +70,9 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
     insert_alloc(device, &mut kernel_proc);
 
     // ========= Kernel Fusion =========
-    fuse_elw_expr(&mut kernel_proc); 
-    fuse_dp_expr(&mut kernel_proc);
-    fuse_rd_expr(&mut kernel_proc);
+    fuse_elw_expr(&mut kernel_proc, &mut kernel_id); 
+    fuse_dp_expr(&mut kernel_proc, &mut kernel_id);
+    fuse_rd_expr(&mut kernel_proc, &mut kernel_id);
 
     // ========= Allocation Optimizations =========
     alloc_switch(&mut kernel_proc);
@@ -75,14 +83,11 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
 
     // ====== Kernel checks for sanity purposes ======= 
     // in fusion kernels, check if only allowed kernel irs are inserted
+    // also check if first kernel is a dotprod/reduce
 
     // ========= Kernel Tuning =========
 
 
     // ========= Return =========
-
-    // ...debug...
-    println!("{}", kernel_proc);
-
     kernel_proc
 }

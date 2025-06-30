@@ -81,6 +81,7 @@ pub enum ReduceOp {
 pub enum Kernels {
     // unary expressions, such as b = a.exp()
     Unary {
+        id: usize,
         a: Input,
         res: Output,
         op: UnaryOp,
@@ -89,6 +90,7 @@ pub enum Kernels {
 
     // binary kernels, such as a + b or a * b
     Binary {  
+        id: usize,
         a: Input,
         b: Input,
         res: Output,
@@ -98,6 +100,7 @@ pub enum Kernels {
 
     // reduce kernels, specifically along a dim (ex: sum)
     Reduce { 
+        id: usize,
         a: Input,
         res: Output,
         op: ReduceOp,
@@ -109,6 +112,7 @@ pub enum Kernels {
     // note that the access expression for a, b, and res are in terms of global idx. You'd have to convert to local group --> global at dot prod kernel
     // This will be improved in the future; dot product kernels are an entire can of worms that you really don't want to enter.
     DotProd { 
+        id: usize,
         a: Input,
         b: Input,
         res: Output,
@@ -121,6 +125,7 @@ pub enum Kernels {
     // note that this movement kernel is not initially created; it's generated lazily or during optimizations. 
     // Note that for some implementations of dot prod, we need contigious as it uses single load/store operation that accesses memory address x ... x + 4.
     Movement { 
+        id: usize,
         a: Input,
         res: Output,
         size: usize,   // size of the result kernel
@@ -147,12 +152,15 @@ pub enum Kernels {
     // Note that each device can set support/unsupport for each fusion operation
     // whenever you add anything here, make sure you add in metainfo.rs
     ElwExpr {
+        id: usize,
         kernels: Vec<Kernels>, // only unary and binary kernels allowed
         size: usize // size of the fused operations
     },
 
     // Dot product fused with elw expression
+    // first kernel is a dot prod, the rest are ELW/Unary
     DPElwExpr {
+        id: usize,
         kernels: Vec<Kernels>,
         a_shape: (usize, usize),
         b_shape: (usize, usize),
@@ -160,7 +168,9 @@ pub enum Kernels {
     },
 
     // Reduce operation fused with elw expression
+    // first kernel is a reduce, the rest are ELW/Unary
     ReduceElwExpr {
+        id: usize,
         kernels: Vec<Kernels>,
         vec_size: usize,
         reduce_size: usize

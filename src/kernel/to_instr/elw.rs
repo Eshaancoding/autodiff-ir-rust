@@ -4,7 +4,7 @@ use crate::{
     IRCmds,
 };
 
-pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker) {
+pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker, kernel_id: &mut usize) {
     match cmd {
         IRCmds::ElwMultiply { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
@@ -14,8 +14,11 @@ pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTrack
                 b: mat_tracker.get_input(b, AccessType::Global),
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: BinaryOp::Multiply,
-                size: a_shape.iter().product()
+                size: a_shape.iter().product(),
+                id: *kernel_id
             });
+
+            *kernel_id += 1;
         },
         IRCmds::ElwAdd { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);
@@ -25,8 +28,11 @@ pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTrack
                 b: mat_tracker.get_input(b, AccessType::Global),
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape),
                 op: BinaryOp::Add,
-                size: a_shape.iter().product()
+                size: a_shape.iter().product(),
+                id: *kernel_id
             });
+
+            *kernel_id += 1;
         },
         IRCmds::ElwAddEq { s, o } => {
             let s_shape = mat_tracker.get_shape(s);
@@ -41,8 +47,11 @@ pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTrack
                 b: mat_tracker.get_input(o, AccessType::Global),
                 res: mat_tracker.get_res(s, AccessType::Global, s_shape),
                 op: BinaryOp::Add,
-                size: s_shape.iter().product()
+                size: s_shape.iter().product(),
+                id: *kernel_id
             });
+
+            *kernel_id += 1;
         },
         IRCmds::ElwMultiplyEq { s, o } => {
             let s_shape = mat_tracker.get_shape(s);
@@ -57,8 +66,11 @@ pub fn to_elw (cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTrack
                 b: mat_tracker.get_input(o, AccessType::Global),
                 res: mat_tracker.get_res(s, AccessType::Global, s_shape),
                 op: BinaryOp::Multiply,
-                size: s_shape.iter().product()
+                size: s_shape.iter().product(),
+                id: *kernel_id
             });
+
+            *kernel_id += 1;
         },
         _ => {}
     }

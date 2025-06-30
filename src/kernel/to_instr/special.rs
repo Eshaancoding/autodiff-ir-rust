@@ -10,7 +10,7 @@ use crate::{
     Device
 };
 
-pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker) {
+pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, mat_tracker: &KernelTracker, kernel_id: &mut usize) {
     match cmd {
         IRCmds::Sum { a, res } => {
             let mut exp_dim = mat_tracker.get_shape(a).clone();
@@ -23,8 +23,11 @@ pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, 
                 res: mat_tracker.get_res(res, AccessType::XY, &exp_dim),
                 op: ReduceOp::Sum,
                 vec_size,
-                reduce_size
+                reduce_size,
+                id: *kernel_id
             });
+            
+            *kernel_id += 1;
         },
         IRCmds::DotProduct { a, b, res } => {
             let a_shape = mat_tracker.get_shape(a);  
@@ -45,8 +48,11 @@ pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, 
                 res: mat_tracker.get_res(res, AccessType::XY, &res_shape),
                 a_shape: convert_tuple(&a_shape),
                 b_shape: convert_tuple(&b_shape),
-                res_shape: convert_tuple(&res_shape)
+                res_shape: convert_tuple(&res_shape),
+                id: *kernel_id
             });
+
+            *kernel_id += 1;
         },
         IRCmds::Contigious { a, res } => {
             let a_shape = mat_tracker.get_shape(a);
@@ -54,8 +60,11 @@ pub fn to_special (device: &dyn Device, cmd: &IRCmds, instr: &mut Vec<Kernels>, 
             instr.push(Kernels::Movement { 
                 a: mat_tracker.get_input(a, AccessType::Global), 
                 res: mat_tracker.get_res(res, AccessType::Global, a_shape), 
-                size: a_shape.iter().product()
+                size: a_shape.iter().product(),
+                id: *kernel_id
             });
+
+            *kernel_id += 1;
         },
 
         // "special" in not the traditional sense. Device doesn't implement AllocEntry

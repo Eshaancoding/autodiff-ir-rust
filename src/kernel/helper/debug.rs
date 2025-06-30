@@ -152,13 +152,13 @@ impl Display for Kernels {
             Kernels::EX => {
                 let _ = write!(f, "{}", "EXIT".red());
             },
-            Kernels::Unary { a, res, op, size } => {
+            Kernels::Unary { a, res, op, size, .. } => {
                 let _ = write!(f, "{} {} {} ({})", res, " = ".on_blue(), format!(" {:#?} ({}) ", op, size.to_string().yellow()).bold(), a);
             },
-            Kernels::Binary { a, b, res, op, size } => {
+            Kernels::Binary { a, b, res, op, size, .. } => {
                 let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" {:#?} ({}) ", op, size.to_string().yellow()).bold(), b);
             },
-            Kernels::Reduce { a, res, op, vec_size, reduce_size} => {
+            Kernels::Reduce { a, res, op, vec_size, reduce_size, ..} => {
                 let _ = write!(f, "{} {} {} ({})", res, " = ".on_blue(), format!(" {:#?} (Vec/X: {}, Reduce/Y: {}) ", op, vec_size.to_string().yellow(), reduce_size.to_string().yellow()).bold(), a);
             },
             Kernels::DotProd { a, b, res, a_shape, b_shape, ..} => {
@@ -168,7 +168,7 @@ impl Display for Kernels {
                 let b_two = b_shape.1.to_string().yellow();
                 let _ = write!(f, "{} {} {} {} {}", res, " = ".on_blue(), a, format!(" ({}x{} DP {}x{})", a_one, a_two, b_one, b_two).bold(), b);
             },
-            Kernels::Movement { a, res , size} => {
+            Kernels::Movement { a, res , size, .. } => {
                 let _ = write!(f, "{} {} {}", res, format!(" <-(Move {})- ", size.to_string().yellow()).bold(), a);
             },
             Kernels::While { .. } => {
@@ -186,13 +186,13 @@ impl Display for Kernels {
             Kernels::Dealloc { id, size } => {
                 let _ = write!(f, "{} {} {}", "Dealloc".red().bold(), id, size.to_string().yellow().bold());
             },
-            Kernels::ElwExpr { kernels, size} => {
+            Kernels::ElwExpr { kernels, size, ..} => {
                 let _ = write!(f, "ElwExpr Kernel Fusion ({})\n\n", size.to_string().yellow().bold());
                 for k in kernels.iter() {
                     let _ = write!(f, "\t{}\n", k);
                 }
             },
-            Kernels::DPElwExpr { kernels, a_shape, b_shape, res_shape } => {
+            Kernels::DPElwExpr { kernels, a_shape, b_shape, res_shape, .. } => {
                 let a_one = a_shape.0.to_string().yellow();
                 let a_two = a_shape.1.to_string().yellow();
                 let b_one = b_shape.0.to_string().yellow();
@@ -203,7 +203,7 @@ impl Display for Kernels {
                     let _ = write!(f, "\t{}\n", k);
                 }
             },
-            Kernels::ReduceElwExpr { kernels, vec_size, reduce_size } => {
+            Kernels::ReduceElwExpr { kernels, vec_size, reduce_size, .. } => {
                 let v_yel = vec_size.to_string().yellow();
                 let extra_info = format!("(Vec/X: {}, Reduce/Y: {}) -(elw)-> {}", v_yel, reduce_size.to_string().yellow(), v_yel).bold();
                 let _ = write!(f, "Reduce + Elw Kernel Fusion {}\n\n", extra_info);

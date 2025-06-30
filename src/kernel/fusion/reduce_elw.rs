@@ -9,7 +9,7 @@ pub struct ReduceExprKernelInfo {
     pub reduce_size: Option<usize>
 }
 
-pub fn fuse_rd_expr (kernel_proc: &mut KernelProcedure) {
+pub fn fuse_rd_expr (kernel_proc: &mut KernelProcedure, kernel_id: &mut usize) {
     kernel_proc.apply(&mut |proc| {
         // ============== Track potential kernel fusion operations ============== 
         let mut elw_ks: Vec<ReduceExprKernelInfo> = vec![];
@@ -131,10 +131,12 @@ pub fn fuse_rd_expr (kernel_proc: &mut KernelProcedure) {
                 Kernels::ReduceElwExpr { 
                     kernels: to_insert,
                     reduce_size: fused_info.reduce_size.unwrap(),
-                    vec_size: fused_info.vec_size.unwrap()
+                    vec_size: fused_info.vec_size.unwrap(),
+                    id: *kernel_id
                 }
             );
 
+            *kernel_id += 1;
             to_delete += size;
         }
 

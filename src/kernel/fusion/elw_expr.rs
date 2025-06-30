@@ -12,7 +12,7 @@ pub struct ElwExprKernelInfo {
 }
 
 // fuse operations heavily rely on prox_rev_opt and prox_opt and grouping operations together!
-pub fn fuse_elw_expr (kernel_proc: &mut KernelProcedure) {
+pub fn fuse_elw_expr (kernel_proc: &mut KernelProcedure, kernel_id: &mut usize) {
     kernel_proc.apply(&mut |proc| {
         // ============== Track potential kernel fusion operations ============== 
         let mut elw_ks: Vec<ElwExprKernelInfo> = vec![];        
@@ -134,9 +134,10 @@ pub fn fuse_elw_expr (kernel_proc: &mut KernelProcedure) {
 
             proc.insert(
                 fused_info.start_loc - to_delete, 
-                Kernels::ElwExpr { kernels: to_insert, size: fused_info.size.unwrap() }
+                Kernels::ElwExpr { kernels: to_insert, size: fused_info.size.unwrap(), id: *kernel_id }
             );
 
+            *kernel_id += 1;
             to_delete += size;
         }
     });

@@ -79,9 +79,6 @@ pub fn tetris_opt (kernel_proc: &mut KernelProcedure) {
         max_temp_size = max(max_temp_size, offset + entry.size)
     }
 
-    println!("Offsetted entries: {:#?}", offsetted_entries);
-    println!("max temp size: {}", max_temp_size);
-
     // ======================== Then, change references and ids ======================== 
     kernel_proc.step_cmd_fusion(&mut |proc, i| {
         let current_kernel = proc.get_mut(*i).unwrap();
@@ -151,7 +148,11 @@ pub fn tetris_opt (kernel_proc: &mut KernelProcedure) {
             
             did_filter.insert(id_proc);
         }
-        
     });
+
+    // =================== Insert temp allocation  =================== 
+    kernel_proc.insert(0, Kernels::Alloc { id: "_temp".to_string(), size: max_temp_size, content: None });
+    kernel_proc.insert(kernel_proc.len()-1, Kernels::Dealloc { id: "_temp".to_string(), size: max_temp_size });
+
     
 }

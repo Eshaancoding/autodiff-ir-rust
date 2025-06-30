@@ -296,6 +296,7 @@ impl Kernels {
             _ => None
         }
     }
+
 }
 
 impl KernelProcedure {

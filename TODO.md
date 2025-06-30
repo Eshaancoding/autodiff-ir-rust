@@ -77,7 +77,6 @@ Backend will refer to things that runs the internal operations and optimizations
     * <mark>Host --> Device feeder</mark>
         * fix this before implementing the x86 implementation
     
-
     * Divergent branching conflicts
         * Could be more complicated on various scenarious (sources, vars, concat, trackers, etc.)        
         * you have to know what is right and what is not right to be fair.

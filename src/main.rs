@@ -1,5 +1,6 @@
 use std::time::Instant;
 use autodiffv2::autodiff;
+use autodiffv2::devices::{OpenCL, CLDeviceType};
 use autodiffv2::nn::{self, SeqF, Module};
 
 // in the future, probably migrate to tests()
@@ -41,8 +42,7 @@ pub fn broadcasting_test () {
 
 // nn_test
 pub fn nn_test () {
-    autodiff::set_device(autodiff::devices::OpenCL::new());
-
+    autodiff::set_device(OpenCL::new(CLDeviceType::GPU));
     autodiff::eager_dep_opt();
 
     let mut neural_net = nn::Sequential();
@@ -69,7 +69,7 @@ pub fn nn_test () {
     res.val().unwrap().keep(); // ensure we can get in dependency list
 
     let start = Instant::now();
-    autodiff::print_and_exec();    
+    autodiff::execute();    
     let _ = res.val().unwrap().get().round(4);
 
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
@@ -78,7 +78,7 @@ pub fn nn_test () {
 
 // Transformer Test
 pub fn multihead_att () {
-    autodiff::set_device(autodiff::devices::OpenCL::new());
+    autodiff::set_device(OpenCL::new(CLDeviceType::GPU));
 
     let transformer = nn::MultiHeadAttention(64, 4);
     let mut opt = nn::optimizers::SGD(transformer.params(), 0.01);
