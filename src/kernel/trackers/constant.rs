@@ -4,7 +4,7 @@ use crate::IRCmds;
 
 #[derive(Clone)]
 pub struct ConstantTracker {
-    pub vars: HashMap<String, f64>
+    pub vars: HashMap<String, f32>
 }
 
 impl ConstantTracker {
@@ -55,7 +55,7 @@ impl ConstantTracker {
         // any other way or method?
     }
 
-    pub fn get_f64 (&self, id: &String) -> Option<f64> {
+    pub fn get_f32 (&self, id: &String) -> Option<f32> {
         match self.vars.get(id) {
             None => None,
             Some(v) => Some(*v)

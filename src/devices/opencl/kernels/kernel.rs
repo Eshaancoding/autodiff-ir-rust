@@ -13,7 +13,7 @@ fn get_arg_list (inputs: Vec<&Input>) -> String {
     for &i in inputs.iter() {
         match i {
             Input::Mat { mat } => {
-                let st = format!("global float const* {}", mat.id);
+                let st = format!("__global float* {}", mat.id);
                 if !l.contains(&st) { l.push(st); }
             },
             _ => {}
@@ -38,11 +38,16 @@ impl Kernels {
         if let Some(src_body) = body {
             let name: String = format!("_{}", self.get_kernel_id().unwrap().to_string()).to_string();
 
-            let program_src = format!(r#"
-            kernel void {} ({}) {{
-                {}
-            }}
-            "#, name, get_arg_list(self.get_inputs()), src_body);
+            let program_src = format!(
+                r#"
+                kernel void {} ({}) {{
+                    {}
+                }}
+                "#, 
+                name, 
+                get_arg_list(self.get_inputs()), 
+                src_body
+            );
 
             let program = Program::create_and_build_from_source(context, &program_src, "")
                 .expect("Can't build program");

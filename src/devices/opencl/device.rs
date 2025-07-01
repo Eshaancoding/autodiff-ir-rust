@@ -6,10 +6,9 @@ use opencl3::device::{
     CL_DEVICE_TYPE_CPU, 
     CL_DEVICE_TYPE_GPU
 };
-
-use opencl3::context::Context;
+use crate::devices::context::OpenCLContext;
 use crate::to_kernel::to_kernel;
-use crate::{Device, IRBase, IRProcedure, ValueData};
+use crate::{IRBase, IRProcedure, ValueData, Device};
 
 pub enum CLDeviceType {
     CPU,
@@ -19,15 +18,10 @@ pub enum CLDeviceType {
 }
 
 pub struct OpenCL {
-    device: CLDevice,
-    context: Context
+    device: CLDevice
 }
 
 impl OpenCL {
-    fn run_alloc () {}
-    fn run_dealloc () {} 
-    fn run_kernel () {}
-
     pub fn new (device_type: CLDeviceType) -> OpenCL {
         let device = CLDevice::new(
             *get_all_devices(match device_type {
@@ -40,11 +34,8 @@ impl OpenCL {
 
         println!("Using device: {}", device.name().expect("Can't get device name"));
 
-        let context = Context::from_device(&device).expect("Can't create context from device");
-
         OpenCL { 
-            device,
-            context
+            device
         }
     }
 }
@@ -52,6 +43,10 @@ impl OpenCL {
 impl Device for OpenCL {
     fn execute (&mut self, proc: &IRProcedure) {
         let kernel_procedure = to_kernel(self, proc);
+        println!("{}", kernel_procedure);
+        
+        let context = OpenCLContext::new(self.device);
+        
     }
 
     fn get_tensor (&self, _: &String) -> ValueData {

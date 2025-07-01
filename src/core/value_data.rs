@@ -4,13 +4,13 @@ use std::fmt::Display;
 #[derive(Clone, Debug)]
 pub struct ValueData {
     pub dim: Vec<usize>,
-    pub data: Vec<f64>,
+    pub data: Vec<f32>,
     pub id: String,
     pub is_none: bool
 }
 
 impl ValueData {
-    fn idx (&self, idx: Vec<usize>) -> f64 {
+    fn idx (&self, idx: Vec<usize>) -> f32 {
         // get global dimension given idxs; not sure about this; ALSO TEST THIS
         let mut g_idx: usize = 0;
         let mut stride: usize = 1;
@@ -36,7 +36,7 @@ impl ValueData {
         ValueData {
             dim: self.dim.clone(),
             data: self.data.iter().map(|x| {
-                let mult = 10.0_f64.powi(num_digits as i32);
+                let mult = 10.0_f32.powi(num_digits as i32);
                 (x * mult).round() / mult
             }).collect(),
             id: self.id.clone(),

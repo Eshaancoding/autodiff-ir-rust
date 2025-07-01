@@ -1,5 +1,5 @@
 use std::time::Instant;
-use autodiffv2::autodiff;
+use autodiffv2::{autodiff, opencl_matmul, opencl_ruduce};
 use autodiffv2::devices::{OpenCL, CLDeviceType};
 use autodiffv2::nn::{self, SeqF, Module};
 
@@ -141,8 +141,25 @@ pub fn forward () {
     println!("value id: {:#?}", v.id);
 }
 
+pub fn simple_dot () {
+    autodiff::set_device(OpenCL::new(CLDeviceType::GPU));
+
+    let a = autodiff::randn(vec![4, 8]);
+    let b = autodiff::randn(vec![8, 6]);
+    let res = autodiff::dot(a, b);
+
+    res.forward();
+    res.val().unwrap().keep();
+
+    autodiff::print_and_exec();
+}
+
 pub fn main () {
-    nn_test();
+    // simple_dot();    
+    // opencl_matmul();
+    opencl_ruduce();
+
+    // nn_test();
     // multihead_att();
 
     // forward();

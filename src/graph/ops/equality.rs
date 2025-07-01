@@ -86,6 +86,6 @@ impl Tensor {
             x = x.sum(0);
         }
 
-        x.equal(&autodiff::constant(total_val as f64, vec![1])) 
+        x.equal(&autodiff::constant(total_val as f32, vec![1])) 
     }
 }

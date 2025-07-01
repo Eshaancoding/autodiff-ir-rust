@@ -101,7 +101,7 @@ impl CPU  {
     }
 }
 
-fn proc_exec (proc: &IRProcedure, hms: &mut HashMap<String, GenTensor<f64>>) -> bool {
+fn proc_exec (proc: &IRProcedure, hms: &mut HashMap<String, GenTensor<f32>>) -> bool {
     let mut exit = false;    
 
     // TODO: test exit within nested for and if statements
@@ -140,7 +140,7 @@ fn proc_exec (proc: &IRProcedure, hms: &mut HashMap<String, GenTensor<f64>>) -> 
 
 impl Device for CPU {
     fn execute (&mut self, cmds: &IRProcedure) {
-        let mut hms: HashMap<String, GenTensor<f64>> = HashMap::new();
+        let mut hms: HashMap<String, GenTensor<f32>> = HashMap::new();
         proc_exec(cmds, &mut hms);
         
         // convert to Value Data

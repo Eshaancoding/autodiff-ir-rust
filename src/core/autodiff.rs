@@ -23,7 +23,7 @@ pub use super::control::*;
 use super::{ir_b_add, ir_b_execute, is_harsh, set_harsh_dep_list, ConstantNode, IRBase, DEP_TRACKER, IRB};
 use crate::IRCmds::{Heading, EX};
 // new tensor
-pub fn tensor (data: Vec<f64>, dim: Vec<usize>) -> Tensor {
+pub fn tensor (data: Vec<f32>, dim: Vec<usize>) -> Tensor {
     if data.len() != dim.iter().product::<usize>() {
         panic!("# of values doesn't match dim size when calling from_vec");
     }
@@ -40,11 +40,11 @@ pub fn tensor (data: Vec<f64>, dim: Vec<usize>) -> Tensor {
     })
 } 
 
-pub fn scalar (val: f64) -> Tensor {
+pub fn scalar (val: f32) -> Tensor {
     tensor(vec![val], vec![1])
 }
 
-pub fn constant (val: f64, dim: Vec<usize>) -> Tensor {
+pub fn constant (val: f32, dim: Vec<usize>) -> Tensor {
     Tensor::new(ConstantNode::new(val, dim))
 }
 
@@ -65,7 +65,7 @@ pub fn empty () -> Tensor {
     })
 }
 
-pub fn fill (val: f64, dim: Vec<usize>) -> Tensor {
+pub fn fill (val: f32, dim: Vec<usize>) -> Tensor {
     tensor(
         vec![val; dim.iter().product()],
         dim.clone()
@@ -75,7 +75,7 @@ pub fn fill (val: f64, dim: Vec<usize>) -> Tensor {
 pub fn randn (dim: Vec<usize>) -> Tensor {
     let mut rng = rng();
     let normal = Normal::new(0.0, 1.0).unwrap(); // Mean = 0, Std = 1
-    let samples: Vec<f64> = (0..dim.iter().product()).map(|_| normal.sample(&mut rng)).collect();   
+    let samples: Vec<f32> = (0..dim.iter().product()).map(|_| normal.sample(&mut rng)).collect();   
     tensor(samples, dim)
 }
 

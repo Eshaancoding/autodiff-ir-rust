@@ -94,8 +94,8 @@ where
     F: FnOnce(&Tensor)
 {
     // internally, it's just a while loop
-    let mut x = autodiff::scalar(r.start as f64);
-    let x_end = autodiff::constant(r.end as f64, vec![1]);
+    let mut x = autodiff::scalar(r.start as f32);
+    let x_end = autodiff::constant(r.end as f32, vec![1]);
 
     let result = x.less_than(&x_end);
     

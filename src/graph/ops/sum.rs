@@ -89,7 +89,7 @@ impl Tensor {
         let p_dim = self.dim();
         let dim = if dim < 0 { p_dim.len() as i32 + dim } else { dim };
         let orig_dim = p_dim.get(dim as usize).unwrap().clone();
-        self.sum(dim) / (orig_dim as f64)
+        self.sum(dim) / (orig_dim as f32)
     }
 
     pub fn var (&self, dim:i32, correction:usize) -> Tensor {
@@ -99,7 +99,7 @@ impl Tensor {
         let dim_size = if dim < 0 { p_dim.len() as i32 + dim } else { dim } as usize;
         let div = p_dim.get(dim_size).unwrap();
 
-        a.sum(dim) / (div - correction) as f64
+        a.sum(dim) / (div - correction) as f32
     }
 }
 

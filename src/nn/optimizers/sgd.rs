@@ -2,7 +2,7 @@ use crate::Tensor;
 
 pub struct SGD {
     n: Vec<Tensor>,
-    lr: f64
+    lr: f32
 }
 
 impl SGD {
@@ -21,7 +21,7 @@ impl SGD {
 }
 
 #[allow(non_snake_case)]
-pub fn SGD (m: Vec<Tensor>, lr: f64) -> SGD {
+pub fn SGD (m: Vec<Tensor>, lr: f32) -> SGD {
     SGD {
         n: m,
         lr

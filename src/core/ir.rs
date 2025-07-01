@@ -7,8 +7,8 @@ use std::sync::{Mutex, Arc};
 #[derive(Clone, PartialEq, Debug)]
 pub enum IRCmds {
     // Create
-    CreateMat {contents: Arc<Vec<f64>>, dim: Vec<usize>, id: String}, // COULD BE VERY LARGE IN SIZE; this is why we encapsulate it in Rc
-    CreateConstant {contents: f64, id: String, dim: Vec<usize>},
+    CreateMat {contents: Arc<Vec<f32>>, dim: Vec<usize>, id: String}, // COULD BE VERY LARGE IN SIZE; this is why we encapsulate it in Rc
+    CreateConstant {contents: f32, id: String, dim: Vec<usize>},
 
     // ELW Operations 
     // No subtraction as a - b = a + (-b)

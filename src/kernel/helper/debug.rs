@@ -186,27 +186,27 @@ impl Display for Kernels {
             Kernels::Dealloc { id, size } => {
                 let _ = write!(f, "{} {} {}", "Dealloc".red().bold(), id, size.to_string().yellow().bold());
             },
-            Kernels::ElwExpr { kernels, size, ..} => {
-                let _ = write!(f, "ElwExpr Kernel Fusion ({})\n\n", size.to_string().yellow().bold());
+            Kernels::ElwExpr { kernels, size, id} => {
+                let _ = write!(f, "ID: _{} ({})\n\n", id, size.to_string().yellow().bold());
                 for k in kernels.iter() {
                     let _ = write!(f, "\t{}\n", k);
                 }
             },
-            Kernels::DPElwExpr { kernels, a_shape, b_shape, res_shape, .. } => {
+            Kernels::DPElwExpr { kernels, a_shape, b_shape, res_shape, id } => {
                 let a_one = a_shape.0.to_string().yellow();
                 let a_two = a_shape.1.to_string().yellow();
                 let b_one = b_shape.0.to_string().yellow();
                 let b_two = b_shape.1.to_string().yellow();
                 let elw_shape = (res_shape.0 * res_shape.1).to_string().yellow();
-                let _ = write!(f, "DP + Elw Kernel Fusion {}\n\n", format!("({}x{} DP {}x{}) -(elw)-> {}", a_one, a_two, b_one, b_two, elw_shape).bold());
+                let _ = write!(f, "ID: _{} {}\n\n", id, format!("({}x{} DP {}x{}) -(elw)-> {}", a_one, a_two, b_one, b_two, elw_shape).bold());
                 for k in kernels.iter() {
                     let _ = write!(f, "\t{}\n", k);
                 }
             },
-            Kernels::ReduceElwExpr { kernels, vec_size, reduce_size, .. } => {
+            Kernels::ReduceElwExpr { kernels, vec_size, reduce_size, id } => {
                 let v_yel = vec_size.to_string().yellow();
                 let extra_info = format!("(Vec/X: {}, Reduce/Y: {}) -(elw)-> {}", v_yel, reduce_size.to_string().yellow(), v_yel).bold();
-                let _ = write!(f, "Reduce + Elw Kernel Fusion {}\n\n", extra_info);
+                let _ = write!(f, "ID: _{} {}\n\n", id, extra_info);
                 for k in kernels.iter() {
                     let _ = write!(f, "\t{}\n", k);
                 }

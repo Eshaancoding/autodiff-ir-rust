@@ -11,7 +11,7 @@ pub fn Attention (Q:Tensor, K:Tensor, V:Tensor, d_model:usize) -> Tensor {
     autodiff::dot(
         (
             autodiff::dot(Q, K.t()) / 
-            (d_model as f64).sqrt()
+            (d_model as f32).sqrt()
         ).softmax(-1),
         V
     )
@@ -22,7 +22,7 @@ pub fn AttentionMasked (Q:Tensor, K:Tensor, V:Tensor, d_model:usize, mask:Tensor
     autodiff::dot(
         (
             autodiff::dot(Q, K.t()) / 
-            (d_model as f64).sqrt() * 
+            (d_model as f32).sqrt() * 
             mask
         ).softmax(-1),
         V

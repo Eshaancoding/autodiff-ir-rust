@@ -11,18 +11,18 @@ fn is_sw (a: &Vec<usize>, b: &Vec<usize>) -> bool {
     }
 }
 
-pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f64>>) {
+pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f32>>) {
     match cmd {
         IRCmds::CreateMat { contents, dim, id } => {
             hms.insert(
                 id.clone(),
-                GenTensor::<f64>::new_raw(contents, dim)
+                GenTensor::<f32>::new_raw(contents, dim)
             );
         },
         IRCmds::CreateConstant { contents, id, .. } => {
             hms.insert(
                 id.clone(),
-                GenTensor::<f64>::new_raw(&vec![*contents], &vec![1])
+                GenTensor::<f32>::new_raw(&vec![*contents], &vec![1])
             );
         }
         IRCmds::ElwMultiply { a, b, res } => {
@@ -64,7 +64,7 @@ pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f64>>) {
         },
         IRCmds::EqualZero { a, res } => {
             let a = hms.get(a).unwrap();
-            let zeros = GenTensor::<f64>::zeros_like(a);
+            let zeros = GenTensor::<f32>::zeros_like(a);
 
             hms.insert(
                 res.clone(),
@@ -73,7 +73,7 @@ pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f64>>) {
         },
         IRCmds::MoreZero { a, res } => {
             let a = hms.get(a).unwrap();
-            let zeros = GenTensor::<f64>::zeros_like(a);
+            let zeros = GenTensor::<f32>::zeros_like(a);
 
             hms.insert(
                 res.clone(),
@@ -82,7 +82,7 @@ pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f64>>) {
         },
         IRCmds::LessZero { a, res } => {
             let a = hms.get(a).unwrap();
-            let zeros = GenTensor::<f64>::zeros_like(a);
+            let zeros = GenTensor::<f32>::zeros_like(a);
 
             hms.insert(
                 res.clone(),
@@ -104,7 +104,7 @@ pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f64>>) {
             );
         },
         IRCmds::Index { a, index, dim, res } => {
-            let dim_idx = GenTensor::<f64>::new_raw(&[*index as f64], &[1]);
+            let dim_idx = GenTensor::<f32>::new_raw(&[*index as f32], &[1]);
             hms.insert(
                 res.clone(),
                 hms.get(a).unwrap().index_select(
@@ -150,8 +150,8 @@ pub fn exec (cmd: &IRCmds, hms: &mut HashMap<String, GenTensor<f64>>) {
         },
         IRCmds::Exp2 { a, res } => {
             // calculate e^(ln(2)*x) since there's no exp2
-            let b_times = GenTensor::<f64>::new_raw(
-                &[2.0f64.ln()],
+            let b_times = GenTensor::<f32>::new_raw(
+                &[2.0f32.ln()],
                 &[1]
             );
 

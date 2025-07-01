@@ -10,7 +10,7 @@ fn number_of_digits(n: usize) -> u32 {
     if n == 0 {
         1
     } else {
-        (n as f64).log10().floor() as u32 + 1
+        (n as f32).log10().floor() as u32 + 1
     }
 }
 

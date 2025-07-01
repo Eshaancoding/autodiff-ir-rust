@@ -122,7 +122,7 @@ impl KernelTracker {
         } else {
             if let Some(id) = ir_to_res(cmd) {
                 // only cmd satisfying this is CreateMat. If it's a constant, then skip
-                if let Some(_) = self.constant_tracker.get_f64(&id) {
+                if let Some(_) = self.constant_tracker.get_f32(&id) {
                     return     
                 }
 
@@ -237,7 +237,7 @@ impl KernelTracker {
     }
 
     // wrapper over constant tracker
-    pub fn get_constant (&self, id: &String) -> Option<f64> {
-        self.constant_tracker.get_f64(id)
+    pub fn get_constant (&self, id: &String) -> Option<f32> {
+        self.constant_tracker.get_f32(id)
     }
 }

@@ -31,14 +31,14 @@ impl Value {
         }
     }
 
-    pub fn fill (val: f64, dim: Vec<usize>) -> Value {
+    pub fn fill (val: f32, dim: Vec<usize>) -> Value {
         Self::new( 
             vec![val; dim.iter().product()], 
             dim 
         )
     }
 
-    pub fn val (val: f64) -> Value {
+    pub fn val (val: f32) -> Value {
         Self::new(
             vec![val],
             vec![1]
@@ -63,7 +63,7 @@ impl Value {
         })
     }
 
-    pub fn new (data: Vec<f64>, dim: Vec<usize>) -> Value {
+    pub fn new (data: Vec<f32>, dim: Vec<usize>) -> Value {
         let id = ir_b_id(); 
         ir_b_add(IRCmds::CreateMat { 
             contents: Arc::new(data.clone()),

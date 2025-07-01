@@ -143,11 +143,11 @@ macro_rules! create_op {
             }
         }
 
-        // Node + f64 constant
-        impl std::ops::$op<f64> for Tensor {
+        // Node + f32 constant
+        impl std::ops::$op<f32> for Tensor {
             type Output = Tensor;
 
-            fn $op_func (self, other:f64) -> Tensor {
+            fn $op_func (self, other:f32) -> Tensor {
                 let (a, b) = try_broadcast(&self, &autodiff::constant(other, self.dim()));
 
                 Tensor::new($node_name {
@@ -159,8 +159,8 @@ macro_rules! create_op {
             }
         }
 
-        // f64 constant + Node 
-        impl std::ops::$op<Tensor> for f64 {
+        // f32 constant + Node 
+        impl std::ops::$op<Tensor> for f32 {
             type Output = Tensor;
 
             fn $op_func (self, other:Tensor) -> Tensor {
@@ -189,8 +189,8 @@ macro_rules! create_op {
             }
         }
 
-        impl std::ops::$op_eq<f64> for Tensor {
-            fn $op_eq_func (&mut self, rhs: f64) {
+        impl std::ops::$op_eq<f32> for Tensor {
+            fn $op_eq_func (&mut self, rhs: f32) {
                 let s_clone = self.deep_copy(); // since we are replacing the Rc<RefCell<>>, we need a deep copy of self before we destroy it
                 let (a, b) = try_broadcast(&s_clone, &autodiff::constant(rhs, self.dim()));
 
@@ -263,7 +263,7 @@ impl std::ops::Sub<Tensor> for Tensor {
     }
 }
 
-impl std::ops::Sub<Tensor> for f64 {
+impl std::ops::Sub<Tensor> for f32 {
     type Output = Tensor;
 
     fn sub(self, other: Tensor) -> Self::Output {
@@ -271,10 +271,10 @@ impl std::ops::Sub<Tensor> for f64 {
     }
 }
 
-impl std::ops::Sub<f64> for Tensor {
+impl std::ops::Sub<f32> for Tensor {
     type Output = Tensor;
 
-    fn sub (self, other:f64) -> Tensor {
+    fn sub (self, other:f32) -> Tensor {
         self + (-1.0) * other 
     }
 }
@@ -285,8 +285,8 @@ impl std::ops::SubAssign<Tensor> for Tensor {
     }
 }
 
-impl std::ops::SubAssign<f64> for Tensor {
-    fn sub_assign(&mut self, rhs: f64) {
+impl std::ops::SubAssign<f32> for Tensor {
+    fn sub_assign(&mut self, rhs: f32) {
         *self += rhs;
     }
 }
@@ -306,7 +306,7 @@ impl std::ops::Div<Tensor> for Tensor {
     }
 }
 
-impl std::ops::Div<Tensor> for f64 {
+impl std::ops::Div<Tensor> for f32 {
     type Output = Tensor;
 
     fn div(self, other: Tensor) -> Self::Output {
@@ -314,10 +314,10 @@ impl std::ops::Div<Tensor> for f64 {
     }
 }
 
-impl std::ops::Div<f64> for Tensor {
+impl std::ops::Div<f32> for Tensor {
     type Output = Tensor;
 
-    fn div (self, other:f64) -> Tensor {
+    fn div (self, other:f32) -> Tensor {
         self * (1.0/other)
     }
 }
@@ -328,8 +328,8 @@ impl std::ops::DivAssign<Tensor> for Tensor {
     }
 }
 
-impl std::ops::DivAssign<f64> for Tensor {
-    fn div_assign(&mut self, rhs: f64) {
+impl std::ops::DivAssign<f32> for Tensor {
+    fn div_assign(&mut self, rhs: f32) {
         *self *= 1.0 / rhs;
     }
 }

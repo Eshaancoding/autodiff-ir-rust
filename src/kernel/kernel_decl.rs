@@ -35,7 +35,7 @@ pub struct Matrix {
 // input matrix could be two types: a matrix or a matrix concat (if matrix concat, then we have to access two seperate memory locations within kernel)
 #[derive(Clone, Debug)]
 pub enum Input {
-    Constant { val: f64 }, 
+    Constant { val: f32 }, 
     Mat { mat: Matrix },
     // if there's a concat, then there's references to two matrix if that makes sense
     ConcatMatrix { 
@@ -135,7 +135,7 @@ pub enum Kernels {
     Alloc {
         id: String,
         size: usize,
-        content: Option<Arc<Vec<f64>>>
+        content: Option<Arc<Vec<f32>>>
     },
     
     Dealloc {

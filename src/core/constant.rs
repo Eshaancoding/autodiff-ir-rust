@@ -4,13 +4,13 @@ use super::{NodeTrait, Value};
 
 #[derive(Clone)]
 pub struct ConstantNode {
-    content: f64,
+    content: f32,
     dim: Vec<usize>, // need a dim to "expand" to. This is just to satisfy the dimension tracker
     val: Option<Value>
 }
 
 impl ConstantNode {
-    pub fn new (content: f64, dim: Vec<usize>) -> ConstantNode {
+    pub fn new (content: f32, dim: Vec<usize>) -> ConstantNode {
         ConstantNode { content, val: None, dim }
     }
 }
@@ -47,7 +47,7 @@ impl NodeTrait for ConstantNode {
     }
 } 
 
-fn c_constant (contents: f64, dim: &Vec<usize>) -> Value {
+fn c_constant (contents: f32, dim: &Vec<usize>) -> Value {
     let id = ir_b_id();
     ir_b_add(IRCmds::CreateConstant { contents, id: id.clone(), dim: dim.clone() });
 

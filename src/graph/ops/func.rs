@@ -1,6 +1,6 @@
 // Elementwise function: sin, cos, exp, etc.
 
-use std::f64::consts::{FRAC_PI_2, E};
+use std::f32::consts::{FRAC_PI_2, E};
 use crate::{IRCmds, Tensor, NodeTrait, Value, ir_b_id, ir_b_add};
 
 macro_rules! create_func {
@@ -71,7 +71,7 @@ macro_rules! create_func {
     
 create_func!(exp2, c_exp, ExpTwoNode, Exp2, |v: Value, grad: Value| -> Value {
     // d/dx 2^x = ln(2) * 2^x
-    let mult_const = 2.0f64.ln();
+    let mult_const = 2.0f32.ln();
     (grad.to_node() * mult_const * v.to_node().exp2()).forward()
 });
 
@@ -102,12 +102,12 @@ impl Tensor {
     }
 
     pub fn exp (&self) -> Tensor {
-        let mult_const = 1.0 / (2.0f64.ln());
+        let mult_const = 1.0 / (2.0f32.ln());
         (self.clone() * mult_const).exp2()
     }
 
     pub fn ln (&self) -> Tensor {
-        let mult_const = 2.0f64.ln();
+        let mult_const = 2.0f32.ln();
         self.log2() * mult_const
     }
 
@@ -126,7 +126,7 @@ impl Tensor {
         (p * self.log2()).exp2()
     }
 
-    pub fn powf (&self, p: f64) -> Tensor {
+    pub fn powf (&self, p: f32) -> Tensor {
         if p == 2.0 {
             self.pow2()
         } 

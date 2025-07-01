@@ -151,8 +151,8 @@ pub fn tetris_opt (kernel_proc: &mut KernelProcedure) {
     });
 
     // =================== Insert temp allocation  =================== 
-    kernel_proc.insert(0, Kernels::Alloc { id: "_temp".to_string(), size: max_temp_size, content: None });
-    kernel_proc.insert(kernel_proc.len()-1, Kernels::Dealloc { id: "_temp".to_string(), size: max_temp_size });
-
-    
+    if max_temp_size > 0 {
+        kernel_proc.insert(0, Kernels::Alloc { id: "_temp".to_string(), size: max_temp_size, content: None });
+        kernel_proc.insert(kernel_proc.len()-1, Kernels::Dealloc { id: "_temp".to_string(), size: max_temp_size });
+    }
 }
