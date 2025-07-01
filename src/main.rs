@@ -46,13 +46,13 @@ pub fn nn_test () {
     autodiff::eager_dep_opt();
 
     let mut neural_net = nn::Sequential();
-    neural_net.insert(nn::Linear(256, 128, true));
+    neural_net.insert(nn::Linear(512, 512, true));
     neural_net.insert(nn::Sigmoid());
-    neural_net.insert(nn::Linear(128, 64, true));
+    neural_net.insert(nn::Linear(512, 512, true));
 
     let mut opt = nn::optimizers::SGD(neural_net.params(), 0.1);
 
-    let x = autodiff::randn(vec![2, 256]);
+    let x = autodiff::randn(vec![16, 512]);
     let mut res = autodiff::empty();
 
     // prev: 0..1000        
