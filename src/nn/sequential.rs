@@ -3,7 +3,7 @@ use crate::{SeqF, Tensor};
 use super::Module;
 
 pub struct Sequential {
-    n: Vec<Box<dyn SeqF>>
+    pub n: Vec<Box<dyn SeqF>>
 }
 
 impl Sequential {

@@ -66,10 +66,11 @@ pub fn nn_test () {
         res = y;
     });
 
+    x.grad().keep();
     res.val().unwrap().keep(); // ensure we can get in dependency list
 
     autodiff::execute();    
-    let v = res.val().unwrap().get().round(4);
+    let v = x.grad().get().round(4);
     println!("v data len: {}", v.data.len());
     println!("first value: {}", v.data[0]);
     println!("second value: {}", v.data[1]);
