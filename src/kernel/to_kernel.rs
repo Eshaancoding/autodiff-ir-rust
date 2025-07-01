@@ -31,7 +31,7 @@ pub fn convert_to_proc (device: &dyn Device, kernel_tracker: &mut KernelTracker,
     )
 }
 
-pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
+pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> (KernelProcedure, KernelTracker) {
     let mut kernel_id: usize = 0;
 
     // ========== Create initial procedure with kernel tracker ========== 
@@ -89,5 +89,5 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> KernelProcedure {
 
 
     // ========= Return =========
-    kernel_proc
+    (kernel_proc, kernel_tracker)
 }

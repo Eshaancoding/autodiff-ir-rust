@@ -141,7 +141,7 @@ pub fn forward () {
     println!("value id: {:#?}", v.id);
 }
 
-pub fn simple_dot () {
+pub fn simple () {
     autodiff::set_device(OpenCL::new(CLDeviceType::GPU));
 
     let a = autodiff::randn(vec![4, 8]);
@@ -152,12 +152,17 @@ pub fn simple_dot () {
     res.val().unwrap().keep();
 
     autodiff::print_and_exec();
+
+    let v = res.val().unwrap().get();
+    println!("value dim: {:#?}", v.dim);
+    println!("value data: {:#?}", v.data);
+    println!("value id: {:#?}", v.id);
 }
 
 pub fn main () {
-    // simple_dot();    
+    simple();    
     // opencl_matmul();
-    opencl_ruduce();
+    // opencl_ruduce();
 
     // nn_test();
     // multihead_att();

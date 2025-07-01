@@ -1,8 +1,7 @@
 use crate::kernel_decl::{Expression, Value, Matrix, Input, Output};
 
 impl Value {
-    pub fn to_opencl (&self) -> String {
-        match self {
+    pub fn to_opencl (&self) -> String { match self {
             Value::Constant { val } => val.to_string(),
             Value::Global => "_global_id".to_string(),
             Value::X => "_x".to_string(),

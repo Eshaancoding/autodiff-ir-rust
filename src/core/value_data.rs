@@ -1,10 +1,11 @@
 use std::fmt::Display;
+use std::sync::Arc;
 
 // Value stored with Data; used primarily by user to get data from IR
 #[derive(Clone, Debug)]
 pub struct ValueData {
     pub dim: Vec<usize>,
-    pub data: Vec<f32>,
+    pub data: Arc<Vec<f32>>,
     pub id: String,
     pub is_none: bool
 }
@@ -26,7 +27,7 @@ impl ValueData {
     pub fn none () -> ValueData {
         ValueData {
             dim: vec![],
-            data: vec![],
+            data: Arc::new(vec![]),
             id: "".to_string(),
             is_none: true
         }
@@ -35,10 +36,10 @@ impl ValueData {
     pub fn round (&self, num_digits: u8) -> Self {
         ValueData {
             dim: self.dim.clone(),
-            data: self.data.iter().map(|x| {
+            data: Arc::new(self.data.iter().map(|x| {
                 let mult = 10.0_f32.powi(num_digits as i32);
                 (x * mult).round() / mult
-            }).collect(),
+            }).collect()),
             id: self.id.clone(),
             is_none: self.is_none
         }

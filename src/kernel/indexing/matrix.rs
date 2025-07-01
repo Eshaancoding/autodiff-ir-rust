@@ -71,7 +71,7 @@ impl KernelTracker {
         }
 
         // is constant
-        else if let Some(content) = self.constant_tracker.get_f64(id) {
+        else if let Some(content) = self.constant_tracker.get_f32(id) {
             Input::Constant { val: content }
         }
         

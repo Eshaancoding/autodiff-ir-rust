@@ -2,6 +2,7 @@
 // Only single threaded operations
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::{to_kernel::to_kernel, Device, IRBase, IRCmds, IRProcedure, ValueData};
 use super::exec::exec;
@@ -149,7 +150,7 @@ impl Device for CPU {
                 key.clone(),
                 ValueData {
                     dim: value.size().clone(),
-                    data: value.get_raw(),
+                    data: Arc::new(value.get_raw()),
                     id: key.clone(),
                     is_none: false
                 }

@@ -1,20 +1,32 @@
+use std::fmt::Display;
 use std::{collections::HashMap, ptr::null_mut};
+use std::sync::Arc;
 
-use opencl3::{command_queue::{CommandQueue, CL_QUEUE_PROFILING_ENABLE}, context::Context, device::Device as CLDevice, kernel::ExecuteKernel, memory::{Buffer, ClMem, CL_MEM_READ_WRITE}, types::{cl_float, CL_BLOCKING}};
+use opencl3::kernel::ExecuteKernel;
+use opencl3::{
+    command_queue::{CommandQueue, CL_QUEUE_PROFILING_ENABLE}, 
+    context::Context, 
+    device::Device as CLDevice, 
+    kernel::Kernel, 
+    memory::{Buffer, CL_MEM_READ_WRITE}, 
+    program::Program, 
+    types::{cl_float, CL_BLOCKING}
+};
 
 
 // Wrapper over the actual opencl3 context, but also includes any variables or compiled programs
-// As we go through the program, it will cache any buffers or program compiled
-pub struct OpenCLContext<'a> {
+// As we go through the program, it will cache any buffers and program compiled
+pub struct OpenCLContext {
+    pub queue: CommandQueue,
     context: Context,
-    queue: CommandQueue,
     buffers: HashMap<String, Buffer<f32>>,
     buffer_size: HashMap<String, usize>,
-    kernels: HashMap<usize, ExecuteKernel<'a>>
+    kernels: HashMap<String, Kernel>,
+    kernel_src: HashMap<String, String>
 }
 
-impl<'a> OpenCLContext<'a> {
-    pub fn new (device: CLDevice) -> OpenCLContext<'a> {
+impl OpenCLContext {
+    pub fn new (device: CLDevice) -> OpenCLContext {
         let context = Context::from_device(&device)
             .expect("Can't create context from device");
 
@@ -26,23 +38,22 @@ impl<'a> OpenCLContext<'a> {
             queue,
             buffers: HashMap::new(),
             buffer_size: HashMap::new(),
-            kernels: HashMap::new()
+            kernels: HashMap::new(),
+            kernel_src: HashMap::new()
         }
     }
 
-    pub fn create_buffer (&mut self, id: &String, size: usize) -> &mut Buffer<f32> {
-        let res = self.buffers.entry(id.clone()).or_insert(
+    pub fn create_buffer (&mut self, id: &String, size: usize) {
+        self.buffers.entry(id.clone()).or_insert(
     unsafe {
                 Buffer::<cl_float>::create(&self.context, CL_MEM_READ_WRITE, size, null_mut()).expect("Can't create buffer")
             }
         );
 
         self.buffer_size.entry(id.clone()).or_insert(size);
-
-        res
     }
 
-    pub fn write_buffer (&mut self, id: &String, data: &[cl_float]) {
+    pub fn write_buffer (&mut self, id: &String, data: &Arc<Vec<f32>>) {
         let size = data.len();
 
         let OpenCLContext { queue, buffers, .. } = self;
@@ -80,5 +91,33 @@ impl<'a> OpenCLContext<'a> {
         read_event.wait().expect("Can't wait for reading buffer");
 
         results
+    }
+
+    pub fn get_kernel<F> (&mut self, kernel_name: &String, gen_src_code: F) -> (&HashMap<String, Buffer<f32>>, ExecuteKernel, &CommandQueue)
+        where F: Fn() -> String 
+    {
+        let OpenCLContext { kernels, context, buffers, queue, .. } = self;
+
+        let k = kernels.entry(kernel_name.clone())
+            .or_insert_with(|| {
+                let src_code = gen_src_code();
+                let program = Program::create_and_build_from_source(&context, &src_code, "").expect("Can't build program");
+                self.kernel_src.insert(kernel_name.clone(), src_code);
+
+                Kernel::create(&program, kernel_name).expect("Can't create kernel")
+            });
+
+        (buffers, ExecuteKernel::new(k), queue)
+    }
+}
+
+impl Display for OpenCLContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (id, src) in self.kernel_src.iter() {
+            let _ = write!(f, "========== For kernel {} ==========\n", id);
+            let _ = write!(f, "{}\n\n", src);
+        }
+
+        write!(f, "")
     }
 }
