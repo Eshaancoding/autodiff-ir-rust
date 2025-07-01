@@ -71,6 +71,9 @@ pub fn nn_test () {
     autodiff::execute();    
     let v = res.val().unwrap().get().round(4);
     println!("v data len: {}", v.data.len());
+    println!("first value: {}", v.data[0]);
+    println!("second value: {}", v.data[1]);
+    println!("third value: {}", v.data[2]);
 }
 
 
