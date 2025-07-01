@@ -17,7 +17,7 @@ impl UnaryOp {
 }
 
 pub fn cl_unary_to_body (a: &Input, res: &Output, op: &UnaryOp) -> String {
-    format!("{} = {}", res.to_opencl(), op.to_opencl(a.to_opencl()))
+    format!("{} = {};", res.to_opencl(), op.to_opencl(a.to_opencl()))
 }
 
 pub fn execute_unary (opencl_context: &mut OpenCLContext, cmd: &Kernels) {

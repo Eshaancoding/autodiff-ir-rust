@@ -50,8 +50,9 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> (KernelProcedure, 
         let prox_rev_score = get_score(&mut prox_rev_copy);
 
         // copy, change, score
+        // TODO: Doesn't have safegaurd for swaps in between IF/While. Still okay as it pasts the tests? 
         let mut prox_copy = kernel_proc.clone();
-        prox_opt(&mut prox_copy);                   // TODO: Doesn't have safegaurd for swaps in between IF/While. Still okay as it pasts the tests? 
+        prox_opt(&mut prox_copy);                   
         let prox_score = get_score(&mut prox_copy);
 
         // Calculate max
@@ -70,15 +71,16 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> (KernelProcedure, 
     insert_alloc(device, &mut kernel_proc);
 
     // ========= Kernel Fusion =========
-    fuse_elw_expr(&mut kernel_proc, &mut kernel_id); 
-    fuse_dp_expr(&mut kernel_proc, &mut kernel_id);
-    fuse_rd_expr(&mut kernel_proc, &mut kernel_id);
+    // fuse_elw_expr(&mut kernel_proc, &mut kernel_id); 
+    // fuse_dp_expr(&mut kernel_proc, &mut kernel_id);
+    // fuse_rd_expr(&mut kernel_proc, &mut kernel_id);
 
     // ========= Allocation Optimizations =========
+    // ideally put insert alloc here plz
     alloc_switch(&mut kernel_proc);
     simplify_global_expr(&mut kernel_proc);
     alloc_temp_opt(&mut kernel_proc);  // you need access expression simplification even more for this to work the best
-    tetris_opt(&mut kernel_proc);
+    tetris_opt(&mut kernel_proc, &var_changed);
     alloc_out_fused(&mut kernel_proc);
 
     // ====== Kernel checks for sanity purposes ======= 

@@ -1,7 +1,7 @@
 use crate::{devices::{context::OpenCLContext, helper::get_inputs_args}, kernel_decl::{Kernels, Output, Input}};
 
 pub fn cl_movement_to_body (a: &Input, res: &Output) -> String {
-    format!("{} = {}", res.to_opencl(), a.to_opencl())
+    format!("{} = {};", res.to_opencl(), a.to_opencl())
 }
 
 pub fn execute_movement (opencl_context: &mut OpenCLContext, cmd: &Kernels) {

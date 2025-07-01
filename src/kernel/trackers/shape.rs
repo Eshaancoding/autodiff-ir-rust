@@ -3,7 +3,7 @@ use crate::{Device, IRCmds};
 
 #[derive(Clone, Debug)]
 pub struct ShapeTracker {
-    shape: HashMap<String, Vec<usize>>
+    pub shape: HashMap<String, Vec<usize>>
 }
 
 impl ShapeTracker {

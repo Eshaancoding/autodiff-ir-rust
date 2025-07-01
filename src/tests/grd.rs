@@ -33,10 +33,10 @@ mod tests {
 
         let a_val = a.val().unwrap().get();
         assert_eq!(a_val.dim, vec![2, 2]);
-        assert_eq!(a_val.data, vec![5.0, 7.0, 3.0, 4.0]);
+        assert_eq!(*a_val.data, vec![5.0, 7.0, 3.0, 4.0]);
 
         let grad_a = a.grad().get();  // tests the gradient accumulation from two backward movements
         assert_eq!(grad_a.dim, vec![2, 2]);
-        assert_eq!(grad_a.data, vec![4.0, 10.0, 4.0, 2.0]);
+        assert_eq!(*grad_a.data, vec![4.0, 10.0, 4.0, 2.0]);
     }
 }

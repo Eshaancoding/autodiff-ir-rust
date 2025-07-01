@@ -1,4 +1,4 @@
-use crate::{ir_b_create_temp_proc, ir_b_return_temp_proc, IRCmds, Tensor};
+use crate::{core::add_to_dep, ir_b_create_temp_proc, ir_b_return_temp_proc, IRCmds, Tensor};
 use std::ops::Range;
 
 use super::{autodiff, ir_b_add};
@@ -14,8 +14,11 @@ where
     E: FnOnce() -> Tensor,
     F: FnOnce()
 {
+    // Also, make sure to add to dep list
+    
     // add if evaluations to main 
     let v = expr().forward();
+    add_to_dep(v.id.clone());    
     if v.dim != vec![1] { panic!("If expression must have dim of [1]") }
     
     // rest of the code will then execute
@@ -43,6 +46,7 @@ where
 {
     // add if evaluations to main 
     let v = expr().forward();
+    add_to_dep(v.id.clone());     // add to dependency list
     if v.dim != vec![1] { panic!("Expr must return a boolean") }
     
     // func
@@ -74,6 +78,7 @@ where
 {
     // first, evaluate control expr
     let v = var.forward(); // first, evaluate control expr
+    add_to_dep(v.id.clone());
     if v.dim != vec![1] { panic!("Expr must return a boolean.") } 
     
     // create func

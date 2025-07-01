@@ -52,18 +52,18 @@ mod tests {
         // ============ Check ============ 
         let res_val = res.val().unwrap().get();
         assert_eq!(res_val.dim, vec![6], "Res dim incorrect");
-        assert_eq!(res_val.data, vec![0.0, 0.0, 27.0, 0.0, 0.0, 27.0], "Res data incorrect");
+        assert_eq!(*res_val.data, vec![0.0, 0.0, 27.0, 0.0, 0.0, 27.0], "Res data incorrect");
 
         let grad_val = x.grad().get();
         assert_eq!(grad_val.dim, vec![6], "Grad dim incorrect");
-        assert_eq!(grad_val.data, vec![0.0, 0.0, 18.0, 0.0, 0.0, 18.0], "Grad value incorrect");
+        assert_eq!(*grad_val.data, vec![0.0, 0.0, 18.0, 0.0, 0.0, 18.0], "Grad value incorrect");
 
         let all_no = all_no.val().unwrap().get();
         assert_eq!(all_no.dim, vec![1]);
-        assert_eq!(all_no.data, vec![0.0]);
+        assert_eq!(*all_no.data, vec![0.0]);
 
         let all_yes = all_yes.val().unwrap().get();
         assert_eq!(all_yes.dim, vec![1]);
-        assert_eq!(all_yes.data, vec![1.0]);
+        assert_eq!(*all_yes.data, vec![1.0]);
     }
 }

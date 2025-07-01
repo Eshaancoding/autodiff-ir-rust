@@ -11,6 +11,7 @@ fn handle_embed_proc (device: &dyn Device, mat_tracker: &mut KernelTracker, p: &
 
     // merge copy matrix tracker to orig matrix tracker (or any other variables if needed) 
     // mat_tracker.merge(mat_tracker_copy, merge_loc); 
+    mat_tracker.shape_tracker = mat_tracker_copy.shape_tracker;
 
     p
 }

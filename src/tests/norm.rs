@@ -21,7 +21,7 @@ mod tests {
 
         let data = res.val().unwrap().get().round(4);    
         assert_eq!(data.dim, vec![2, 4]);
-        assert_eq!(data.data, vec![
+        assert_eq!(*data.data, vec![
             0.3651, 0.7303, 1.0954, 1.4606,
             0.7581, 0.9097, 1.0613, 1.213
         ]);
@@ -45,7 +45,7 @@ mod tests {
 
         let data = res.val().unwrap().get().round(4);    
         assert_eq!(data.dim, vec![2, 4]);
-        assert_eq!(data.data, vec![
+        assert_eq!(*data.data, vec![
             -1.3416, -0.4472, 0.4472, 1.3416,
             -1.1832, -0.5071, 0.169, 1.5213
         ]);

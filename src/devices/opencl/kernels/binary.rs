@@ -10,7 +10,7 @@ impl BinaryOp {
 }
 
 pub fn cl_binary_to_body (a: &Input, b: &Input, res: &Output, op: &BinaryOp) -> String {
-    format!("{} = {} {} {}", res.to_opencl(), a.to_opencl(), op.to_opencl(), b.to_opencl()).to_string()
+    format!("{} = {} {} {};", res.to_opencl(), a.to_opencl(), op.to_opencl(), b.to_opencl()).to_string()
 }
 
 

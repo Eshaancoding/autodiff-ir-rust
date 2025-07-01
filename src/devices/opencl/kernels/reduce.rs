@@ -3,8 +3,8 @@ use crate::{devices::{context::OpenCLContext, helper::get_inputs_args}, kernel_d
 impl ReduceOp {
     pub fn to_opencl (&self, orig: String, new: String) -> String {
         match self {
-            ReduceOp::Sum => format!("{} += {}", orig, new),
-            ReduceOp::Max => format!("{} = max({}, {})", orig, orig, new),
+            ReduceOp::Sum => format!("{} += {};", orig, new),
+            ReduceOp::Max => format!("{} = max({}, {});", orig, orig, new),
         }
     }
 }

@@ -34,7 +34,7 @@ mod tests {
         // ======== Check resultant value ========
         let res_val = res.val().unwrap().get().round(4);
         assert_eq!(res_val.dim, vec![2, 4], "Result value dim incorrect");
-        assert_eq!(res_val.data, vec![
+        assert_eq!(*res_val.data, vec![
             8.5169,   4.1459,  -0.9816, 783.7341,
             5.6071,  -4.9606, -15.6412,   5.6242
         ], "Result data value incorrect");
@@ -42,7 +42,7 @@ mod tests {
         // ======== Check x value ========
         let x_grad = x.grad().get().round(4);
         assert_eq!(x_grad.dim, vec![2, 4], "x grad value dim incorrect");
-        assert_eq!(x_grad.data, vec![
+        assert_eq!(*x_grad.data, vec![
             -41.4012,      6.4684,      3.5990, -353617.0418,
             4.4253,      9.1042,   -117.8712,      1.7871
         ], "y grad value incorrect");
@@ -50,7 +50,7 @@ mod tests {
         // ======== Check y value ========
         let y_grad = y.grad().get().round(4);
         assert_eq!(y_grad.dim, vec![2, 4], "x grad dim incorrect");
-        assert_eq!(y_grad.data, vec![
+        assert_eq!(*y_grad.data, vec![
             0.2070, 0.1600, 0.5591, 0.1442,
             0.0983, 0.1327, 0.1162, 0.0899
         ], "y grad value incorrect");

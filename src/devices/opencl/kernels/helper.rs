@@ -10,15 +10,18 @@ pub fn get_inputs_args (inputs: Vec<&Input>, output: &Output) -> Vec<String> {
             Input::Constant { .. } => { },
             Input::Temp { } => {},
             Input::Mat { mat } => {
-                t.push(mat.id.clone())
+                if !t.contains(&mat.id) {
+                    t.push(mat.id.clone())
+                }
             }
         }
     }
 
     match output {
         Output::Mat { mat } => {
-            let arg_name: String = format!("__global float* {}", mat.id);
-            t.push(mat.id.clone());
+            if !t.contains(&mat.id) {
+                t.push(mat.id.clone());
+            }
         },
         Output::Temp {} => {}
     }

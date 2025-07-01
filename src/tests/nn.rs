@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod tests {
+    use crate::autodiff::devices::{OpenCL, CLDeviceType};
     use crate::autodiff;
     use crate::nn::{self, SeqF, Module};
     
     #[test]
     fn nn () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        // autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(OpenCL::new(CLDeviceType::GPU));
         autodiff::eager_dep_opt();
 
         let l1_w = autodiff::tensor(vec![
@@ -60,20 +62,22 @@ mod tests {
         });
 
         res.val().unwrap().keep(); // ensure we can get in dependecy list
+        l1_w.val().unwrap().keep();
+        l1_b.val().unwrap().keep();
+        l2_w.val().unwrap().keep();
 
-        autodiff::execute();    
-        autodiff::ir_print(); // even more massive
+        autodiff::print_and_exec();    
 
         let res_out_data = res.val().unwrap().get().round(4);
         assert_eq!(res_out_data.dim, vec![2,2], "Y output dim wrong");
-        assert_eq!(res_out_data.data, vec![
+        assert_eq!(*res_out_data.data, vec![
             -1.6599, -1.5678,
             -1.6662, -1.5736
         ], "Y output data wrong");
         
         let l1_w_out_data = l1_w.val().unwrap().get().round(4);
         assert_eq!(l1_w_out_data.dim, vec![5,3], "L1 Weight dim wrong");
-        assert_eq!(l1_w_out_data.data, vec![
+        assert_eq!(*l1_w_out_data.data, vec![
             0.0461, 0.0349, 0.025,
             0.0599, 0.0683, 0.0815,
             0.0358, 0.1238, 0.094,
@@ -83,13 +87,13 @@ mod tests {
 
         let l1_b_out_data = l1_b.val().unwrap().get().round(4);
         assert_eq!(l1_b_out_data.dim, vec![3], "L1 Bias dim wrong");
-        assert_eq!(l1_b_out_data.data, vec![
+        assert_eq!(*l1_b_out_data.data, vec![
             0.4715, 0.4172, 0.4423
         ], "l1_b output data wrong");
 
         let l2_w_out_data = l2_w.val().unwrap().get().round(4);
         assert_eq!(l2_w_out_data.dim, vec![3, 2], "L2 Weight dim wrong");
-        assert_eq!(l2_w_out_data.data, vec![
+        assert_eq!(*l2_w_out_data.data, vec![
             -1.0534, -1.0594,
             -1.0530, -0.9670,
             -1.0603, -0.9833

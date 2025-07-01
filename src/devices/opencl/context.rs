@@ -101,7 +101,8 @@ impl OpenCLContext {
         let k = kernels.entry(kernel_name.clone())
             .or_insert_with(|| {
                 let src_code = gen_src_code();
-                let program = Program::create_and_build_from_source(&context, &src_code, "").expect("Can't build program");
+                let program = Program::create_and_build_from_source(&context, &src_code, "")
+                    .expect(format!("Can't build program:\n{}", src_code).as_str());
                 self.kernel_src.insert(kernel_name.clone(), src_code);
 
                 Kernel::create(&program, kernel_name).expect("Can't create kernel")

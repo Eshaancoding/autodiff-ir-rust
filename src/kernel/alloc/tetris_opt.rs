@@ -26,7 +26,7 @@ pub fn max (a: usize, b: usize) -> usize {
     if b > a { b } else { a }
 }
 
-pub fn tetris_opt (kernel_proc: &mut KernelProcedure) {
+pub fn tetris_opt (kernel_proc: &mut KernelProcedure, var_changed: &Vec<String>) {
     let list = ret_dep_list();
     let mut entries: HashMap<String, AllocEntry> = HashMap::new();
 
@@ -36,7 +36,7 @@ pub fn tetris_opt (kernel_proc: &mut KernelProcedure) {
         let cmd = proc.get(*idx).unwrap();
 
         if let Kernels::Alloc { id, size, content } = cmd {
-            if content.is_none() && !list.contains(id) {
+            if content.is_none() && !list.contains(id) && !var_changed.contains(id) {
                 entries.insert(id.clone(), AllocEntry {
                     id: id.clone(),
                     start_loc: loc,

@@ -8,14 +8,28 @@ pub struct RefLocation {
 }
 
 /*
-Technically, we don't need this optimization actually
+Technically, we don't need this optimization 
 The main premise of this opt is to reuse ids that are only being used once
 however, we anyways globalize all ids into one at a future optimization ("tetris optimzation" I like to call it)
 So why mem opt? It actually helps a lot with grouping like operations together
 This massively helps kernel fusion, which is extremely important
 */
 pub fn mem_opt (proc: &mut KernelProcedure, var_changed: &Vec<String>) {
-    let dep_list = ret_dep_list();
+    let mut dep_list = ret_dep_list();
+
+    // ===================== Track variables that are from while or if statements ===================== 
+    proc.step_cmd_fusion(&mut |proc, idx| {
+        let cmd = proc.get(*idx).unwrap();
+
+        if let Kernels::If { conditions, .. } = cmd {
+            for (c, _) in conditions.iter() {
+                dep_list.insert(c.clone());
+            }
+        }
+        else if let Kernels::While { conditional_var, .. } = cmd {
+            dep_list.insert(conditional_var.clone());
+        }
+    });
 
     // ========== get metadata about cmds ========== 
     let mut res_to_procid: HashMap<String, String> = HashMap::new();

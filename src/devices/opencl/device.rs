@@ -65,7 +65,7 @@ impl Device for OpenCL {
         let mut context = OpenCLContext::new(self.device);
         proc_exec(&kernel_procedure, &mut context);
 
-        println!("{}", context);
+        // println!("{}", context);
 
         // from all dep list, get variables
         let dep_list = ret_dep_list();
@@ -132,7 +132,6 @@ fn proc_exec (proc: &KernelProcedure, opencl_context: &mut OpenCLContext) -> boo
 
     false
 }
-
 
 fn exec (cmd: &Kernels, opencl_context: &mut OpenCLContext) {
     match cmd {
