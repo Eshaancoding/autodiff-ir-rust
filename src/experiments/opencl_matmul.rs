@@ -18,7 +18,7 @@ use opencl3::device::{CL_DEVICE_TYPE_GPU, Device, get_all_devices};
 use opencl3::kernel::{ExecuteKernel, Kernel};
 use opencl3::memory::{Buffer, CL_MEM_READ_ONLY, CL_MEM_WRITE_ONLY};
 use opencl3::program::Program;
-use opencl3::types::{CL_BLOCKING, cl_float};
+use opencl3::types::{CL_BLOCKING, cl_float, cl_int};
 use std::ptr;
 
 const PROGRAM_SOURCE: &str = r#"
@@ -143,8 +143,8 @@ pub fn opencl_matmul () {
             .set_arg(&res_buffer)
             .set_arg(&a_buffer)
             .set_arg(&w_buffer)
-            .set_arg(&INPUT_SIZE)
-            .set_arg(&OUTPUT_SIZE)
+            .set_arg(&(INPUT_SIZE as cl_int))
+            .set_arg(&(OUTPUT_SIZE as cl_int))
             .set_global_work_size(OUTPUT_SIZE)
             .set_global_work_size(BATCH_SIZE)
             .enqueue_nd_range(&queue).expect("Execute kernel error")

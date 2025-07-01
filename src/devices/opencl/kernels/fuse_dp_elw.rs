@@ -1,3 +1,5 @@
+use opencl3::types::cl_int;
+
 use crate::{devices::{context::OpenCLContext, fuse_elw::cl_elw_kernels_to_body, helper::get_inputs_args}, kernel_decl::{Input, Kernels, Output}};
 
 pub fn execute_fuse_dp_elw (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
@@ -78,8 +80,8 @@ pub fn execute_fuse_dp_elw (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
                 for id in parsed_args {
                     e_kernel.set_arg(buffers.get(&id).unwrap());
                 }
-                e_kernel.set_arg(&input_size);
-                e_kernel.set_arg(&output_size);
+                e_kernel.set_arg(&(input_size as cl_int));
+                e_kernel.set_arg(&(output_size as cl_int));
 
                 e_kernel
                     .set_global_work_size(output_size)

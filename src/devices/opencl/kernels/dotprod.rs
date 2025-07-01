@@ -1,4 +1,5 @@
 use crate::{devices::{context::OpenCLContext, helper::get_inputs_args}, kernel_decl::Kernels};
+use opencl3::types::cl_int;
 
 pub fn execute_dot_prod (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
     match cmd {
@@ -56,8 +57,9 @@ pub fn execute_dot_prod (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
                 for id in parsed_args {
                     e_kernel.set_arg(buffers.get(&id).unwrap());
                 }
-                e_kernel.set_arg(&input_size);
-                e_kernel.set_arg(&output_size);
+                
+                e_kernel.set_arg(&(input_size as cl_int));
+                e_kernel.set_arg(&(output_size as cl_int));
 
                 e_kernel
                     .set_global_work_size(output_size)
