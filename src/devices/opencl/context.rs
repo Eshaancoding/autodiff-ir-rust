@@ -44,13 +44,7 @@ impl OpenCLContext {
     }
 
     pub fn create_buffer (&mut self, id: &String, size: usize) {
-        self.buffers.entry(id.clone()).or_insert(
-    unsafe {
-                Buffer::<cl_float>::create(&self.context, CL_MEM_READ_WRITE, size, null_mut()).expect("Can't create buffer")
-            }
-        );
-
-        self.buffer_size.entry(id.clone()).or_insert(size);
+        self.write_buffer(id, &Arc::new(vec![0.0; size]));
     }
 
     pub fn write_buffer (&mut self, id: &String, data: &Arc<Vec<f32>>) {
