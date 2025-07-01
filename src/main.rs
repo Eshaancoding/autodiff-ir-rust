@@ -49,6 +49,7 @@ pub fn nn_test () {
     neural_net.insert(nn::Linear(512, 256, true));
     neural_net.insert(nn::Sigmoid());
     neural_net.insert(nn::Linear(256, 128, true));
+    neural_net.insert(nn::Sigmoid());
 
     let mut opt = nn::optimizers::SGD(neural_net.params(), 0.1);
 
