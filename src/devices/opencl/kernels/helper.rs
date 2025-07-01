@@ -1,6 +1,7 @@
 use crate::{kernel_decl::{Input, Output}};
 
-pub fn get_inputs_args (inputs: Vec<&Input>, output: &Output) -> Vec<String> {
+// this could be replaced by kernel helper if I am being honest
+pub fn get_inputs_args (inputs: Vec<&Input>, output: Vec<&Output>) -> Vec<String> {
     let mut t: Vec<String> = vec![];
     for arg in inputs.iter() {
         match arg {
@@ -17,13 +18,15 @@ pub fn get_inputs_args (inputs: Vec<&Input>, output: &Output) -> Vec<String> {
         }
     }
 
-    match output {
-        Output::Mat { mat } => {
-            if !t.contains(&mat.id) {
-                t.push(mat.id.clone());
-            }
-        },
-        Output::Temp {} => {}
+    for out in output.iter() {
+        match out {
+            Output::Mat { mat } => {
+                if !t.contains(&mat.id) {
+                    t.push(mat.id.clone());
+                }
+            },
+            Output::Temp {} => {}
+        }
     }
 
     t

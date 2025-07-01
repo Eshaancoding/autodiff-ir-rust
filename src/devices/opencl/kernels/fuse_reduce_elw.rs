@@ -1,25 +1,30 @@
-use crate::{devices::{context::OpenCLContext, helper::get_inputs_args}, kernel_decl::{Kernels, ReduceOp}};
+use crate::{devices::{context::OpenCLContext, fuse_elw::cl_elw_kernels_to_body, helper::get_inputs_args}, kernel_decl::{Input, Kernels, Output, ReduceOp}};
 
-impl ReduceOp {
-    pub fn to_opencl (&self, orig: String, new: String) -> String {
-        match self {
-            ReduceOp::Sum => format!("{} += {};", orig, new),
-            ReduceOp::Max => format!("{} = max({}, {});", orig, orig, new),
-        }
-    }
-}
-
-pub fn execute_reduce (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
+pub fn execute_fuse_reduce_elw (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
     match cmd {
-        Kernels::Reduce { id, a, res, op, vec_size, reduce_size } => {
+        Kernels::ReduceElwExpr { id, kernels, vec_size, reduce_size } => {
             let kernel_name = format!("_{}", id);
-            let parsed_args = get_inputs_args(vec![a], vec![res]);
+            let parsed_args = get_inputs_args(cmd.get_inputs(), cmd.get_outputs());
 
             let (
                 buffers, 
                 mut e_kernel, 
                 queue
             ) = opencl_context.get_kernel(&kernel_name, || {
+                // get a, op, and res fro mthe very first command
+                let mut kernels = kernels.clone();
+                let a_rd: Input;
+                let res_rd: Output;
+                let op_rd: ReduceOp;
+                
+                if let Kernels::Reduce { a, res, op, .. } = kernels.remove(0) {
+                    a_rd = a;
+                    res_rd = res;
+                    op_rd = op;
+                }
+                else {
+                    panic!("First command is not a Reduce operation!")
+                }
 
                 let mut args: Vec<String> = parsed_args.iter().map(|v| format!("__global float* {}", v)).collect();
                 args.push("__local float* scratch".to_string());
@@ -50,15 +55,20 @@ pub fn execute_reduce (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
 
                     // Write result of this work-group to partial_sums
                     if (_y == 0) {{
+                        float _temp_var = 0.0;
                         {} = scratch[0];
+
+                        int _global_id = _x; 
+                        {}
                     }}
                 }}
                 "#, 
                     kernel_name, 
                     args.join(","),
-                    a.to_opencl(),
-                    op.to_opencl("scratch[_y]".to_string(), "scratch[_y + offset]".to_string()),
-                    res.to_opencl()
+                    a_rd.to_opencl(),
+                    op_rd.to_opencl("scratch[_y]".to_string(), "scratch[_y + offset]".to_string()),
+                    res_rd.to_opencl(),
+                    cl_elw_kernels_to_body(&kernels)
                 )          
             });
 

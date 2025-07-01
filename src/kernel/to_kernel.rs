@@ -71,9 +71,9 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> (KernelProcedure, 
     insert_alloc(device, &mut kernel_proc);
 
     // ========= Kernel Fusion =========
-    // fuse_elw_expr(&mut kernel_proc, &mut kernel_id); 
-    // fuse_dp_expr(&mut kernel_proc, &mut kernel_id);
-    // fuse_rd_expr(&mut kernel_proc, &mut kernel_id);
+    fuse_elw_expr(&mut kernel_proc, &mut kernel_id); 
+    fuse_dp_expr(&mut kernel_proc, &mut kernel_id);
+    fuse_rd_expr(&mut kernel_proc, &mut kernel_id);
 
     // ========= Allocation Optimizations =========
     // ideally put insert alloc here plz

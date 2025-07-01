@@ -13,12 +13,11 @@ pub fn cl_binary_to_body (a: &Input, b: &Input, res: &Output, op: &BinaryOp) -> 
     format!("{} = {} {} {};", res.to_opencl(), a.to_opencl(), op.to_opencl(), b.to_opencl()).to_string()
 }
 
-
 pub fn execute_binary (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
     match cmd {
         Kernels::Binary { id, a, b, res, op, size } => {
             let kernel_name = format!("_{}", id);
-            let parsed_args = get_inputs_args(vec![a, b], res);
+            let parsed_args = get_inputs_args(vec![a, b], vec![res]);
 
             let (
                 buffers, 

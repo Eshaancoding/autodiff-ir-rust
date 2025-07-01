@@ -40,7 +40,7 @@ impl Input {
             Input::Constant { val } => val.to_string(),
             Input::Mat { mat } => mat.to_opencl(),
             Input::ConcatMatrix { .. } => todo!(), // not doing this one yet because might be multi-lined or something
-            Input::Temp => "_temp".to_string()
+            Input::Temp => "_temp_var".to_string()
         }
     }
 }
@@ -49,7 +49,7 @@ impl Output {
     pub fn to_opencl (&self) -> String {
         match self {
             Output::Mat { mat } => mat.to_opencl(),
-            Output::Temp => "_temp".to_string()
+            Output::Temp => "_temp_var".to_string()
         }
     }
 }

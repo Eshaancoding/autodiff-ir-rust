@@ -56,7 +56,7 @@ pub fn nn_test () {
     let mut res = autodiff::empty();
 
     // prev: 0..1000        
-    autodiff::ir_for(0..100, |_| {
+    autodiff::ir_for(0..1000, |_| {
         let y = neural_net.f(x.clone());
         opt.zero_grad();
         y.forward();
@@ -68,11 +68,9 @@ pub fn nn_test () {
 
     res.val().unwrap().keep(); // ensure we can get in dependency list
 
-    let start = Instant::now();
     autodiff::execute();    
-    let _ = res.val().unwrap().get().round(4);
-
-    println!("elapsed: {} s", start.elapsed().as_secs_f64());
+    let v = res.val().unwrap().get().round(4);
+    println!("v data len: {}", v.data.len());
 }
 
 
@@ -160,11 +158,11 @@ pub fn simple () {
 }
 
 pub fn main () {
-    simple();    
+    // simple();    
     // opencl_matmul();
     // opencl_ruduce();
 
-    // nn_test();
+    nn_test();
     // multihead_att();
 
     // forward();

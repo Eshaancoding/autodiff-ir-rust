@@ -1,20 +1,36 @@
-use crate::{devices::{context::OpenCLContext, helper::get_inputs_args}, kernel_decl::Kernels};
+use crate::{devices::{context::OpenCLContext, fuse_elw::cl_elw_kernels_to_body, helper::get_inputs_args}, kernel_decl::{Input, Kernels, Output}};
 
-pub fn execute_dot_prod (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
+pub fn execute_fuse_dp_elw (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
     match cmd {
-        Kernels::DotProd { id, a, b, res, a_shape, res_shape, .. } => {
+        Kernels::DPElwExpr { id, kernels, a_shape, res_shape, .. } => {
+            // get important information
             let batch_size = a_shape.0;            
             let input_size = a_shape.1; 
             let output_size = res_shape.1;
 
             let kernel_name = format!("_{}", id);
-            let parsed_args = get_inputs_args(vec![a, b], vec![res]);
+            let parsed_args = get_inputs_args(cmd.get_inputs(), cmd.get_outputs());
 
             let (
                 buffers, 
                 mut e_kernel, 
                 queue
             ) = opencl_context.get_kernel(&kernel_name, || {
+                // get a, b, res from dot product
+                let mut kernels = kernels.clone(); // not the best implementation... it's only called once anyways
+                let a_dot: Input;
+                let b_dot: Input;
+                let res_dot: Output;
+
+                if let Kernels::DotProd { a, b, res, .. } = kernels.remove(0) {
+                    a_dot = a;
+                    b_dot = b;
+                    res_dot = res;
+                } 
+                else {
+                    panic!("First command is not a DP operation!")
+                }               
+
                 let mut args = parsed_args.iter().map(|v| format!("__global float* {}", v)).collect::<Vec<String>>();
                 args.push("int wA".to_string());
                 args.push("int wB".to_string());
@@ -41,14 +57,20 @@ pub fn execute_dot_prod (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
 
                     int _x = ty;
                     int _y = tx;
+                    float _temp_var = 0.0;
+                    
                     {} = value;
+
+                    int _global_id = ty * wB + tx;
+                    {}
                 }}
                 "#, 
                     kernel_name, 
                     args.join(","),
-                    a.to_opencl(),
-                    b.to_opencl(),
-                    res.to_opencl()
+                    a_dot.to_opencl(),
+                    b_dot.to_opencl(),
+                    res_dot.to_opencl(),
+                    cl_elw_kernels_to_body(&kernels)
                 )          
             });
 

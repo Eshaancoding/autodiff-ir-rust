@@ -24,7 +24,7 @@ pub fn execute_unary (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
     match cmd {
         Kernels::Unary { id, a, res, op, size } => {
             let kernel_name = format!("_{}", id);
-            let parsed_args = get_inputs_args(vec![a], res);
+            let parsed_args = get_inputs_args(vec![a], vec![res]);
 
             let (
                 buffers, 

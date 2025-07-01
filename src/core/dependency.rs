@@ -24,7 +24,7 @@ pub fn ret_dep_list () -> HashSet<String> {
 
 pub fn set_harsh_dep_list () {
     let mut guard = HARSH_DEP_LIST.lock().unwrap();
-    *guard = true; // set to true
+    *guard = true; 
 }
 
 pub fn is_harsh () -> bool {

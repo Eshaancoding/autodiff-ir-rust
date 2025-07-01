@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Instant;
 use opencl3::device::{
     get_all_devices, 
     Device as CLDevice, 
@@ -13,6 +14,9 @@ use crate::devices::alloc::execute_alloc;
 use crate::devices::binary::execute_binary;
 use crate::devices::context::OpenCLContext;
 use crate::devices::dotprod::execute_dot_prod;
+use crate::devices::fuse_dp_elw::execute_fuse_dp_elw;
+use crate::devices::fuse_elw::execute_elw_expr;
+use crate::devices::fuse_reduce_elw::execute_fuse_reduce_elw;
 use crate::devices::movement::execute_movement;
 use crate::devices::reduce::execute_reduce;
 use crate::devices::unary::execute_unary;
@@ -59,15 +63,26 @@ impl Device for OpenCL {
         self.result.clear();
         self.result_shape.clear();
 
-        let (kernel_procedure, kernel_tracker) = to_kernel(self, proc);
+        let (mut kernel_procedure, kernel_tracker) = to_kernel(self, proc);
         println!("{}", kernel_procedure);
         
         let mut context = OpenCLContext::new(self.device);
+
+        // warmup; compile programs, initialize buffers + writing to those buffers, executing kernels, etc.
+        println!("Compiling...");
+        kernel_procedure.step_cmd(&mut |v, idx| {
+            let cmd = v.get(*idx).unwrap();
+            exec(cmd, &mut context); 
+            true
+        });
+
+        // Actually Execute
+        println!("Executing...");
+        let start = Instant::now();
         proc_exec(&kernel_procedure, &mut context);
+        println!("elapsed: {} s", start.elapsed().as_secs_f64());
 
-        // println!("{}", context);
-
-        // from all dep list, get variables
+        // From all dep list, get variables
         let dep_list = ret_dep_list();
         for st in dep_list.iter() {
             self.result.insert(st.clone(), Arc::new(context.read_buffer(st)));
@@ -142,9 +157,9 @@ fn exec (cmd: &Kernels, opencl_context: &mut OpenCLContext) {
         Kernels::DotProd { .. } => { execute_dot_prod(opencl_context, cmd); },
         Kernels::Reduce { .. } => { execute_reduce(opencl_context, cmd); },
         Kernels::Movement { .. } => { execute_movement(opencl_context, cmd); },
-        Kernels::ElwExpr { .. } => todo!(),
-        Kernels::DPElwExpr { .. } => todo!(),
-        Kernels::ReduceElwExpr { .. } => todo!(),
+        Kernels::ElwExpr { .. } => { execute_elw_expr(opencl_context, cmd); } ,
+        Kernels::DPElwExpr { .. } => { execute_fuse_dp_elw(opencl_context, cmd); },
+        Kernels::ReduceElwExpr { .. } => { execute_fuse_reduce_elw(opencl_context, cmd); },
         Kernels::While { .. } => {}, // handled by parent funcs
         Kernels::If { .. } => {}, // handled by parent funcs
         Kernels::EX { .. } => {}, // handled by parent funcs
