@@ -56,7 +56,7 @@ pub fn nn_test () {
     let mut res = autodiff::empty();
 
     // prev: 0..1000        
-    autodiff::ir_for(0..1000, |_| {
+    autodiff::ir_for(0..10000, |_| {
         let y = neural_net.f(x.clone());
         opt.zero_grad();
         y.forward();
