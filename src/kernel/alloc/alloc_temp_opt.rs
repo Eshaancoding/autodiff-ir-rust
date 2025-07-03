@@ -58,7 +58,7 @@ pub fn alloc_temp_opt (kernel_proc: &mut KernelProcedure) {
         
         // I have absolutely no cases where there might be multiple temporary variables in one kernel 
         // So far, haven't seen an example of this. However, if it does happen, then I will know ;)
-        if pot_temps.len() > 1 { todo!("Multiple temporary variables? Implement this") }
+        if pot_temps.len() > 1 { println!("Multiple temporary variables? Implement this") }
 
         let var = pot_temps.get(0).unwrap().clone();
 

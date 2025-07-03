@@ -1,5 +1,5 @@
 use crate::{
-    alloc::{alloc_out_fused, alloc_switch, alloc_temp_opt, insert_alloc, tetris_opt}, 
+    alloc::{alloc_in, alloc_out_fused, alloc_switch, alloc_temp_opt, insert_alloc, tetris_opt}, 
     fusion::{dp_elw::fuse_dp_expr, fuse_elw_expr, fuse_rd_expr}, 
     helper::simplify_expr::simplify_global_expr, 
     kernel_decl::{KernelProcedure, Kernels}, 
@@ -68,19 +68,28 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> (KernelProcedure, 
     }
 
     // ========= Insert allocations + deallocations =========
-    insert_alloc(device, &mut kernel_proc);
+    insert_alloc(device, &mut kernel_proc, &var_changed);
 
     // ========= Kernel Fusion =========
     fuse_elw_expr(&mut kernel_proc, &mut kernel_id); 
     fuse_dp_expr(&mut kernel_proc, &mut kernel_id);
     fuse_rd_expr(&mut kernel_proc, &mut kernel_id);
 
-    // ========= Allocation Optimizations =========
-    // ideally put insert alloc here plz
-    alloc_switch(&mut kernel_proc);
-    simplify_global_expr(&mut kernel_proc);
-    alloc_temp_opt(&mut kernel_proc);  // you need access expression simplification even more for this to work the best
+    // ============== Allocation Optimizations ==================
+    // ideally put insert alloc here plz 
+    simplify_global_expr(&mut kernel_proc); // good preq for alloc_temp_opt (need same global params)
+    
+    // Try to match allocs/deallocs inside fusion commands
+    alloc_in(&mut kernel_proc);
+    alloc_switch(&mut kernel_proc); // good preq 
+    
+    // if allocs + dealloc in same fusion --> replace with temporary
+    alloc_temp_opt(&mut kernel_proc);  
+
+    // Collate all temporary memory into one --> tetris opt 
     tetris_opt(&mut kernel_proc, &var_changed);
+    
+    // remove the allocs from fusion (fusion runtime cannot handle allocs or deallocs)
     alloc_out_fused(&mut kernel_proc);
 
     // ====== Kernel checks for sanity purposes ======= 

@@ -46,18 +46,17 @@ pub fn nn_test () {
     autodiff::eager_dep_opt();
 
     let mut neural_net = nn::Sequential();
-    neural_net.insert(nn::Linear(512, 256, true));
+    neural_net.insert(nn::Linear(128, 64, true));
     neural_net.insert(nn::Sigmoid());
-    neural_net.insert(nn::Linear(256, 128, true));
-    neural_net.insert(nn::Sigmoid());
+    neural_net.insert(nn::Linear(64, 32, true));
 
-    let mut opt = nn::optimizers::SGD(neural_net.params(), 0.1);
+    let mut opt = nn::optimizers::SGD(neural_net.params(), 0.01);
 
-    let x = autodiff::randn(vec![16, 512]);
+    let x = autodiff::randn(vec![2, 128]);
     let mut res = autodiff::empty();
 
     // prev: 0..1000        
-    autodiff::ir_for(0..10000, |_| {
+    autodiff::ir_for(0..10, |_| {
         let y = neural_net.f(x.clone());
         opt.zero_grad();
         y.forward();
@@ -70,8 +69,9 @@ pub fn nn_test () {
     x.grad().keep();
     res.val().unwrap().keep(); // ensure we can get in dependency list
 
-    autodiff::execute();    
-    let v = x.grad().get().round(4);
+    autodiff::print_and_exec();    
+    let v = res.val().unwrap().get().round(4);
+    println!("id to be read: {}", res.val().unwrap().id);
     println!("v data len: {}", v.data.len());
     println!("first value: {}", v.data[0]);
     println!("second value: {}", v.data[1]);

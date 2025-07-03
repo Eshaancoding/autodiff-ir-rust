@@ -35,6 +35,9 @@ pub fn ir_optimize () {
     // *= opts
     // probably more ideas in TODO
     // etc.
+    // multiple views
+    // multiple contigious
+    //     when you do this --> everytime you use "keep" --> call contigious function
     
     drop(guard);
 }

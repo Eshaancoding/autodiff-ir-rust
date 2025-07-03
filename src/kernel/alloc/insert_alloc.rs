@@ -40,9 +40,9 @@ pub fn step_procedure<'a> (device: &dyn Device, proc: &'a KernelProcedure, alloc
     } 
 }
 
-pub fn insert_alloc<'a> (device: &dyn Device, kernel_proc: &mut KernelProcedure) {
+pub fn insert_alloc<'a> (device: &dyn Device, kernel_proc: &mut KernelProcedure, var_changed: &Vec<String>) {
     let dep_vars = ret_dep_list();
-    let mut alloc_tracker = AllocTracker::new(&dep_vars);
+    let mut alloc_tracker = AllocTracker::new(&dep_vars, var_changed);
     
     // ====================== Step through kernel procedure ====================== 
     step_procedure(device, &kernel_proc, &mut alloc_tracker);

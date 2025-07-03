@@ -32,14 +32,16 @@ pub struct AllocTracker<'a> {
     // hlir id is same as the alloc id
     // However, not all hlir id will be in vars (ex: referencing source vars)
     pub vars: HashMap<String, AllocEntry>,  
-    pub dep_vars: &'a HashSet<String>,
+    pub dep_vars: &'a HashSet<String>, // ideally, combine dep vars and var changed
+    pub var_changed: &'a Vec<String>,
     pub shape_tracker: ShapeTrackerKernel
 }
 
 impl<'a> AllocTracker<'a> {
-    pub fn new (dep_vars: &'a HashSet<String>) -> AllocTracker<'a> {
+    pub fn new (dep_vars: &'a HashSet<String>, var_changed: &'a Vec<String>) -> AllocTracker<'a> {
         AllocTracker {  
             vars: HashMap::new(),
+            var_changed,
             dep_vars,
             shape_tracker: ShapeTrackerKernel::new()
         }
@@ -58,7 +60,7 @@ impl<'a> AllocTracker<'a> {
                     size: total_dim, 
                     initial_content: None,
                     alloc_loc: 
-                        if self.dep_vars.contains(ir_id) {
+                        if self.dep_vars.contains(ir_id) || self.var_changed.contains(ir_id) {
                             Location {
                                 proc_id: "main".to_string(),
                                 loc: 0
@@ -101,7 +103,7 @@ impl<'a> AllocTracker<'a> {
 
         for v in cmd.get_dep_id() {
             // skip dealloc loc if it contains one of the dep variables
-            if self.dep_vars.contains(v) { continue; }
+            if self.dep_vars.contains(v) || self.var_changed.contains(v) { continue; }
             
             // update dealloc location
             if let Some(entry) = self.vars.get_mut(v) {

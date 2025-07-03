@@ -17,7 +17,7 @@ use opencl3::{
 // Wrapper over the actual opencl3 context, but also includes any variables or compiled programs
 // As we go through the program, it will cache any buffers and program compiled
 pub struct OpenCLContext {
-    pub queue: CommandQueue,
+    queue: CommandQueue,
     context: Context,
     buffers: HashMap<String, Buffer<f32>>,
     buffer_size: HashMap<String, usize>,
@@ -72,10 +72,10 @@ impl OpenCLContext {
     }
 
     pub fn read_buffer (&mut self, id: &String) -> Vec<f32> {
-        let buf = self.buffers.get(id).expect("Invalid buffer id at reading");
+        let buf = self.buffers.get(id).expect(format!("Invalid buffer id \"{}\" at reading", id).as_str());
         let size = self.buffer_size.get(id).expect("Invalid buffer id at reading size");
 
-        let mut results: Vec<cl_float> = vec![-1.0; *size];
+        let mut results: Vec<cl_float> = vec![0.0 as cl_float; *size];
 
         let read_event = unsafe {
             self.queue.enqueue_read_buffer(buf, CL_BLOCKING, 0, &mut results, &[])
