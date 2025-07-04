@@ -31,13 +31,15 @@ pub fn ir_optimize () {
     const_begin(&mut irb.proc);
 
     // also do graph optimizations here for nicer simplification
-    // constant evalutation
+    // constant simplification 
     // *= opts
     // probably more ideas in TODO
     // etc.
     // multiple views
+    // contigious at the end of every dep var (detect if need to be contigious)
+    //     then you can unignore view test
     // multiple contigious
-    //     when you do this --> everytime you use "keep" --> call contigious function
+    // if we use a reduce on constant, then just evaluate it here
     
     drop(guard);
 }

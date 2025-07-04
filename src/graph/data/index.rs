@@ -66,8 +66,11 @@ impl NodeTrait for IndexNode {
 impl Tensor {
     // select index at dim
     pub fn i (&self, i: usize, dim: i32) -> Tensor {
-        let n_dim = self.dim().len();
-        let dim = if dim < 0 { n_dim as i32 + dim } else { dim } as usize;
+        let p_dim = self.dim();
+        let dim = if dim < 0 { p_dim.len() as i32 + dim } else { dim } as usize;
+
+        assert!(dim < p_dim.len(), "invalid dimension!");
+        assert!(i < p_dim[dim], "invalid index!");
 
         Tensor::new(IndexNode {
             parent: self.clone(),

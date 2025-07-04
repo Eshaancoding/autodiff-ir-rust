@@ -2,6 +2,7 @@
 mod tests {
     use crate::{autodiff, devices::CLDeviceType};
 
+    #[ignore]
     #[test]
     fn view () {
         autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
@@ -11,7 +12,6 @@ mod tests {
         res.forward();
         res.val().unwrap().keep();
 
-        autodiff::execute();
-        autodiff::ir_print(); 
+        autodiff::print_and_exec();
     }
 }

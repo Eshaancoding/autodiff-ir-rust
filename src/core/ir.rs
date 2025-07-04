@@ -1,5 +1,5 @@
 use std::string::String;
-use crate::ValueData;
+use crate::{core::print::display_colored_side_by_side, kernel_decl::KernelProcedure, to_kernel::to_kernel, trackers::KernelTracker, ValueData};
 use std::sync::{Mutex, Arc};
 
 // All different IR needs to implement these functions
@@ -125,7 +125,7 @@ pub static L: Option<IRBase> = None;
 
 pub trait Device {
     // Execute a list of instructions 
-    fn execute (&mut self, cmds: &IRProcedure);
+    fn execute (&mut self, proc: KernelProcedure, tracker: KernelTracker);
     
     // Transfers matrix id to device.
     fn get_tensor (&self, id: &String) -> ValueData;
@@ -177,14 +177,21 @@ pub fn ir_b_device_callback () {
     drop(guard);
 }
 
-pub fn ir_b_execute () {
+pub fn ir_b_execute (debug: bool) {
     // get cmds
     let mut guard_irb = IRB.lock().unwrap();
     let IRBase { proc, .. } = guard_irb.as_mut().expect("Can't unpack IRBuilder");
 
     let mut guard_device = DEVICE.lock().unwrap();
     let device = guard_device.as_mut().expect("Can't unpack IRBuilder");
-    device.execute(&proc);
+
+    let (kernel_proc, kernel_tracker) = to_kernel(device.as_ref(), proc);
+
+    if debug {
+        display_colored_side_by_side(format!("{}", kernel_proc), format!("{}", proc));
+    }
+
+    device.execute(kernel_proc, kernel_tracker);
 
     drop(guard_device);
     drop(guard_irb);

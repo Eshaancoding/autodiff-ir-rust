@@ -69,6 +69,8 @@ pub fn handle_minus_dim (source_dim: &Vec<usize>, input_dim: &Vec<i32>) -> Vec<u
 impl Tensor {
     // you have to refactor the target dim such that it is i32 instead of usize
     pub fn view (&self, target_dim: Vec<i32>) -> Tensor {
+        let target_dim = if target_dim.len() == 0 { vec![1] } else { target_dim };
+
         let source_dim = self.dim();
         let target_dim = handle_minus_dim(&source_dim, &target_dim);
         if target_dim != source_dim {

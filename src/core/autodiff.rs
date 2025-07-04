@@ -99,12 +99,6 @@ pub fn set_device <T: Device + Send + Sync + 'static> (device: T) {
 /**
  * Note that ir_print will show EXIT after execute()
  */
-pub fn ir_print () {
-    let mut guard = IRB.lock().unwrap();
-    let v = guard.as_mut().expect("Can't unpack IRBuilder");
-    println!("{}", v.proc);
-}
-
 pub fn add_heading (cmt: &str) {
     ir_b_add(Heading {
         cmt: cmt.to_string()
@@ -116,7 +110,7 @@ pub fn execute () {
     ir_b_device_callback();
     ir_optimize();
 
-    ir_b_execute();    // execute
+    ir_b_execute(false);    // execute
 }
 
 pub fn print_and_exec () {
@@ -124,9 +118,7 @@ pub fn print_and_exec () {
     ir_b_device_callback();
     ir_optimize();
 
-    ir_print();
-
-    ir_b_execute();
+    ir_b_execute(true);
 }
 
 

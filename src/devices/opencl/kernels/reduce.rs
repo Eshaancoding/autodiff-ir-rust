@@ -1,4 +1,5 @@
 use crate::{devices::{context::OpenCLContext, helper::get_inputs_args}, kernel_decl::{Kernels, ReduceOp}};
+use opencl3::types::cl_int;
 
 impl ReduceOp {
     pub fn to_opencl (&self, orig: String, new: String) -> String {
@@ -23,6 +24,7 @@ pub fn execute_reduce (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
 
                 let mut args: Vec<String> = parsed_args.iter().map(|v| format!("__global float* {}", v)).collect();
                 args.push("__local float* scratch".to_string());
+                args.push("int l_size".to_string());
 
                 format!(r#"
                 __kernel void {}(
@@ -33,10 +35,9 @@ pub fn execute_reduce (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
                     int _x = get_group_id(0);
                     int _y = get_local_id(0);
                     int local_size = get_local_size(0);
-                    int total_size = get_global_size(0);
 
-                    // Load data into local memory (not doing if clause check... okay?)
-                    scratch[_y] = {};
+                    // Load data into local memory
+                    scratch[_y] = (_y < l_size) ? {} : 0.0f;
 
                     barrier(CLK_LOCAL_MEM_FENCE); // waits until transfer to local memory is all finished
 
@@ -63,14 +64,20 @@ pub fn execute_reduce (opencl_context: &mut OpenCLContext, cmd: &Kernels) {
             });
 
             let kernel_event = unsafe {
+                let local_size = (((*reduce_size as f32) / 2.0).ceil() as usize) * 2;
+
                 for id in parsed_args {
                     e_kernel.set_arg(buffers.get(&id).unwrap());
                 }
-                e_kernel.set_arg_local_buffer(*reduce_size);
+                e_kernel.set_arg_local_buffer(local_size);
+                e_kernel.set_arg(&(*reduce_size as cl_int));
+
+                // make sure local size is an even number (this is how the reduction works)
+                // we have a guard if it tries to access out of bounds
 
                 e_kernel
-                    .set_global_work_size(*reduce_size * *vec_size)
-                    .set_local_work_size(*reduce_size)
+                    .set_global_work_size(local_size * *vec_size)
+                    .set_local_work_size(local_size)
                     .enqueue_nd_range(&queue)
                     .expect("Can't create execute kernel")
             };

@@ -78,7 +78,6 @@ create_equality!(MoreZeroNode, c_more_zero, MoreZero, more_than);
 create_equality!(LessZeroNode, c_less_zero, LessZero, less_than);
 
 impl Tensor {
-    // TODO: TEST!!!  
     pub fn all (&self) -> Tensor {
         let mut x = self.clone();
         let total_val = self.dim().iter().product::<usize>();

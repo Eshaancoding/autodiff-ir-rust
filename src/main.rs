@@ -1,5 +1,5 @@
 use std::time::Instant;
-use autodiffv2::{autodiff, opencl_matmul, opencl_reduce};
+use autodiffv2::autodiff;
 use autodiffv2::devices::{OpenCL, CLDeviceType};
 use autodiffv2::nn::{self, SeqF, Module};
 
@@ -11,17 +11,18 @@ pub fn nn_test () {
     autodiff::eager_dep_opt();
 
     let mut neural_net = nn::Sequential();
-    neural_net.insert(nn::Linear(128, 64, true));
+    neural_net.insert(nn::Linear(512, 256, true));
     neural_net.insert(nn::Sigmoid());
-    neural_net.insert(nn::Linear(64, 32, true));
+    neural_net.insert(nn::Linear(256, 128, true));
+    neural_net.insert(nn::Sigmoid());
 
     let mut opt = nn::optimizers::SGD(neural_net.params(), 0.01);
 
-    let x = autodiff::randn(vec![2, 128]);
+    let x = autodiff::randn(vec![16, 512]);
     let mut res = autodiff::empty();
 
-    // prev: 0..1000        
-    autodiff::ir_for(0..10, |_| {
+    // prev: 0..1000       
+    autodiff::ir_for(0..10000, |_| {
         let y = neural_net.f(x.clone());
         opt.zero_grad();
         y.forward();
@@ -36,7 +37,6 @@ pub fn nn_test () {
 
     autodiff::print_and_exec();    
     let v = res.val().unwrap().get().round(4);
-    println!("id to be read: {}", res.val().unwrap().id);
     println!("v data len: {}", v.data.len());
     println!("first value: {}", v.data[0]);
     println!("second value: {}", v.data[1]);
@@ -72,10 +72,9 @@ pub fn simple () {
 
     let a = autodiff::tensor(
         vec![
-            0.03, 0.023, 0.623, 0.0123, 0.7792, 0.3727, 0.137, 0.062,
-            0.23, 0.013, 0.683, 0.023, 0.292, 0.327, 0.198, 0.022
+            2.0, 0.0, 1.0
         ], 
-        vec![2, 8]
+        vec![3]
     );
     let res = a.sum(0);
 
@@ -96,15 +95,10 @@ pub fn main () {
     // opencl_reduce();
     // println!("hello world");
 
-    nn_test();
     // multihead_att();
+    nn_test();
+    
 
-    // forward();
-    // me_life();
-    // broadcasting_test();
-    // reduce();
-    // concat_test();
-    // broadcasting_test();
 
     // test constant tracker
     // check whether it deletes vars if += or -= and if it deletes references vars too

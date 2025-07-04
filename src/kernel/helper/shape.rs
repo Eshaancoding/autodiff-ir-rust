@@ -1,8 +1,6 @@
-use crate::{kernel_decl::Expression, trackers::DataCmds};
+use crate::{helper::debug::display_vec, kernel_decl::Expression, trackers::DataCmds};
 
-pub fn calc_stride (shape: &Vec<usize>) -> Vec<Expression> {
-    if shape.len() == 0 { return vec![] }
-    
+fn calc_stride (shape: &Vec<usize>) -> Vec<Expression> {
     let n = shape.len();
     let mut strides: Vec<Expression> = vec![Expression::make_const(1); n];
     for i in (0..(n - 1)).rev() {
@@ -13,8 +11,6 @@ pub fn calc_stride (shape: &Vec<usize>) -> Vec<Expression> {
 }
 
 pub fn global_to_ndim (index:Expression, shape: &Vec<usize>) -> Vec<Expression> {
-    if shape.len() == 0 { return vec![] }
-
     let strides = calc_stride(shape);
 
     let nd_index: Vec<Expression> = (0..shape.len())
@@ -33,8 +29,6 @@ pub fn global_to_ndim (index:Expression, shape: &Vec<usize>) -> Vec<Expression> 
 }
 
 pub fn ndim_to_global (dim: &Vec<Expression>, shape: &Vec<usize>) -> Expression {
-    if dim.len() == 0 { return Expression::make_global(); }
-
     let strides = calc_stride(shape);
     let mut global_expr = Expression::make_mult(
         dim[0].clone(),
@@ -55,9 +49,8 @@ pub fn ndim_to_global (dim: &Vec<Expression>, shape: &Vec<usize>) -> Expression 
 }
 
 pub fn ndim_change_datacmds (ndim: &mut Vec<Expression>, data_cmds: &Vec<DataCmds>) {
-    if ndim.len() == 0 { return; } // do nothing
-
-    for cmd in data_cmds.iter().rev() { match cmd { 
+    for cmd in data_cmds.iter().rev() { 
+        match cmd { 
             DataCmds::Broadcast { dim, .. } => {
                 ndim[*dim] = Expression::make_const(0);
             },

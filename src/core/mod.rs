@@ -9,6 +9,7 @@ pub mod control;
 pub mod dependency;
 pub mod env;
 pub mod procedure;
+pub mod print;
 
 pub use autodiff::*;
 pub use node::*;

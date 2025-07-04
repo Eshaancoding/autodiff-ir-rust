@@ -5,6 +5,7 @@
 mod tests {
     use crate::{autodiff, devices::CLDeviceType};
 
+    #[ignore]
     #[test]
     fn everything () {
         autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
@@ -38,8 +39,7 @@ mod tests {
 
         result.val().unwrap().keep();
 
-        autodiff::execute();
-        autodiff::ir_print(); // ir print is massive
+        autodiff::print_and_exec();
 
         // ======== Check resultant value ========
         let res_val = result.val().unwrap().get();

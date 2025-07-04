@@ -64,6 +64,27 @@ Backend will refer to things that runs the internal operations and optimizations
     * with allocations and deallocations
     * ain't that nice.
 
+* fix this 
+    * IR simplification (graph)
+        * double check the end of the todo and see
+        * you should be able to unignore view then
+
+    * support concat of like concat(a, a) <-- already supported?
+
+    * concatenation at the OpenCL level
+        * test the evrty.rs
+    
+    * range select at the OpenCL + kernel level
+
+    * better expression simplification
+    
+    * fix to_kernel
+
+    * simplify the to_kernel side of things a little bit 
+        * still pretty messy, especially the metadata part
+
+* >>>>>> only then you can jump ahead to the multihead attention kernel <<<<<<<
+
 * **Kernel**:
     * ~~Resolve conflicts if memory location of res and memory location of dep ARE EQUAL (same id) and the access expressions are DIFFERENT~~
         * ~~Then, you need a temp allocation for this.~~

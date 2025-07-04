@@ -99,9 +99,6 @@ pub fn opencl_matmul () {
         }
     }
 
-    println!("a_data: {:?}", a_data);
-    println!("w_data: {:?}", w_data);
-
     /////////////////////////////////////////////////////////////////////
     // Create buffers and fill buffers
     let mut a_buffer = unsafe {
@@ -165,5 +162,4 @@ pub fn opencl_matmul () {
     read_event.wait().expect("Wait expect");
 
     // find the results
-    println!("results: {:#?}", results);
 }

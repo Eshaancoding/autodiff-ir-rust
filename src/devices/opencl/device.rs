@@ -21,8 +21,8 @@ use crate::devices::movement::execute_movement;
 use crate::devices::reduce::execute_reduce;
 use crate::devices::unary::execute_unary;
 use crate::kernel_decl::{KernelProcedure, Kernels};
-use crate::to_kernel::to_kernel;
-use crate::{IRBase, IRProcedure, ValueData, Device};
+use crate::trackers::KernelTracker;
+use crate::{IRBase, ValueData, Device};
 
 pub enum CLDeviceType {
     CPU,
@@ -59,18 +59,15 @@ impl OpenCL {
 }
 
 impl Device for OpenCL {
-    fn execute (&mut self, proc: &IRProcedure) {
+    fn execute (&mut self, proc: KernelProcedure, tracker: KernelTracker) {
         self.result.clear();
         self.result_shape.clear();
-
-        let (mut kernel_procedure, kernel_tracker) = to_kernel(self, proc);
-        println!("{}", kernel_procedure);
-        
         let mut context = OpenCLContext::new(self.device);
-
+        
         // warmup; compile programs, initialize buffers + writing to those buffers, executing kernels, etc.
         println!("Compiling...");
-        kernel_procedure.step_cmd(&mut |v, idx| {
+        let mut proc = proc;
+        proc.step_cmd(&mut |v, idx| {
             let cmd = v.get(*idx).unwrap();
             exec(cmd, &mut context); 
             true
@@ -79,14 +76,14 @@ impl Device for OpenCL {
         // Actually Execute
         println!("Executing...");
         let start = Instant::now();
-        proc_exec(&kernel_procedure, &mut context);
+        proc_exec(&proc, &mut context);
         println!("elapsed: {} s", start.elapsed().as_secs_f64());
 
         // From all dep list, get variables
         let dep_list = ret_dep_list();
         for st in dep_list.iter() {
             self.result.insert(st.clone(), Arc::new(context.read_buffer(st)));
-            self.result_shape.insert(st.clone(), kernel_tracker.get_shape(st).clone());
+            self.result_shape.insert(st.clone(), tracker.get_shape(st).clone());
         }
     }
 

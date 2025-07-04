@@ -9,9 +9,9 @@ impl UnaryOp {
             UnaryOp::Neg => format!("-{}", a),
             UnaryOp::Recip => format!("1.0/{}", a),
             UnaryOp::Sqrt => format!("sqrt(fabs({}))", a),
-            UnaryOp::EqualZero => format!("({} == 0.0f) ? 1.0 : 0.0", a),
-            UnaryOp::MoreZero => format!("({} > 0.0f) ? 1.0 : 0.0", a),
-            UnaryOp::LessZero => format!("({} < 0.0f) ? 1.0 : 0.0", a)
+            UnaryOp::EqualZero => format!("(({} == 0.0f) ? 1.0 : 0.0)", a),
+            UnaryOp::MoreZero => format!("(({} > 0.0f) ? 1.0 : 0.0)", a),
+            UnaryOp::LessZero => format!("(({} < 0.0f) ? 1.0 : 0.0)", a)
         }
     }
 }
