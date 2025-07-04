@@ -166,9 +166,4 @@ pub fn opencl_matmul () {
 
     // find the results
     println!("results: {:#?}", results);
-
-    // Calculate the kernel duration, from the kernel_event
-    let start_time = kernel_event.profiling_command_start().expect("Start time error");
-    let end_time = kernel_event.profiling_command_end().expect("End time error");
-    let duration = end_time - start_time;
 }

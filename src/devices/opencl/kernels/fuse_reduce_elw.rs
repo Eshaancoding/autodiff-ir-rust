@@ -85,7 +85,7 @@ pub fn execute_fuse_reduce_elw (opencl_context: &mut OpenCLContext, cmd: &Kernel
                     .expect("Can't create execute kernel")
             };
 
-            // kernel_event.wait().expect("Can't wait for kernel event");
+            kernel_event.wait().expect("Can't wait for kernel event");
         },
         _ => {}
     }

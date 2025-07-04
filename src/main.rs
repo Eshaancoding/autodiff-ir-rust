@@ -1,5 +1,5 @@
 use std::time::Instant;
-use autodiffv2::{autodiff, opencl_matmul, opencl_ruduce};
+use autodiffv2::{autodiff, opencl_matmul, opencl_reduce};
 use autodiffv2::devices::{OpenCL, CLDeviceType};
 use autodiffv2::nn::{self, SeqF, Module};
 
@@ -165,9 +165,9 @@ pub fn simple () {
 pub fn main () {
     // simple();    
     // opencl_matmul();
-    // opencl_ruduce();
+    opencl_reduce();
 
-    nn_test();
+    // nn_test();
     // multihead_att();
 
     // forward();

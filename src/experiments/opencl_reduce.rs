@@ -14,7 +14,7 @@
 
 use opencl3::command_queue::{CL_QUEUE_PROFILING_ENABLE, CommandQueue};
 use opencl3::context::Context;
-use opencl3::device::{CL_DEVICE_TYPE_GPU, Device, get_all_devices};
+use opencl3::device::{CL_DEVICE_TYPE_ALL, Device, get_all_devices};
 use opencl3::kernel::{ExecuteKernel, Kernel};
 use opencl3::memory::{Buffer, CL_MEM_READ_WRITE, CL_MEM_WRITE_ONLY};
 use opencl3::program::Program;
@@ -58,9 +58,9 @@ __kernel void reduce_sum(
 
 const KERNEL_NAME: &str = "reduce_sum";
 
-pub fn opencl_ruduce () {
+pub fn opencl_reduce () {
     // Find a usable device for this application
-    let device_id = *get_all_devices(CL_DEVICE_TYPE_GPU).expect("Can't get device")
+    let device_id = *get_all_devices(CL_DEVICE_TYPE_ALL).expect("Can't get device")
         .first()
         .expect("no device found in platform");
     let device = Device::new(device_id);
@@ -167,9 +167,4 @@ pub fn opencl_ruduce () {
 
     // find the results
     println!("results: {:#?}", results);
-
-    // Calculate the kernel duration, from the kernel_event
-    let start_time = kernel_event.profiling_command_start().expect("Start time error");
-    let end_time = kernel_event.profiling_command_end().expect("End time error");
-    let duration = end_time - start_time;
 }
