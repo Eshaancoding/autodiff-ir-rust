@@ -3,11 +3,11 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::autodiff;
+    use crate::{autodiff, devices::CLDeviceType};
 
     #[test]
     fn everything () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
 
         let x = autodiff::tensor(
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], 

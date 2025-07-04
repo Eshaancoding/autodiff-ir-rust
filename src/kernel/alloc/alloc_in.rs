@@ -1,7 +1,7 @@
 use crate::kernel_decl::{KernelProcedure, Kernels};
 
-pub fn alloc_in (procedure: &mut KernelProcedure) {
-    procedure.apply(&mut |f| {
+pub fn alloc_in (proc: &mut KernelProcedure) {
+    proc.apply(&mut |f| {
         for i in 0..(f.len()-1) {
             let mut idx_to_del = None;
 

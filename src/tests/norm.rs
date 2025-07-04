@@ -1,11 +1,12 @@
 #[cfg(test)]
 mod tests {
+    use crate::devices::CLDeviceType;
     use crate::{autodiff, LayerNorm, RMS};
     use crate::nn::module::SeqF;
 
     #[test]
     pub fn rmsnorm () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
 
         let x = autodiff::tensor(
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0],
@@ -29,7 +30,7 @@ mod tests {
 
     #[test]
     pub fn layernorm () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
 
         let x = autodiff::tensor(
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 9.0],

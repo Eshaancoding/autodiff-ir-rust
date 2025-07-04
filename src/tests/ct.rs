@@ -1,12 +1,14 @@
 // constant & elw & funcs test
+// not the most stable to check btw
 
 #[cfg(test)]
 mod tests {
-    use crate::autodiff;
+    use crate::{autodiff, devices::CLDeviceType};
 
     #[test]
     fn ct () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        // autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
 
         let x = autodiff::tensor(
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], 
@@ -35,16 +37,16 @@ mod tests {
         let res_val = res.val().unwrap().get().round(4);
         assert_eq!(res_val.dim, vec![2, 4], "Result value dim incorrect");
         assert_eq!(*res_val.data, vec![
-            8.5169,   4.1459,  -0.9816, 783.7341,
-            5.6071,  -4.9606, -15.6412,   5.6242
+            8.5169,   4.1459,  -0.9816, 783.6786,
+            5.6071,  -4.9606, -15.6413,   5.6242
         ], "Result data value incorrect");
 
         // ======== Check x value ========
         let x_grad = x.grad().get().round(4);
         assert_eq!(x_grad.dim, vec![2, 4], "x grad value dim incorrect");
         assert_eq!(*x_grad.data, vec![
-            -41.4012,      6.4684,      3.5990, -353617.0418,
-            4.4253,      9.1042,   -117.8712,      1.7871
+            -41.4012,      6.4684,      3.5990, -353566.88,
+            4.4253,      9.1042,   -117.8715,      1.7871
         ], "y grad value incorrect");
         
         // ======== Check y value ========

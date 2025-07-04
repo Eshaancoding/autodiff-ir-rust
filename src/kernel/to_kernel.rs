@@ -84,10 +84,11 @@ pub fn to_kernel (device: &dyn Device, proc: &IRProcedure) -> (KernelProcedure, 
     alloc_switch(&mut kernel_proc); // good preq 
     
     // if allocs + dealloc in same fusion --> replace with temporary
-    alloc_temp_opt(&mut kernel_proc);  
+    alloc_temp_opt(&mut kernel_proc);  // only supports reduce + dot prod... any chance for ELW too (multisized temp)
 
     // Collate all temporary memory into one --> tetris opt 
-    tetris_opt(&mut kernel_proc, &var_changed);
+    // tetris_opt(&mut kernel_proc, &var_changed);
+    // ^^^^^^^^^^^ There's a massive error with this ^^^^^^^^^^^ 
     
     // remove the allocs from fusion (fusion runtime cannot handle allocs or deallocs)
     alloc_out_fused(&mut kernel_proc);

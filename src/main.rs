@@ -5,41 +5,6 @@ use autodiffv2::nn::{self, SeqF, Module};
 
 // in the future, probably migrate to tests()
 
-pub fn concat_test () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
-    // -1 dim
-    let input = autodiff::randn(vec![2, 5]);
-    let w_one = autodiff::randn(vec![5, 1]);
-    let w_two = autodiff::randn(vec![5, 1]);
-    let t = autodiff::concat(vec![w_one, w_two], -1);
-    let result = autodiff::dot(input, t);
-    result.forward();
-    result.val().unwrap().keep();
-
-    // 0 dim
-    let input = autodiff::randn(vec![5, 2]);
-    let w_one = autodiff::randn(vec![1,2]);
-    let w_two = autodiff::randn(vec![1,2]);
-    let t = autodiff::concat(vec![w_one, w_two], 0);
-    let result = autodiff::dot(input, t);
-    result.forward();
-    result.val().unwrap().keep();
-
-    autodiff::print_and_exec();
-}
-
-pub fn broadcasting_test () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
-    
-    let input = autodiff::randn(vec![5, 25]);
-    
-    let res = input.t().contigious();
-    res.forward();
-    res.val().unwrap().keep();
-    
-    autodiff::print_and_exec();
-}
-
 // nn_test
 pub fn nn_test () {
     autodiff::set_device(OpenCL::new(CLDeviceType::GPU));
@@ -102,54 +67,17 @@ pub fn multihead_att () {
     println!("elapsed: {} s", start.elapsed().as_secs_f64());
 }
 
-pub fn reduce () {
-    autodiff::set_device(autodiff::devices::CPUNew::new());
-    let x = autodiff::tensor(vec![
-        0.03, 0.02, 0.01, 
-        0.04, 0.05, 0.063, 
-        0.01, 0.10, 0.07, 
-        0.02, 0.01, 0.08, 
-        0.05, 0.03, 0.06
-    ], vec![5, 3]);
-
-    let res = x.sum(-1);
-    res.forward();
-    res.val().unwrap().keep();
-
-    autodiff::print_and_exec();
-
-    let v = res.val().unwrap().get();
-    println!("Value dim: {:#?}", v.dim);
-    println!("Value data: {:#?}", v.data);
-}
-
-pub fn forward () {
-    autodiff::set_device(autodiff::devices::CPU::new());
-
-    let mut x = autodiff::tensor(vec![3.0], vec![1]);
-    
-    autodiff::ir_for(2..6, |i| {
-        x += i.clone(); 
-        x.forward();
-    });    
-
-    let result = x * 3.0;
-    result.forward();
-
-    autodiff::print_and_exec();
-
-    let v = result.val().unwrap().get();
-    println!("value dim: {:#?}", v.dim);
-    println!("value data: {:#?}", v.data);
-    println!("value id: {:#?}", v.id);
-}
-
 pub fn simple () {
     autodiff::set_device(OpenCL::new(CLDeviceType::GPU));
 
-    let a = autodiff::randn(vec![4, 8]);
-    let b = autodiff::randn(vec![8, 6]);
-    let res = autodiff::dot(a, b);
+    let a = autodiff::tensor(
+        vec![
+            0.03, 0.023, 0.623, 0.0123, 0.7792, 0.3727, 0.137, 0.062,
+            0.23, 0.013, 0.683, 0.023, 0.292, 0.327, 0.198, 0.022
+        ], 
+        vec![2, 8]
+    );
+    let res = a.sum(0);
 
     res.forward();
     res.val().unwrap().keep();
@@ -165,9 +93,10 @@ pub fn simple () {
 pub fn main () {
     // simple();    
     // opencl_matmul();
-    opencl_reduce();
+    // opencl_reduce();
+    // println!("hello world");
 
-    // nn_test();
+    nn_test();
     // multihead_att();
 
     // forward();

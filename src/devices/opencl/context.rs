@@ -32,7 +32,7 @@ impl OpenCLContext {
 
         let queue = CommandQueue::create_default(&context, CL_QUEUE_PROFILING_ENABLE)
             .expect("Can't create command queue");
-        
+
         OpenCLContext { 
             context, 
             queue,
@@ -54,7 +54,8 @@ impl OpenCLContext {
 
         let buf = buffers.entry(id.clone()).or_insert(
     unsafe {
-                Buffer::<cl_float>::create(&self.context, CL_MEM_READ_WRITE, size, null_mut()).expect("Can't create buffer")
+                Buffer::<cl_float>::create(&self.context, CL_MEM_READ_WRITE, size, null_mut())
+                    .expect("Can't create buffer")
             }
         );
 
@@ -64,11 +65,10 @@ impl OpenCLContext {
         
         let write_event = unsafe {
             queue.enqueue_write_buffer(buf, CL_BLOCKING, 0, &data, &[])
+                .expect("Can't create write event")
         };
 
-        write_event.expect("Can't create write event")
-            .wait()
-            .expect("Can't wait for write buffer")
+        write_event.wait().expect("Can't wait for write buffer")
     }
 
     pub fn read_buffer (&mut self, id: &String) -> Vec<f32> {

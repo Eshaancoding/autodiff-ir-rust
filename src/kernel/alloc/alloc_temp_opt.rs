@@ -110,9 +110,13 @@ pub fn alloc_temp_opt (kernel_proc: &mut KernelProcedure) {
 
     kernel_proc.apply(&mut |proc| {
         for cmd in proc.iter_mut() {
-            if let Some(kernel) = cmd.fus_get_mut_kernels() {
-                f(kernel)
+            if let Kernels::DPElwExpr { kernels, .. } = cmd {
+                f(kernels)
             }
+            else if let Kernels::ReduceElwExpr { kernels, .. } = cmd {
+                f(kernels)
+            }
+
         }
     })
 }

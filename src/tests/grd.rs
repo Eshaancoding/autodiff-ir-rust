@@ -1,7 +1,7 @@
 // gradient calculation, accumulation, and the add equal operation
 #[cfg(test)]
 mod tests {
-    use crate::{autodiff, Tensor};
+    use crate::{autodiff, devices::CLDeviceType, Tensor};
     
     fn f (a: &Tensor, b: &Tensor) -> Tensor {
         a.clone() * b.clone()
@@ -9,7 +9,7 @@ mod tests {
     
     #[test]
     fn grd () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
 
         autodiff::add_heading("Declaring tensors");
         let mut a = autodiff::tensor(vec![3.0, 2.0, 1.0, 3.0], vec![2, 2]);

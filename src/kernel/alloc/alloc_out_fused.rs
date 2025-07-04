@@ -50,8 +50,9 @@ pub fn alloc_out_fused (kernel_proc: &mut KernelProcedure) {
             }
 
             // remove the last few ending 
+            let idx = fused_kernels.len() - end_size;
             for _ in 0..end_size {
-                end.push(fused_kernels.remove(fused_kernels.len() - end_size))
+                end.push(fused_kernels.remove(idx))
             }
 
             // find locations 

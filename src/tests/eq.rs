@@ -1,11 +1,11 @@
 #[cfg(test)]
 
 mod tests {
-    use crate::{autodiff, Tensor};
+    use crate::{autodiff, devices::CLDeviceType, Tensor};
 
     #[test]
     fn eq () {
-        autodiff::set_device(autodiff::devices::CPU::new());
+        autodiff::set_device(autodiff::devices::OpenCL::new(CLDeviceType::ALL));
 
         // ============ Equality test ============ 
         let x = autodiff::tensor(
@@ -19,7 +19,7 @@ mod tests {
             ).pow2();
             
         let y = res.sum(0);
-            
+
         autodiff::add_heading("Forward");
         y.forward();
         autodiff::add_heading("Backward");
@@ -47,7 +47,7 @@ mod tests {
         res.val().unwrap().keep();
         all_no.val().unwrap().keep();
         all_yes.val().unwrap().keep();
-        autodiff::execute();
+        autodiff::print_and_exec();
 
         // ============ Check ============ 
         let res_val = res.val().unwrap().get();
